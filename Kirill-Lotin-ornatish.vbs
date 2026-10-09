@@ -6,7 +6,7 @@ Option Explicit
 ' --- Yangilanish sozlamalari (muallif to'ldiradi) ---
 ' UPDATE_URL: yangilanish fayllari turgan manzil, masalan
 ' "https://raw.githubusercontent.com/FOYDALANUVCHI/OMBOR/main/"
-Const KL_VERSION = "2026.10.09"
+Const KL_VERSION = "2026.10.09.1"
 Const UPDATE_URL = "https://raw.githubusercontent.com/Begzodbek87/kirill-lotin-yangilanish/main/"
 Dim silent, updNote
 Dim sh, fso, wd, doc, tmpFile, startup, defStartup, target, ver, v, parts, f
@@ -16121,7 +16121,11 @@ Function RpsPart1()
     s = s & "        $ix = $ln.IndexOf(':')" & vbCrLf
     s = s & "        if ($ix -gt 0) { $icons += ,@($ln.Substring(0, $ix), [Convert]::FromBase64String($ln.Substring($ix + 1))) }" & vbCrLf
     s = s & "    }" & vbCrLf
-    s = s & "    $zip = [System.IO.Compression.ZipFile]::Open($Dotm, 'Update')" & vbCrLf
+    s = s & "    $zip = $null" & vbCrLf
+    s = s & "    for ($try = 0; $try -lt 15 -and $zip -eq $null; $try++) {" & vbCrLf
+    s = s & "        try { $zip = [System.IO.Compression.ZipFile]::Open($Dotm, 'Update') } catch { Start-Sleep -Seconds 2 }" & vbCrLf
+    s = s & "    }" & vbCrLf
+    s = s & "    if ($zip -eq $null) { $zip = [System.IO.Compression.ZipFile]::Open($Dotm, 'Update') }" & vbCrLf
     s = s & "    try {" & vbCrLf
     s = s & "        # eski customUI qismlarini olib tashlash" & vbCrLf
     s = s & "        $old = @()" & vbCrLf
@@ -16175,16 +16179,16 @@ Function RpsPart1()
     s = s & "            $c = $c.Insert($m.Index + $m.Length, '<Default Extension=""xml"" ContentType=""application/xml""/>')" & vbCrLf
     s = s & "        }" & vbCrLf
     s = s & "        Put $zip '[Content_Types].xml' ($utf8.GetBytes($c))" & vbCrLf
-    s = s & "    } finally {" & vbCrLf
-    s = s & "        $zip.Dispose()" & vbCrLf
-    s = s & "    }" & vbCrLf
-    s = s & "    # tekshirish" & vbCrLf
     RpsPart1 = s
 End Function
 
 Function RpsPart2()
     Dim s
     s = ""
+    s = s & "    } finally {" & vbCrLf
+    s = s & "        $zip.Dispose()" & vbCrLf
+    s = s & "    }" & vbCrLf
+    s = s & "    # tekshirish" & vbCrLf
     s = s & "    $z2 = [System.IO.Compression.ZipFile]::OpenRead($Dotm)" & vbCrLf
     s = s & "    try {" & vbCrLf
     s = s & "        $ok = ($z2.GetEntry('customUI/' + $xmlName) -ne $null) -and ($z2.GetEntry('_rels/.rels') -ne $null) -and ($z2.GetEntry('[Content_Types].xml') -ne $null) -and ($z2.GetEntry('word/vbaProject.bin') -ne $null)" & vbCrLf
@@ -17405,8 +17409,24 @@ Function UpdaterText()
     UpdaterText = UpdPart1() & UpdPart2() & UpdPart3() & UpdPart4()
 End Function
 
+Sub WaitWordGone()
+    Dim w, n, t
+    On Error Resume Next
+    Set w = GetObject("winmgmts:\\.\root\cimv2")
+    For t = 1 To 20
+        n = 0
+        n = w.ExecQuery("Select * from Win32_Process Where Name='WINWORD.EXE'").Count
+        Err.Clear
+        If n = 0 Then Exit For
+        If t = 10 Then sh.Run "taskkill /f /im winword.exe", 0, True
+        WScript.Sleep 1500
+    Next
+    Err.Clear
+    On Error GoTo 0
+End Sub
+
 Function AddRibbon(dotm, rootDir, ver)
-    Dim d, rc, v
+    Dim d, rc, v, tryN
     AddRibbon = False
     On Error Resume Next
     d = rootDir & "\ribbon"
@@ -17414,10 +17434,18 @@ Function AddRibbon(dotm, rootDir, ver)
     If fso.FileExists(d & "\ribbon-xato.txt") Then fso.DeleteFile d & "\ribbon-xato.txt", True
     v = 14
     If ver = "12.0" Then v = 12
-    rc = sh.Run("powershell.exe -NoProfile -ExecutionPolicy Bypass -File """ & d & "\ribbon.ps1"" -Dotm """ & dotm & """ -Dir """ & d & """ -Ver " & v, 0, True)
-    If Err.Number = 0 Then
-        If rc = 0 Then AddRibbon = True
-    End If
+    For tryN = 1 To 4
+        rc = sh.Run("powershell.exe -NoProfile -ExecutionPolicy Bypass -File """ & d & "\ribbon.ps1"" -Dotm """ & dotm & """ -Dir """ & d & """ -Ver " & v, 0, True)
+        If Err.Number = 0 Then
+            If rc = 0 Then
+                AddRibbon = True
+                Exit For
+            End If
+        End If
+        Err.Clear
+        WaitWordGone
+        WScript.Sleep 3000
+    Next
     Err.Clear
 End Function
 
@@ -17666,7 +17694,8 @@ If fso.FileExists(target) Then
     Set wd = Nothing
     Err.Clear
     On Error GoTo 0
-    WScript.Sleep 1500
+    WaitWordGone
+    WScript.Sleep 2000
     ribVer = ver
     ribOk = AddRibbon(target, root, ribVer)
     On Error Resume Next
