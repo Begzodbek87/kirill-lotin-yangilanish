@@ -6,7 +6,7 @@ Option Explicit
 ' --- Yangilanish sozlamalari (muallif to'ldiradi) ---
 ' UPDATE_URL: yangilanish fayllari turgan manzil, masalan
 ' "https://raw.githubusercontent.com/FOYDALANUVCHI/OMBOR/main/"
-Const KL_VERSION = "2026.10.09.7"
+Const KL_VERSION = "2026.10.09.8"
 Const UPDATE_URL = "https://raw.githubusercontent.com/Begzodbek87/kirill-lotin-yangilanish/main/"
 Dim silent, updNote
 Dim sh, fso, wd, doc, tmpFile, startup, defStartup, target, ver, v, parts, f
@@ -109,6 +109,7 @@ Function ModPart1()
     s = s & "Private gMarkN As Long" & vbCrLf
     s = s & "Private gCurBm As String" & vbCrLf
     s = s & "Private gImQuick As Boolean" & vbCrLf
+    s = s & "Private gImCats As String" & vbCrLf
     s = s & "" & vbCrLf
     s = s & "'------------------------------ Sozlamalar --------------------------------" & vbCrLf
     s = s & "Public Sub ApostrofRasmiy()" & vbCrLf
@@ -145,13 +146,13 @@ Function ModPart1()
     s = s & "        Case 2: OAp = ""'""" & vbCrLf
     s = s & "        Case 3: OAp = ChrW(&H2018)" & vbCrLf
     s = s & "        Case Else: OAp = ChrW(&H2BB)" & vbCrLf
-    s = s & "    End Select" & vbCrLf
     ModPart1 = s
 End Function
 
 Function ModPart2()
     Dim s
     s = ""
+    s = s & "    End Select" & vbCrLf
     s = s & "End Function" & vbCrLf
     s = s & "" & vbCrLf
     s = s & "Private Function TAp() As String" & vbCrLf
@@ -231,13 +232,13 @@ Function ModPart2()
     s = s & "End Function" & vbCrLf
     s = s & "" & vbCrLf
     s = s & "Private Function IsLat(ByVal ch As String) As Boolean" & vbCrLf
-    s = s & "    If Len(ch) = 0 Then Exit Function" & vbCrLf
     ModPart2 = s
 End Function
 
 Function ModPart3()
     Dim s
     s = ""
+    s = s & "    If Len(ch) = 0 Then Exit Function" & vbCrLf
     s = s & "    IsLat = (ch Like ""[A-Za-z]"")" & vbCrLf
     s = s & "End Function" & vbCrLf
     s = s & "" & vbCrLf
@@ -317,13 +318,13 @@ Function ModPart3()
     s = s & "                res = res & Mid$(s, i, 1)" & vbCrLf
     s = s & "                skip = True" & vbCrLf
     s = s & "        End Select" & vbCrLf
-    s = s & "        If Not skip Then" & vbCrLf
     ModPart3 = s
 End Function
 
 Function ModPart4()
     Dim s
     s = ""
+    s = s & "        If Not skip Then" & vbCrLf
     s = s & "            If up Then" & vbCrLf
     s = s & "                multi = (Len(b) >= 2) And (b Like ""[a-z][a-z]*"")" & vbCrLf
     s = s & "                neigh = IsUpperCyr(pc) Or IsUpperCyr(nc)" & vbCrLf
@@ -403,13 +404,13 @@ Function ModPart4()
     s = s & "            Else" & vbCrLf
     s = s & "                res = res & ChrW(&H44A) & CS(&H435, (nx <> nl))" & vbCrLf
     s = s & "            End If" & vbCrLf
-    s = s & "            i = i + 1" & vbCrLf
     ModPart4 = s
 End Function
 
 Function ModPart5()
     Dim s
     s = ""
+    s = s & "            i = i + 1" & vbCrLf
     s = s & "        ElseIf lo = ""e"" Then" & vbCrLf
     s = s & "            If IsLat(pv) Or IsApos(pv) Then" & vbCrLf
     s = s & "                res = res & CS(&H435, up)" & vbCrLf
@@ -489,13 +490,13 @@ Function ModPart5()
     s = s & "    basePos = pr.Start" & vbCrLf
     s = s & "    n = Len(txt)" & vbCrLf
     s = s & "    If n = 0 Then Exit Sub" & vbCrLf
-    s = s & "    ReDim tS(1 To n)" & vbCrLf
     ModPart5 = s
 End Function
 
 Function ModPart6()
     Dim s
     s = ""
+    s = s & "    ReDim tS(1 To n)" & vbCrLf
     s = s & "    ReDim tE(1 To n)" & vbCrLf
     s = s & "    cnt = 0" & vbCrLf
     s = s & "    i = 1" & vbCrLf
@@ -575,13 +576,13 @@ Function ModPart6()
     s = s & "        If b > a Then" & vbCrLf
     s = s & "            Set pr = scope.Duplicate" & vbCrLf
     s = s & "            pr.SetRange a, b" & vbCrLf
-    s = s & "            ConvertPiece pr, toLatin" & vbCrLf
     ModPart6 = s
 End Function
 
 Function ModPart7()
     Dim s
     s = ""
+    s = s & "            ConvertPiece pr, toLatin" & vbCrLf
     s = s & "        End If" & vbCrLf
     s = s & "    Next para" & vbCrLf
     s = s & "End Sub" & vbCrLf
@@ -661,13 +662,13 @@ Function ModPart7()
     s = s & "Private Sub CallOnTime()" & vbCrLf
     s = s & "    Dim app As Object" & vbCrLf
     s = s & "    On Error Resume Next" & vbCrLf
-    s = s & "    Set app = Application" & vbCrLf
     ModPart7 = s
 End Function
 
 Function ModPart8()
     Dim s
     s = ""
+    s = s & "    Set app = Application" & vbCrLf
     s = s & "    app.OnTime Now + TimeSerial(0, 0, 5), ""ImPreload""" & vbCrLf
     s = s & "End Sub" & vbCrLf
     s = s & "" & vbCrLf
@@ -705,6 +706,12 @@ Function ModPart8()
     s = s & "    ctl.OnAction = ""ImloTekshirish""" & vbCrLf
     s = s & "    ctl.TooltipText = ""Imlo qoidalari va o'quv imlo lug'ati asosida tekshiradi""" & vbCrLf
     s = s & "" & vbCrLf
+    s = s & "    Set ctl = cb.Controls.Add(1)" & vbCrLf
+    s = s & "    ctl.Caption = ""Tinish belgilari""" & vbCrLf
+    s = s & "    ctl.Style = 2" & vbCrLf
+    s = s & "    ctl.OnAction = ""TinishTekshirish""" & vbCrLf
+    s = s & "    ctl.TooltipText = ""Tinish belgilari, bo'shliqlar, tire va chiziqchani tekshiradi va tuzatadi""" & vbCrLf
+    s = s & "" & vbCrLf
     s = s & "    Set pop = cb.Controls.Add(10)" & vbCrLf
     s = s & "    pop.Caption = ""Avtozamena""" & vbCrLf
     s = s & "    pop.TooltipText = ""Yozish paytida h/x va imlo xatolarini avtomatik tuzatish""" & vbCrLf
@@ -741,6 +748,12 @@ Function ModPart8()
     s = s & "    ctl.Style = 2" & vbCrLf
     s = s & "    ctl.BeginGroup = True" & vbCrLf
     s = s & "    ctl.OnAction = ""PdfOcr""" & vbCrLf
+    ModPart8 = s
+End Function
+
+Function ModPart9()
+    Dim s
+    s = ""
     s = s & "    ctl.TooltipText = ""Skan qilingan PDF ni Word hujjatiga aylantiradi (OCR)""" & vbCrLf
     s = s & "" & vbCrLf
     s = s & "    Set ctl = cb.Controls.Add(1)" & vbCrLf
@@ -748,12 +761,6 @@ Function ModPart8()
     s = s & "    ctl.Style = 2" & vbCrLf
     s = s & "    ctl.OnAction = ""Antiplagiat""" & vbCrLf
     s = s & "    ctl.TooltipText = ""Tanlangan matnni (yoki butun hujjatni) internet bo'yicha tekshiradi""" & vbCrLf
-    ModPart8 = s
-End Function
-
-Function ModPart9()
-    Dim s
-    s = ""
     s = s & "" & vbCrLf
     s = s & "    Set ctl = cb.Controls.Add(1)" & vbCrLf
     s = s & "    ctl.Caption = ""Korpus tahlili""" & vbCrLf
@@ -827,6 +834,12 @@ Function ModPart9()
     s = s & "    Dim fd As Object" & vbCrLf
     s = s & "    PdfPick = """"" & vbCrLf
     s = s & "    On Error Resume Next" & vbCrLf
+    ModPart9 = s
+End Function
+
+Function ModPart10()
+    Dim s
+    s = ""
     s = s & "    Set fd = Application.FileDialog(3)" & vbCrLf
     s = s & "    fd.AllowMultiSelect = False" & vbCrLf
     s = s & "    fd.Title = ""PDF faylni tanlang""" & vbCrLf
@@ -834,12 +847,6 @@ Function ModPart9()
     s = s & "    fd.Filters.Add ""PDF fayllar"", ""*.pdf""" & vbCrLf
     s = s & "    If fd.Show = -1 Then PdfPick = fd.SelectedItems(1)" & vbCrLf
     s = s & "    Err.Clear" & vbCrLf
-    ModPart9 = s
-End Function
-
-Function ModPart10()
-    Dim s
-    s = ""
     s = s & "End Function" & vbCrLf
     s = s & "" & vbCrLf
     s = s & "Private Function AbbyyPath() As String" & vbCrLf
@@ -913,6 +920,12 @@ Function ModPart10()
     s = s & "Public Sub Antiplagiat()" & vbCrLf
     s = s & "    Dim hta As String, dirT As String, f As String, txt As String, st As Object" & vbCrLf
     s = s & "    If Not CheckAct() Then Exit Sub" & vbCrLf
+    ModPart10 = s
+End Function
+
+Function ModPart11()
+    Dim s
+    s = ""
     s = s & "    hta = Environ$(""PUBLIC"") & ""\KirillLotinOCR\antiplagiat.hta""" & vbCrLf
     s = s & "    If Dir$(hta) = """" Then" & vbCrLf
     s = s & "        MsgBox ""Antiplagiat dasturi topilmadi. Kirill-Lotin-ornatish.vbs ni qayta ishga tushiring."", vbExclamation, ""Antiplagiat""" & vbCrLf
@@ -920,12 +933,6 @@ Function ModPart10()
     s = s & "    End If" & vbCrLf
     s = s & "    dirT = Environ$(""PUBLIC"") & ""\KirillLotinOCR\tmp""" & vbCrLf
     s = s & "    If Dir$(dirT, vbDirectory) = """" Then MkDir dirT" & vbCrLf
-    ModPart10 = s
-End Function
-
-Function ModPart11()
-    Dim s
-    s = ""
     s = s & "    f = dirT & ""\ap_input.txt""" & vbCrLf
     s = s & "    txt = """"" & vbCrLf
     s = s & "    If Documents.Count > 0 Then" & vbCrLf
@@ -999,6 +1006,12 @@ Function ModPart11()
     s = s & "    ActB36 = s" & vbCrLf
     s = s & "End Function" & vbCrLf
     s = s & "" & vbCrLf
+    ModPart11 = s
+End Function
+
+Function ModPart12()
+    Dim s
+    s = ""
     s = s & "Private Function ActHash(ByVal s As String, ByVal mult As Double, ByVal p As Double) As Double" & vbCrLf
     s = s & "    Dim h As Double, i As Long" & vbCrLf
     s = s & "    h = 7" & vbCrLf
@@ -1006,12 +1019,6 @@ Function ModPart11()
     s = s & "        h = h * mult + AscW(Mid$(s, i, 1))" & vbCrLf
     s = s & "        h = h - Int(h / p) * p" & vbCrLf
     s = s & "    Next i" & vbCrLf
-    ModPart11 = s
-End Function
-
-Function ModPart12()
-    Dim s
-    s = ""
     s = s & "    ActHash = h" & vbCrLf
     s = s & "End Function" & vbCrLf
     s = s & "" & vbCrLf
@@ -1085,6 +1092,12 @@ Function ModPart12()
     s = s & "    Do While i <= Len(s)" & vbCrLf
     s = s & "        ch = Mid$(s, i, 1)" & vbCrLf
     s = s & "        nx = Mid$(s, i + 1, 1)" & vbCrLf
+    ModPart12 = s
+End Function
+
+Function ModPart13()
+    Dim s
+    s = ""
     s = s & "        If (ch = ""s"" Or ch = ""c"") And nx = ""h"" Then" & vbCrLf
     s = s & "            i = i + 1" & vbCrLf
     s = s & "        ElseIf ch = ""h"" Or ch = ""x"" Then" & vbCrLf
@@ -1092,12 +1105,6 @@ Function ModPart12()
     s = s & "        End If" & vbCrLf
     s = s & "        i = i + 1" & vbCrLf
     s = s & "    Loop" & vbCrLf
-    ModPart12 = s
-End Function
-
-Function ModPart13()
-    Dim s
-    s = ""
     s = s & "    HxPattern = r" & vbCrLf
     s = s & "End Function" & vbCrLf
     s = s & "" & vbCrLf
@@ -1171,6 +1178,12 @@ Function ModPart13()
     s = s & "                gHX(k) = gHX(k) & ""|"" & ln" & vbCrLf
     s = s & "            Else" & vbCrLf
     s = s & "                gHX.Add k, ln" & vbCrLf
+    ModPart13 = s
+End Function
+
+Function ModPart14()
+    Dim s
+    s = ""
     s = s & "            End If" & vbCrLf
     s = s & "        End If" & vbCrLf
     s = s & "    Loop" & vbCrLf
@@ -1178,12 +1191,6 @@ Function ModPart13()
     s = s & "    HxLoad = True" & vbCrLf
     s = s & "End Function" & vbCrLf
     s = s & "" & vbCrLf
-    ModPart13 = s
-End Function
-
-Function ModPart14()
-    Dim s
-    s = ""
     s = s & "' 0 = to'g'ri yoki bazada yo'q, 1 = aniq xato (newTok), 2/3 = chalkash (note)" & vbCrLf
     s = s & "Private Function HxCheck(ByVal tok As String, ByRef newTok As String, ByRef note As String) As Long" & vbCrLf
     s = s & "    Dim nC As Long, nL As Long, i As Long, c As Long, isCyr As Boolean" & vbCrLf
@@ -1257,6 +1264,12 @@ Function ModPart14()
     s = s & "    If rareHit Then HxCheck = 2 Else HxCheck = 3" & vbCrLf
     s = s & "End Function" & vbCrLf
     s = s & "" & vbCrLf
+    ModPart14 = s
+End Function
+
+Function ModPart15()
+    Dim s
+    s = ""
     s = s & "Private Sub HxComment(ByVal r As Range, ByVal t As String)" & vbCrLf
     s = s & "    On Error Resume Next" & vbCrLf
     s = s & "    ActiveDocument.Comments.Add r, t" & vbCrLf
@@ -1264,12 +1277,6 @@ Function ModPart14()
     s = s & "End Sub" & vbCrLf
     s = s & "" & vbCrLf
     s = s & "Private Sub HxPiece(ByVal pr As Range)" & vbCrLf
-    ModPart14 = s
-End Function
-
-Function ModPart15()
-    Dim s
-    s = ""
     s = s & "    Dim txt As String, basePos As Long, n As Long, i As Long, j As Long, k As Long, q As Long" & vbCrLf
     s = s & "    Dim s As Long, e As Long, cnt As Long, res As Long" & vbCrLf
     s = s & "    Dim tok As String, newTok As String, note As String" & vbCrLf
@@ -1343,6 +1350,12 @@ Function ModPart15()
     s = s & "                    If Len(gHxSug) > 0 Then" & vbCrLf
     s = s & "                        ImMark tr, ""flag"", ""h/x"", gHxSug" & vbCrLf
     s = s & "                    Else" & vbCrLf
+    ModPart15 = s
+End Function
+
+Function ModPart16()
+    Dim s
+    s = ""
     s = s & "                        HxComment tr, ""H/X: ma'noga qarab tekshiring - "" & note" & vbCrLf
     s = s & "                    End If" & vbCrLf
     s = s & "                    gHxAmb = gHxAmb + 1" & vbCrLf
@@ -1350,12 +1363,6 @@ Function ModPart15()
     s = s & "            End If" & vbCrLf
     s = s & "        End If" & vbCrLf
     s = s & "    Next k" & vbCrLf
-    ModPart15 = s
-End Function
-
-Function ModPart16()
-    Dim s
-    s = ""
     s = s & "End Sub" & vbCrLf
     s = s & "" & vbCrLf
     s = s & "Private Sub HxRange(ByVal scope As Range)" & vbCrLf
@@ -1429,6 +1436,12 @@ Function ModPart16()
     s = s & "          ""Ctrl+Z bilan barcha o'zgarishlarni qaytarish mumkin.""" & vbCrLf
     s = s & "    If gHxMark + gHxAmb > 0 Then" & vbCrLf
     s = s & "        msg = msg & vbCrLf & vbCrLf & ""Belgilangan joylar uchun takliflar menyusini hozir ochaymi?""" & vbCrLf
+    ModPart16 = s
+End Function
+
+Function ModPart17()
+    Dim s
+    s = ""
     s = s & "        If MsgBox(msg, vbYesNo + vbInformation, ""H/X tekshirish"") = vbYes Then" & vbCrLf
     s = s & "            Selection.SetRange 0, 0" & vbCrLf
     s = s & "            ImNext True" & vbCrLf
@@ -1436,12 +1449,6 @@ Function ModPart16()
     s = s & "    Else" & vbCrLf
     s = s & "        MsgBox msg, vbInformation, ""H/X tekshirish""" & vbCrLf
     s = s & "    End If" & vbCrLf
-    ModPart16 = s
-End Function
-
-Function ModPart17()
-    Dim s
-    s = ""
     s = s & "    Exit Sub" & vbCrLf
     s = s & "Fail:" & vbCrLf
     s = s & "    errNum = Err.Number" & vbCrLf
@@ -1515,6 +1522,12 @@ Function ModPart17()
     s = s & "        n = HxAcPut(w, r, mode)" & vbCrLf
     s = s & "    End If" & vbCrLf
     s = s & "    HxAcPair = n" & vbCrLf
+    ModPart17 = s
+End Function
+
+Function ModPart18()
+    Dim s
+    s = ""
     s = s & "End Function" & vbCrLf
     s = s & "" & vbCrLf
     s = s & "Private Function HxAcRun(ByVal mode As Long, ByVal doCyr As Boolean) As Long" & vbCrLf
@@ -1522,12 +1535,6 @@ Function ModPart17()
     s = s & "    Dim wf() As String, rf() As String, i As Long, cnt As Long, pass As Long, total As Long" & vbCrLf
     s = s & "    Dim skip As Object, d As Document, langs As Variant, cyrs As Variant, label As String" & vbCrLf
     s = s & "    p = Environ$(""PUBLIC"") & ""\KirillLotinOCR\hxauto.txt""" & vbCrLf
-    ModPart17 = s
-End Function
-
-Function ModPart18()
-    Dim s
-    s = ""
     s = s & "    Set fso = CreateObject(""Scripting.FileSystemObject"")" & vbCrLf
     s = s & "    If Not fso.FileExists(p) Then" & vbCrLf
     s = s & "        HxAcRun = -1" & vbCrLf
@@ -1594,26 +1601,59 @@ Function ModPart18()
     s = s & "    Err.Clear" & vbCrLf
     s = s & "End Sub" & vbCrLf
     s = s & "" & vbCrLf
-    s = s & "Public Sub ImloTekshirish()" & vbCrLf
-    s = s & "    Dim ans As Long, mode As Long, root As String, js As String, dataF As String, inF As String, outF As String" & vbCrLf
-    s = s & "    Dim fso As Object, f As Object, wsh As Object, rc As Long, scope As Range, para As Paragraph" & vbCrLf
-    s = s & "    Dim pA() As Long, pT() As String, pCnt As Long, a As Long, b As Long, t As String, rr As Range" & vbCrLf
-    s = s & "    Dim ln As String, parts() As String, idx As Long, s As Long, e As Long, r As Range" & vbCrLf
-    s = s & "    Dim nFix As Long, nFlag As Long, nMark As Long, nApos As Long, msg As String" & vbCrLf
-    s = s & "    Dim errNum As Long, errDesc As String" & vbCrLf
+    s = s & "Public Sub TinishTekshirish()" & vbCrLf
+    s = s & "    gImCats = ""E""" & vbCrLf
+    s = s & "    ImloTekshirish" & vbCrLf
+    s = s & "    gImCats = """"" & vbCrLf
+    s = s & "End Sub" & vbCrLf
     s = s & "" & vbCrLf
-    s = s & "    If Not CheckAct() Then Exit Sub" & vbCrLf
-    s = s & "    If Documents.Count = 0 Then Exit Sub" & vbCrLf
-    s = s & "    root = Environ$(""PUBLIC"") & ""\KirillLotinOCR""" & vbCrLf
-    s = s & "    js = root & ""\imlo_check.js""" & vbCrLf
-    s = s & "    dataF = root & ""\imlo_data.txt""" & vbCrLf
-    s = s & "    Set fso = CreateObject(""Scripting.FileSystemObject"")" & vbCrLf
+    s = s & "' Faqat o'zgargan qismini almashtiradi (qo'shni harflarning formati buzilmasligi uchun)" & vbCrLf
     ModPart18 = s
 End Function
 
 Function ModPart19()
     Dim s
     s = ""
+    s = s & "Private Sub ImReplaceNarrow(ByVal r As Range, ByVal newT As String)" & vbCrLf
+    s = s & "    Dim oldT As String, lo As Long, ln As Long, p As Long, q As Long, rr As Range, mid2 As String" & vbCrLf
+    s = s & "    oldT = r.Text" & vbCrLf
+    s = s & "    lo = Len(oldT)" & vbCrLf
+    s = s & "    ln = Len(newT)" & vbCrLf
+    s = s & "    p = 0" & vbCrLf
+    s = s & "    Do While p < lo And p < ln" & vbCrLf
+    s = s & "        If Mid$(oldT, p + 1, 1) <> Mid$(newT, p + 1, 1) Then Exit Do" & vbCrLf
+    s = s & "        p = p + 1" & vbCrLf
+    s = s & "    Loop" & vbCrLf
+    s = s & "    q = 0" & vbCrLf
+    s = s & "    Do While q < lo - p And q < ln - p" & vbCrLf
+    s = s & "        If Mid$(oldT, lo - q, 1) <> Mid$(newT, ln - q, 1) Then Exit Do" & vbCrLf
+    s = s & "        q = q + 1" & vbCrLf
+    s = s & "    Loop" & vbCrLf
+    s = s & "    mid2 = Mid$(newT, p + 1, ln - p - q)" & vbCrLf
+    s = s & "    Set rr = r.Duplicate" & vbCrLf
+    s = s & "    rr.SetRange r.Start + p, r.End - q" & vbCrLf
+    s = s & "    If rr.End > rr.Start Or Len(mid2) > 0 Then rr.Text = mid2" & vbCrLf
+    s = s & "    If Len(mid2) > 0 Then rr.HighlightColorIndex = 4" & vbCrLf
+    s = s & "End Sub" & vbCrLf
+    s = s & "" & vbCrLf
+    s = s & "Public Sub ImloTekshirish()" & vbCrLf
+    s = s & "    Dim ans As Long, mode As Long, root As String, js As String, dataF As String, inF As String, outF As String" & vbCrLf
+    s = s & "    Dim fso As Object, f As Object, wsh As Object, rc As Long, scope As Range, para As Paragraph" & vbCrLf
+    s = s & "    Dim pA() As Long, pT() As String, pCnt As Long, a As Long, b As Long, t As String, rr As Range" & vbCrLf
+    s = s & "    Dim ln As String, parts() As String, idx As Long, s As Long, e As Long, r As Range" & vbCrLf
+    s = s & "    Dim nFix As Long, nFlag As Long, nMark As Long, nApos As Long, msg As String" & vbCrLf
+    s = s & "    Dim errNum As Long, errDesc As String, cats As String, onlyE As Boolean" & vbCrLf
+    s = s & "" & vbCrLf
+    s = s & "    If Not CheckAct() Then Exit Sub" & vbCrLf
+    s = s & "    If Documents.Count = 0 Then Exit Sub" & vbCrLf
+    s = s & "    cats = gImCats" & vbCrLf
+    s = s & "    If Len(cats) = 0 Then cats = ""ABCDE""" & vbCrLf
+    s = s & "    If gImQuick Then cats = ""ABCD""" & vbCrLf
+    s = s & "    onlyE = (cats = ""E"")" & vbCrLf
+    s = s & "    root = Environ$(""PUBLIC"") & ""\KirillLotinOCR""" & vbCrLf
+    s = s & "    js = root & ""\imlo_check.js""" & vbCrLf
+    s = s & "    dataF = root & ""\imlo_data.txt""" & vbCrLf
+    s = s & "    Set fso = CreateObject(""Scripting.FileSystemObject"")" & vbCrLf
     s = s & "    If Not fso.FileExists(js) Or Not fso.FileExists(dataF) Then" & vbCrLf
     s = s & "        MsgBox ""Imlo bazasi topilmadi. Kirill-Lotin-ornatish.vbs ni qayta ishga tushiring."", vbExclamation, ""Imlo tekshirish""" & vbCrLf
     s = s & "        Exit Sub" & vbCrLf
@@ -1622,14 +1662,29 @@ Function ModPart19()
     s = s & "        mode = 2" & vbCrLf
     s = s & "        GoTo QuickStart" & vbCrLf
     s = s & "    End If" & vbCrLf
-    s = s & "    ans = MsgBox(""Matn o'zbek tilining imlo qoidalari va o'quv imlo lug'ati asosida tekshiriladi"" & vbCrLf & _" & vbCrLf
-    s = s & "                 ""(o', g' va tutuq; h/x; qo'shimchalar; og'zaki shakllar; qo'shib/ajratib/chiziqcha bilan yozish; bosh harflar)."" & vbCrLf & vbCrLf & _" & vbCrLf
-    s = s & "                 ""Ha - aniq xatolarni avtomatik tuzatish (yashil rang)"" & vbCrLf & _" & vbCrLf
-    s = s & "                 ""Yo'q - tuzatmasdan, belgilash (pushti rang)"" & vbCrLf & vbCrLf & _" & vbCrLf
-    s = s & "                 ""Shubhali joylar sariq rangda belgilanadi. Keyin takliflar menyusidan"" & vbCrLf & _" & vbCrLf
-    s = s & "                 ""tanlab, so'zni sichqoncha bilan almashtirasiz (chekkada izoh qolmaydi)."" & vbCrLf & _" & vbCrLf
-    s = s & "                 ""Matn tanlangan bo'lsa - faqat shu qism, aks holda butun asosiy matn tekshiriladi."", _" & vbCrLf
-    s = s & "                 vbYesNoCancel + vbQuestion, ""Imlo tekshirish"")" & vbCrLf
+    s = s & "    If onlyE Then" & vbCrLf
+    s = s & "        ans = MsgBox(""Tinish belgilari va bo'shliqlar o'zbek tili imlo qoidalari asosida tekshiriladi:"" & vbCrLf & _" & vbCrLf
+    s = s & "                     ""- belgidan oldin/keyin bo'shliq, ortiqcha va takror bo'shliqlar;"" & vbCrLf & _" & vbCrLf
+    s = s & "                     ""- qavs va qo'shtirnoq ichidagi bo'shliq, qo'shtirnoq turi;"" & vbCrLf & _" & vbCrLf
+    s = s & "                     ""- tire, chiziqcha va oraliq belgisi; bibliografik matnda ' - ' va ' // ';"" & vbCrLf & _" & vbCrLf
+    s = s & "                     ""- harflar orasiga tushib qolgan bo'shliq (k i t o b);"" & vbCrLf & _" & vbCrLf
+    s = s & "                     ""- 'lekin, ammo, biroq...' oldidan vergul (taklif)."" & vbCrLf & vbCrLf & _" & vbCrLf
+    s = s & "                     ""Ha - aniq xatolarni bir tugmada tuzatish (yashil rang)"" & vbCrLf & _" & vbCrLf
+    s = s & "                     ""Yo'q - tuzatmasdan, belgilash (pushti rang)"" & vbCrLf & vbCrLf & _" & vbCrLf
+    s = s & "                     ""Shubhali joylar sariq rangda belgilanadi (o'zingiz hal qilasiz)."" & vbCrLf & _" & vbCrLf
+    s = s & "                     ""Matn tanlangan bo'lsa - faqat shu qism, aks holda butun asosiy matn tekshiriladi."", _" & vbCrLf
+    s = s & "                     vbYesNoCancel + vbQuestion, ""Tinish belgilari va bo'shliqlar"")" & vbCrLf
+    s = s & "    Else" & vbCrLf
+    s = s & "        ans = MsgBox(""Matn o'zbek tilining imlo qoidalari va o'quv imlo lug'ati asosida tekshiriladi"" & vbCrLf & _" & vbCrLf
+    s = s & "                     ""(o', g' va tutuq; h/x; qo'shimchalar; og'zaki shakllar; qo'shib/ajratib/chiziqcha bilan yozish; bosh harflar;"" & vbCrLf & _" & vbCrLf
+    s = s & "                     ""tinish belgilari, bo'shliqlar va tire/chiziqcha)."" & vbCrLf & vbCrLf & _" & vbCrLf
+    s = s & "                     ""Ha - aniq xatolarni avtomatik tuzatish (yashil rang)"" & vbCrLf & _" & vbCrLf
+    s = s & "                     ""Yo'q - tuzatmasdan, belgilash (pushti rang)"" & vbCrLf & vbCrLf & _" & vbCrLf
+    s = s & "                     ""Shubhali joylar sariq rangda belgilanadi. Keyin takliflar menyusidan"" & vbCrLf & _" & vbCrLf
+    s = s & "                     ""tanlab, so'zni sichqoncha bilan almashtirasiz (chekkada izoh qolmaydi)."" & vbCrLf & _" & vbCrLf
+    s = s & "                     ""Matn tanlangan bo'lsa - faqat shu qism, aks holda butun asosiy matn tekshiriladi."", _" & vbCrLf
+    s = s & "                     vbYesNoCancel + vbQuestion, ""Imlo tekshirish"")" & vbCrLf
+    s = s & "    End If" & vbCrLf
     s = s & "    If ans = vbCancel Then Exit Sub" & vbCrLf
     s = s & "    If ans = vbYes Then mode = 1 Else mode = 2" & vbCrLf
     s = s & "QuickStart:" & vbCrLf
@@ -1639,6 +1694,12 @@ Function ModPart19()
     s = s & "    Else" & vbCrLf
     s = s & "        Set scope = ActiveDocument.Content" & vbCrLf
     s = s & "    End If" & vbCrLf
+    ModPart19 = s
+End Function
+
+Function ModPart20()
+    Dim s
+    s = ""
     s = s & "" & vbCrLf
     s = s & "    ' 1. Abzatslarni yig'ish" & vbCrLf
     s = s & "    pCnt = 0" & vbCrLf
@@ -1676,7 +1737,7 @@ Function ModPart19()
     s = s & "    If fso.FileExists(outF) Then fso.DeleteFile outF, True" & vbCrLf
     s = s & "    If fso.FileExists(outF & "".err"") Then fso.DeleteFile outF & "".err"", True" & vbCrLf
     s = s & "    Set f = fso.CreateTextFile(inF, True, True)" & vbCrLf
-    s = s & "    f.WriteLine ""OPTS"" & vbTab & ""ABCD"" & vbTab & OAp() & vbTab & TAp()" & vbCrLf
+    s = s & "    f.WriteLine ""OPTS"" & vbTab & cats & vbTab & OAp() & vbTab & TAp()" & vbCrLf
     s = s & "    For idx = 0 To pCnt - 1" & vbCrLf
     s = s & "        f.WriteLine pT(idx)" & vbCrLf
     s = s & "    Next idx" & vbCrLf
@@ -1694,12 +1755,6 @@ Function ModPart19()
     s = s & "        End If" & vbCrLf
     s = s & "        MsgBox ""Tekshiruv dasturi ishlamadi (kod "" & rc & ""). "" & msg & vbCrLf & _" & vbCrLf
     s = s & "               ""Windows Script Host (cscript) o'chirilgan bo'lishi mumkin."", vbExclamation, ""Imlo tekshirish""" & vbCrLf
-    ModPart19 = s
-End Function
-
-Function ModPart20()
-    Dim s
-    s = ""
     s = s & "        Exit Sub" & vbCrLf
     s = s & "    End If" & vbCrLf
     s = s & "" & vbCrLf
@@ -1725,11 +1780,21 @@ Function ModPart20()
     s = s & "                            If mode = 1 Then" & vbCrLf
     s = s & "                                r.Text = parts(5)" & vbCrLf
     s = s & "                                nApos = nApos + 1" & vbCrLf
+    ModPart20 = s
+End Function
+
+Function ModPart21()
+    Dim s
+    s = ""
     s = s & "                            End If" & vbCrLf
     s = s & "                        Case ""fix""" & vbCrLf
     s = s & "                            If mode = 1 Then" & vbCrLf
-    s = s & "                                r.Text = parts(5)" & vbCrLf
-    s = s & "                                r.HighlightColorIndex = 4" & vbCrLf
+    s = s & "                                If Left$(parts(4), 1) = ""E"" Then" & vbCrLf
+    s = s & "                                    ImReplaceNarrow r, parts(5)" & vbCrLf
+    s = s & "                                Else" & vbCrLf
+    s = s & "                                    r.Text = parts(5)" & vbCrLf
+    s = s & "                                    r.HighlightColorIndex = 4" & vbCrLf
+    s = s & "                                End If" & vbCrLf
     s = s & "                                nFix = nFix + 1" & vbCrLf
     s = s & "                            Else" & vbCrLf
     s = s & "                                r.HighlightColorIndex = 5" & vbCrLf
@@ -1750,7 +1815,7 @@ Function ModPart20()
     s = s & "    gHxFix = 0" & vbCrLf
     s = s & "    gHxAmb = 0" & vbCrLf
     s = s & "    gHxMark = 0" & vbCrLf
-    s = s & "    If HxLoad() Then" & vbCrLf
+    s = s & "    If Not onlyE And HxLoad() Then" & vbCrLf
     s = s & "        gHxMode = mode" & vbCrLf
     s = s & "        HxRange scope" & vbCrLf
     s = s & "    End If" & vbCrLf
@@ -1761,10 +1826,18 @@ Function ModPart20()
     s = s & "    Application.ScreenUpdating = True" & vbCrLf
     s = s & "    If gImQuick Then Exit Sub" & vbCrLf
     s = s & "" & vbCrLf
-    s = s & "    msg = ""Imlo tekshiruvi tugadi."" & vbCrLf & vbCrLf" & vbCrLf
+    s = s & "    If onlyE Then" & vbCrLf
+    s = s & "        msg = ""Tinish belgilari va bo'shliqlar tekshiruvi tugadi."" & vbCrLf & vbCrLf" & vbCrLf
+    s = s & "    Else" & vbCrLf
+    s = s & "        msg = ""Imlo tekshiruvi tugadi."" & vbCrLf & vbCrLf" & vbCrLf
+    s = s & "    End If" & vbCrLf
     s = s & "    If mode = 1 Then" & vbCrLf
-    s = s & "        msg = msg & ""Tuzatildi (yashil): "" & nFix & ""  (shundan h/x: "" & gHxFix & "")"" & vbCrLf & _" & vbCrLf
-    s = s & "                    ""O', g' va tutuq belgisi to'g'rilandi: "" & nApos & vbCrLf" & vbCrLf
+    s = s & "        If onlyE Then" & vbCrLf
+    s = s & "            msg = msg & ""Tuzatildi (yashil): "" & nFix & vbCrLf" & vbCrLf
+    s = s & "        Else" & vbCrLf
+    s = s & "            msg = msg & ""Tuzatildi (yashil): "" & nFix & ""  (shundan h/x: "" & gHxFix & "")"" & vbCrLf & _" & vbCrLf
+    s = s & "                        ""O', g' va tutuq belgisi to'g'rilandi: "" & nApos & vbCrLf" & vbCrLf
+    s = s & "        End If" & vbCrLf
     s = s & "    Else" & vbCrLf
     s = s & "        msg = msg & ""Xato deb belgilandi (pushti): "" & nMark & vbCrLf" & vbCrLf
     s = s & "    End If" & vbCrLf
@@ -1773,19 +1846,13 @@ Function ModPart20()
     s = s & "    If nMark + nFlag + gHxMark + gHxAmb > 0 Then" & vbCrLf
     s = s & "        msg = msg & vbCrLf & vbCrLf & ""Belgilangan joylar uchun takliflar menyusini hozir ochaymi?"" & vbCrLf & _" & vbCrLf
     s = s & "              ""(Taklifni sichqoncha bilan tanlasangiz, so'z o'zi almashadi.)""" & vbCrLf
-    s = s & "        If MsgBox(msg, vbYesNo + vbInformation, ""Imlo tekshirish"") = vbYes Then" & vbCrLf
+    s = s & "        If MsgBox(msg, vbYesNo + vbInformation, IIf(onlyE, ""Tinish belgilari va bo'shliqlar"", ""Imlo tekshirish"")) = vbYes Then" & vbCrLf
     s = s & "            Selection.SetRange scope.Start, scope.Start" & vbCrLf
     s = s & "            ImNext True" & vbCrLf
     s = s & "        End If" & vbCrLf
     s = s & "    Else" & vbCrLf
-    s = s & "        MsgBox msg, vbInformation, ""Imlo tekshirish""" & vbCrLf
+    s = s & "        MsgBox msg, vbInformation, IIf(onlyE, ""Tinish belgilari va bo'shliqlar"", ""Imlo tekshirish"")" & vbCrLf
     s = s & "    End If" & vbCrLf
-    ModPart20 = s
-End Function
-
-Function ModPart21()
-    Dim s
-    s = ""
     s = s & "    Exit Sub" & vbCrLf
     s = s & "Fail:" & vbCrLf
     s = s & "    errNum = Err.Number" & vbCrLf
@@ -1799,6 +1866,12 @@ Function ModPart21()
     s = s & "'------------------------- Takliflar: bosib almashtirish ------------------" & vbCrLf
     s = s & "' Imlo va H/X tekshiruvi shubhali so'zlarni yashirin xatcho'p (_klN) bilan belgilaydi." & vbCrLf
     s = s & "' Takliflar hujjat o'zgaruvchisida (klN) saqlanadi: ""tur|qoida|taklif1 / taklif2""." & vbCrLf
+    ModPart21 = s
+End Function
+
+Function ModPart22()
+    Dim s
+    s = ""
     s = s & "' ImKeyingi / ImJoriy takliflar menyusini ochadi; tanlangan taklif so'zni o'zi almashtiradi." & vbCrLf
     s = s & "" & vbCrLf
     s = s & "Private Function ImMarkNum(ByVal nm As String) As Long" & vbCrLf
@@ -1866,12 +1939,6 @@ Function ModPart21()
     s = s & "    Err.Clear" & vbCrLf
     s = s & "End Sub" & vbCrLf
     s = s & "" & vbCrLf
-    ModPart21 = s
-End Function
-
-Function ModPart22()
-    Dim s
-    s = ""
     s = s & "Private Function ImMarkInfo(ByVal bm As String, ByRef kind As String, ByRef rule As String, ByRef sug As String) As Boolean" & vbCrLf
     s = s & "    Dim v As String, p() As String" & vbCrLf
     s = s & "    ImMarkInfo = False" & vbCrLf
@@ -1885,6 +1952,12 @@ Function ModPart22()
     s = s & "    p = Split(v, ""|"")" & vbCrLf
     s = s & "    If UBound(p) < 2 Then Exit Function" & vbCrLf
     s = s & "    kind = p(0)" & vbCrLf
+    ModPart22 = s
+End Function
+
+Function ModPart23()
+    Dim s
+    s = ""
     s = s & "    rule = p(1)" & vbCrLf
     s = s & "    sug = p(2)" & vbCrLf
     s = s & "    ImMarkInfo = True" & vbCrLf
@@ -1904,6 +1977,18 @@ Function ModPart22()
     s = s & "        Case ""oy/kun"": ImRuleName = ""oy va kun nomlari""" & vbCrLf
     s = s & "        Case ""67"": ImRuleName = ""joy nomi""" & vbCrLf
     s = s & "        Case ""70/71"": ImRuleName = ""bosh harf bilan yoziladigan ibora""" & vbCrLf
+    s = s & "        Case ""E1"": ImRuleName = ""ortiqcha bo'shliq""" & vbCrLf
+    s = s & "        Case ""E2"": ImRuleName = ""belgidan oldin bo'shliq bo'lmaydi""" & vbCrLf
+    s = s & "        Case ""E3"": ImRuleName = ""belgidan keyin bo'shliq kerak""" & vbCrLf
+    s = s & "        Case ""E4"": ImRuleName = ""qavs / qo'shtirnoq ichidagi bo'shliq""" & vbCrLf
+    s = s & "        Case ""E5"": ImRuleName = ""qavs oldidan bo'shliq""" & vbCrLf
+    s = s & "        Case ""E6"": ImRuleName = ""takror belgi""" & vbCrLf
+    s = s & "        Case ""E7"": ImRuleName = ""tire / oraliq belgisi""" & vbCrLf
+    s = s & "        Case ""E8"": ImRuleName = ""chiziqcha""" & vbCrLf
+    s = s & "        Case ""E9"": ImRuleName = ""qo'shtirnoq turi""" & vbCrLf
+    s = s & "        Case ""E10"": ImRuleName = ""harflar orasidagi bo'shliq""" & vbCrLf
+    s = s & "        Case ""E11"": ImRuleName = ""vergul qo'yilishi kerak""" & vbCrLf
+    s = s & "        Case ""E12"": ImRuleName = ""satr oxiridagi bo'shliq""" & vbCrLf
     s = s & "        Case Else: ImRuleName = rule & ""-qoida""" & vbCrLf
     s = s & "    End Select" & vbCrLf
     s = s & "End Function" & vbCrLf
@@ -1952,13 +2037,13 @@ Function ModPart22()
     s = s & "        ctl.Caption = ""Tekshiring: "" & shown & ""  ("" & ImRuleName(rule) & "")""" & vbCrLf
     s = s & "    End If" & vbCrLf
     s = s & "    ctl.Style = 2" & vbCrLf
-    ModPart22 = s
+    s = s & "    ctl.Enabled = False" & vbCrLf
+    ModPart23 = s
 End Function
 
-Function ModPart23()
+Function ModPart24()
     Dim s
     s = ""
-    s = s & "    ctl.Enabled = False" & vbCrLf
     s = s & "    For i = 0 To n - 1" & vbCrLf
     s = s & "        Set ctl = cb.Controls.Add(1)" & vbCrLf
     s = s & "        ctl.Caption = ""&"" & CStr(i + 1) & ""  "" & Replace(a(i), ""&"", ""&&"")" & vbCrLf
@@ -2038,13 +2123,13 @@ Function ModPart23()
     s = s & "    For Each b In ActiveDocument.Bookmarks" & vbCrLf
     s = s & "        If ImMarkNum(b.Name) > 0 Then" & vbCrLf
     s = s & "            If b.Range.Text = old Then col.Add b.Name" & vbCrLf
-    ModPart23 = s
+    s = s & "        End If" & vbCrLf
+    ModPart24 = s
 End Function
 
-Function ModPart24()
+Function ModPart25()
     Dim s
     s = ""
-    s = s & "        End If" & vbCrLf
     s = s & "    Next b" & vbCrLf
     s = s & "    Application.ScreenUpdating = False" & vbCrLf
     s = s & "    BeginUndo" & vbCrLf
@@ -2124,13 +2209,13 @@ Function ModPart24()
     s = s & "    If Not CheckAct() Then Exit Sub" & vbCrLf
     s = s & "    If Documents.Count = 0 Then Exit Sub" & vbCrLf
     s = s & "    ImNext True" & vbCrLf
-    ModPart24 = s
+    s = s & "End Sub" & vbCrLf
+    ModPart25 = s
 End Function
 
-Function ModPart25()
+Function ModPart26()
     Dim s
     s = ""
-    s = s & "End Sub" & vbCrLf
     s = s & "" & vbCrLf
     s = s & "Private Function ImFindAt(ByVal pos As Long) As String" & vbCrLf
     s = s & "    Dim b As Bookmark" & vbCrLf
@@ -2210,13 +2295,13 @@ Function ModPart25()
     s = s & "                 vbYesNo + vbQuestion, ""Belgilarni tozalash"")" & vbCrLf
     s = s & "    If ans <> vbYes Then Exit Sub" & vbCrLf
     s = s & "    BeginUndo" & vbCrLf
-    ModPart25 = s
+    s = s & "    ImClearMarks scope" & vbCrLf
+    ModPart26 = s
 End Function
 
-Function ModPart26()
+Function ModPart27()
     Dim s
     s = ""
-    s = s & "    ImClearMarks scope" & vbCrLf
     s = s & "    scope.HighlightColorIndex = 0" & vbCrLf
     s = s & "    EndUndo" & vbCrLf
     s = s & "    Err.Clear" & vbCrLf
@@ -2254,6 +2339,7 @@ Function ModPart26()
     s = s & "        Case ""klApE"": ApostrofEgri" & vbCrLf
     s = s & "        Case ""klApO"": ApostrofOddiy" & vbCrLf
     s = s & "        Case ""klImlo"": ImloTekshirish" & vbCrLf
+    s = s & "        Case ""klPunct"": TinishTekshirish" & vbCrLf
     s = s & "        Case ""klHX"": HXTekshirish" & vbCrLf
     s = s & "        Case ""klNext"": ImKeyingi" & vbCrLf
     s = s & "        Case ""klCur"": ImJoriy" & vbCrLf
@@ -2296,10 +2382,10 @@ Function ModPart26()
     s = s & "    End If" & vbCrLf
     s = s & "    Err.Clear" & vbCrLf
     s = s & "    txt = Trim$(Replace(Replace(Replace(txt, vbCr, "" ""), Chr$(11), "" ""), Chr$(7), "" ""))" & vbCrLf
-    ModPart26 = s
+    ModPart27 = s
 End Function
 
-Function ModPart27()
+Function ModPart28()
     Dim s
     s = ""
     s = s & "    If Len(txt) > 2000 Then txt = Left$(txt, 2000)" & vbCrLf
@@ -2382,10 +2468,10 @@ Function ModPart27()
     s = s & "        s = Left$(s, Len(s) - 1)" & vbCrLf
     s = s & "    Loop" & vbCrLf
     s = s & "    Do While Len(s) > 0 And (Left$(s, 1) Like ""[0-9. ]"")" & vbCrLf
-    ModPart27 = s
+    ModPart28 = s
 End Function
 
-Function ModPart28()
+Function ModPart29()
     Dim s
     s = ""
     s = s & "        s = Mid$(s, 2)" & vbCrLf
@@ -2468,10 +2554,10 @@ Function ModPart28()
     s = s & "    If Not BibFindList(lS, lE) Then" & vbCrLf
     s = s & "        MsgBox ""Adabiyotlar ro'yxati topilmadi."" & vbCrLf & vbCrLf & _" & vbCrLf
     s = s & "               ""Ro'yxat sarlavhasi ('Foydalanilgan adabiyotlar' yoki 'Adabiyotlar ro'yxati') bo'lishi kerak,"" & vbCrLf & _" & vbCrLf
-    ModPart28 = s
+    ModPart29 = s
 End Function
 
-Function ModPart29()
+Function ModPart30()
     Dim s
     s = ""
     s = s & "               ""yoki ro'yxat yozuvlarini sichqoncha bilan belgilab (tanlab), tugmani qayta bosing."" & vbCrLf & _" & vbCrLf
@@ -2554,10 +2640,10 @@ Function ModPart29()
     s = s & "    Next para" & vbCrLf
     s = s & "    f.Close" & vbCrLf
     s = s & "    Application.StatusBar = ""Adabiyotlar ro'yxati tekshirilmoqda...""" & vbCrLf
-    ModPart29 = s
+    ModPart30 = s
 End Function
 
-Function ModPart30()
+Function ModPart31()
     Dim s
     s = ""
     s = s & "    Set wsh = CreateObject(""WScript.Shell"")" & vbCrLf
@@ -2640,10 +2726,10 @@ Function ModPart30()
     s = s & "            Set pr = r.Paragraphs(CLng(v))" & vbCrLf
     s = s & "            pr.Alignment = 1" & vbCrLf
     s = s & "            pr.FirstLineIndent = 0" & vbCrLf
-    ModPart30 = s
+    ModPart31 = s
 End Function
 
-Function ModPart31()
+Function ModPart32()
     Dim s
     s = ""
     s = s & "            pr.LeftIndent = 0" & vbCrLf
@@ -2726,10 +2812,10 @@ Function ModPart31()
     s = s & "End Function" & vbCrLf
     s = s & "" & vbCrLf
     s = s & "Private Function ImAcRun(ByVal mode As Long) As Long" & vbCrLf
-    ModPart31 = s
+    ModPart32 = s
 End Function
 
-Function ModPart32()
+Function ModPart33()
     Dim s
     s = ""
     s = s & "    Dim p As String, fso As Object, f As Object, ln As String, parts() As String" & vbCrLf
@@ -2812,10 +2898,10 @@ Function ModPart32()
     s = s & "    Dim saved As String" & vbCrLf
     s = s & "    If gActChecked Then" & vbCrLf
     s = s & "        ActOkSilent = gActOk" & vbCrLf
-    ModPart32 = s
+    ModPart33 = s
 End Function
 
-Function ModPart33()
+Function ModPart34()
     Dim s
     s = ""
     s = s & "        Exit Function" & vbCrLf
@@ -2898,10 +2984,10 @@ Function ModPart33()
     s = s & "    Dim i As Long, r As String, pc As String" & vbCrLf
     s = s & "    w = LCase$(w)" & vbCrLf
     s = s & "    For i = 1 To Len(w)" & vbCrLf
-    ModPart33 = s
+    ModPart34 = s
 End Function
 
-Function ModPart34()
+Function ModPart35()
     Dim s
     s = ""
     s = s & "        If HxIsApos(CodeAt(w, i)) Then" & vbCrLf
@@ -2984,10 +3070,10 @@ Function ModPart34()
     s = s & "            If gIm.Exists(k) Then cand = ImCase(cand, ImDisp(gIm(k)))" & vbCrLf
     s = s & "        End If" & vbCrLf
     s = s & "    End If" & vbCrLf
-    ModPart34 = s
+    ModPart35 = s
 End Function
 
-Function ModPart35()
+Function ModPart36()
     Dim s
     s = ""
     s = s & "    ' 2b) o', g' va tutuq belgisini to'g'rilash" & vbCrLf
@@ -3070,10 +3156,10 @@ Function ModPart35()
     s = s & "End Function" & vbCrLf
     s = s & "" & vbCrLf
     s = s & "Public Sub ImAutoOn()" & vbCrLf
-    ModPart35 = s
+    ModPart36 = s
 End Function
 
-Function ModPart36()
+Function ModPart37()
     Dim s
     s = ""
     s = s & "    If Not CheckAct() Then Exit Sub" & vbCrLf
@@ -3107,7 +3193,7 @@ Function ModPart36()
     s = s & "Public Sub HxAutoOff()" & vbCrLf
     s = s & "    ImAutoOff" & vbCrLf
     s = s & "End Sub" & vbCrLf
-    ModPart36 = s
+    ModPart37 = s
 End Function
 
 Function ModuleText()
@@ -3115,7 +3201,7 @@ Function ModuleText()
     s = ""
     s = s & ModPart1() & ModPart2() & ModPart3() & ModPart4() & ModPart5() & ModPart6() & ModPart7() & ModPart8() & ModPart9() & ModPart10() & ModPart11() & ModPart12() & ModPart13() & ModPart14() & ModPart15()
     s = s & ModPart16() & ModPart17() & ModPart18() & ModPart19() & ModPart20() & ModPart21() & ModPart22() & ModPart23() & ModPart24() & ModPart25() & ModPart26() & ModPart27() & ModPart28() & ModPart29() & ModPart30()
-    s = s & ModPart31() & ModPart32() & ModPart33() & ModPart34() & ModPart35() & ModPart36()
+    s = s & ModPart31() & ModPart32() & ModPart33() & ModPart34() & ModPart35() & ModPart36() & ModPart37()
     ModuleText = s
 End Function
 
@@ -9720,6 +9806,203 @@ Function ImcPart5()
     s = s & "    return out;" & vbCrLf
     s = s & "  }" & vbCrLf
     s = s & "  function isAllCaps(t) { return t.length > 1 && t === t.toUpperCase() && /[A-Z]/.test(t); }" & vbCrLf
+    s = s & "  /* ---- E: tinish belgilari, bo'shliqlar, tire / chiziqcha, harflar orasidagi bo'shliq ---- */" & vbCrLf
+    s = s & "  var LET = 'A-Za-z\\u02BB\\u02BC\\u2018\\u2019\'`\\u00B4';" & vbCrLf
+    s = s & "  var LETC = '[' + LET + ']';" & vbCrLf
+    s = s & "  var ABBR = { prof: 1, dots: 1, akad: 1, doc: 1, dr: 1, mr: 1, mrs: 1, ms: 1, sh: 1, qarang: 1, vol: 1, no: 1, nr: 1, et: 1, al: 1, ibid: 1, bet: 1, kv: 1, mln: 1, mlrd: 1, jumladan: 1, ya: 1 };" & vbCrLf
+    s = s & "  var PARTICLE = 'ku|chi|yu|ov|ey|oq';" & vbCrLf
+    s = s & "  var NSUF = 'yil|yillar|yilda|yilgi|yillik|asr|asrda|sinf|bob|qism|ta|chi|nchi|dan|gacha|ga|da|ni|ning|lik|ligi|li';" & vbCrLf
+    s = s & "  var COMMA_CONJ = { lekin: 1, ammo: 1, biroq: 1, holbuki: 1, chunki: 1, yani: 1, masalan: 1 };" & vbCrLf
+    s = s & "  function isBiblio(t) {" & vbCrLf
+    s = s & "    if (t.length > 700) return false;" & vbCrLf
+    s = s & "    if (!/\b(?:1[89]|20)\d\d\b/.test(t)) return false;" & vbCrLf
+    s = s & "    if (/\/\//.test(t)) return true;" & vbCrLf
+    s = s & "    if (/(?:^|\s)[\u2014\u2013-]\s*(?:T\.|M\.|SPb\.|Toshkent|Tashkent|Samarqand|Moskva|London|New York|Berlin|Paris|Cambridge|Oxford|\u041C\u043E\u0441\u043A\u0432\u0430|\u041C\.)/.test(t)) return true;" & vbCrLf
+    s = s & "    if (/\b\d+\s*(?:b|bet|p|pp|\u0441|\u0441\u0442\u0440)\.?\s*$/.test(t)) return true;" & vbCrLf
+    s = s & "    return /(?:^|\s)(?:B|b|\u0411|\u0431|\u0421|\u0441|P|p|pp|S|s)\.\s*\d+\s*[\u2013\u2014-]\s*\d+/.test(t);" & vbCrLf
+    s = s & "  }" & vbCrLf
+    s = s & "  function stripAp(w) { return w.toLowerCase().replace(/[\u02BB\u02BC\u2018\u2019'`\u00B4]/g, ''); }" & vbCrLf
+    s = s & "  function punct(text, add0) {" & vbCrLf
+    s = s & "    var n = text.length, mask = [], i, m, re, bib = isBiblio(text), DASH = bib ? '\u2014' : '\u2013';" & vbCrLf
+    s = s & "    for (i = 0; i < n; i++) mask[i] = 0;" & vbCrLf
+    s = s & "    function maskRe(r) {" & vbCrLf
+    s = s & "      var mm, q;" & vbCrLf
+    s = s & "      r.lastIndex = 0;" & vbCrLf
+    s = s & "      while ((mm = r.exec(text)) !== null) {" & vbCrLf
+    s = s & "        for (q = mm.index; q < mm.index + mm[0].length; q++) mask[q] = 1;" & vbCrLf
+    s = s & "        if (mm[0].length === 0) r.lastIndex++;" & vbCrLf
+    s = s & "      }" & vbCrLf
+    s = s & "    }" & vbCrLf
+    s = s & "    maskRe(/(?:https?:\/\/|ftp:\/\/|www\.)\S+/gi);" & vbCrLf
+    s = s & "    maskRe(/[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}/g);" & vbCrLf
+    s = s & "    maskRe(/\b[A-Za-z0-9\-]+(?:\.[A-Za-z0-9\-]+)*\.(?:com|uz|org|ru|net|edu|gov|info|io|me)\b(?:\/\S*)?/gi);" & vbCrLf
+    s = s & "    maskRe(/[A-Za-z]:\\[^\s]+/g);" & vbCrLf
+    s = s & "    maskRe(/\b10\.\d{4,9}\/\S+/g);" & vbCrLf
+    s = s & "    maskRe(/\d+(?:[.,:]\d+)+/g);" & vbCrLf
+    s = s & "    function free(s, e) { for (var q = s; q < e; q++) if (mask[q]) return false; return true; }" & vbCrLf
+    s = s & "    function A(s, e, rep, kind, rule, note) { if (s >= 0 && e <= n && free(s, e) && text.slice(s, e) !== rep) add0(s, e, rep, kind, rule, note); }" & vbCrLf
+    s = s & "    function isOpen(c) { return c === '(' || c === '[' || c === '\u00AB' || c === '\u201C'; }" & vbCrLf
+    s = s & "    // E12: oxiridagi bo'shliq" & vbCrLf
+    s = s & "    m = /([ \u00A0\t]+)$/.exec(text);" & vbCrLf
+    s = s & "    if (m && m.index > 0 && /\S/.test(text)) A(m.index, n, '', 'fix', 'E12');" & vbCrLf
+    s = s & "    // E1: ortiqcha bo'shliq" & vbCrLf
+    s = s & "    re = /(\S)([ \u00A0]{2,})(?=[^\s,;:!?.])/g;" & vbCrLf
+    s = s & "    while ((m = re.exec(text)) !== null) A(m.index, m.index + m[0].length + 1, m[1] + ' ' + text.charAt(m.index + m[0].length), 'fix', 'E1');" & vbCrLf
+    s = s & "    // E2/E3: , ; : ! ? atrofidagi bo'shliq" & vbCrLf
+    s = s & "    re = /(\S)([ \u00A0]*)([,;:!?])([ \u00A0]*)(?=(\S))/g;" & vbCrLf
+    s = s & "    while ((m = re.exec(text)) !== null) {" & vbCrLf
+    s = s & "      var pc = m[1], p = m[3], nx = m[5], after, fullS = m.index, fullE = m.index + m[0].length;" & vbCrLf
+    s = s & "      if (m[2].length === 0 && m[4].length === 1 && m[4] !== '\u00A0') continue;" & vbCrLf
+    s = s & "      if (/[,;:!?]/.test(pc) && m[2].length === 0) { re.lastIndex = fullE; continue; }" & vbCrLf
+    s = s & "      if ((p === ',' || p === ':') && /\d/.test(pc) && /\d/.test(nx)) continue;" & vbCrLf
+    s = s & "      if (p === ':' && (nx === '/' || nx === '\\')) continue;" & vbCrLf
+    s = s & "      if (new RegExp('^' + LETC + '$|^[0-9\\u0400-\\u04FF]$').test(nx) || isOpen(nx) || nx === '""') after = ' ';" & vbCrLf
+    s = s & "      else after = '';" & vbCrLf
+    s = s & "      if (m[2].length === 0 && after === '' ) continue;" & vbCrLf
+    s = s & "      if (p === ':' && m[2].length === 0 && after === ' ' && /\d/.test(pc) && /\d/.test(nx)) continue;" & vbCrLf
+    s = s & "      A(fullS, fullE, pc + p + after, 'fix', m[2].length > 0 ? 'E2' : 'E3');" & vbCrLf
+    s = s & "      re.lastIndex = fullE;" & vbCrLf
+    s = s & "    }" & vbCrLf
+    s = s & "    re = /(\S)([ \u00A0]+)([,;:!?])(?=[ \u00A0]*$)/g;" & vbCrLf
+    s = s & "    while ((m = re.exec(text)) !== null) { if (!/[,;:!?]/.test(m[1])) A(m.index, m.index + m[0].length, m[1] + m[3], 'fix', 'E2'); }" & vbCrLf
+    s = s & "    // E2 (nuqta): so'z . / so'z  ." & vbCrLf
+    ImcPart5 = s
+End Function
+
+Function ImcPart6()
+    Dim s
+    s = ""
+    s = s & "    re = /(\S)([ \u00A0]+)\.(?=[ \u00A0]|$|[)\]\u00BB\u201D""])/g;" & vbCrLf
+    s = s & "    while ((m = re.exec(text)) !== null) { if (!/^\.{1,}$/.test(m[1])) A(m.index, m.index + m[0].length, m[1] + '.', 'fix', 'E2'); }" & vbCrLf
+    s = s & "    // E3 (nuqta): keldi.Men -> keldi. Men" & vbCrLf
+    s = s & "    re = new RegExp('(' + LETC + '{2,}|\\d)\\.(?=[A-Z\\u0410-\\u042F])', 'g');" & vbCrLf
+    s = s & "    while ((m = re.exec(text)) !== null) {" & vbCrLf
+    s = s & "      var wd = stripAp(m[1]);" & vbCrLf
+    s = s & "      if (has(ABBR, wd) || /^\d+$/.test(wd) && false) continue;" & vbCrLf
+    s = s & "      if (m.index > 0 && /[A-Za-z0-9]/.test(text.charAt(m.index - 1)) && /^\d/.test(m[1])) continue;" & vbCrLf
+    s = s & "      A(m.index, m.index + m[0].length + 1, m[1] + '. ' + text.charAt(m.index + m[0].length), 'fix', 'E3');" & vbCrLf
+    s = s & "    }" & vbCrLf
+    s = s & "    // E4: qavs va qo'shtirnoq ichidagi bo'shliq" & vbCrLf
+    s = s & "    re = /([(\[\u00AB\u201C])([ \u00A0]+)(?=\S)/g;" & vbCrLf
+    s = s & "    while ((m = re.exec(text)) !== null) A(m.index, m.index + m[0].length + 1, m[1] + text.charAt(m.index + m[0].length), 'fix', 'E4');" & vbCrLf
+    s = s & "    re = /(\S)([ \u00A0]+)([)\]\u00BB\u201D])/g;" & vbCrLf
+    s = s & "    while ((m = re.exec(text)) !== null) A(m.index, m.index + m[0].length, m[1] + m[3], 'fix', 'E4');" & vbCrLf
+    s = s & "    // E5: so'z(izoh) -> so'z (izoh); (izoh)so'z -> (izoh) so'z" & vbCrLf
+    s = s & "    re = new RegExp('(' + LETC + '{2,})\\(([^()]*)\\)', 'g');" & vbCrLf
+    s = s & "    while ((m = re.exec(text)) !== null) {" & vbCrLf
+    s = s & "      if (/^[a-z\u2018\u2019\u02BB\u02BC'`]{1,4}$/.test(m[2]) || /^[A-Za-z0-9]$/.test(m[2])) continue;" & vbCrLf
+    s = s & "      if (/^(?:sin|cos|tg|ctg|log|ln|lg|exp|max|min|f|g)$/i.test(m[1])) continue;" & vbCrLf
+    s = s & "      A(m.index, m.index + m[1].length + 1, m[1] + ' (', 'fix', 'E5');" & vbCrLf
+    s = s & "    }" & vbCrLf
+    s = s & "    re = new RegExp('\\(([^()]*)\\)(' + LETC + ')', 'g');" & vbCrLf
+    s = s & "    while ((m = re.exec(text)) !== null) {" & vbCrLf
+    s = s & "      if (/^[a-z\u2018\u2019\u02BB\u02BC'`]{1,4}$/.test(m[1]) || m[1].length <= 4) continue;" & vbCrLf
+    s = s & "      A(m.index + m[0].length - 2, m.index + m[0].length + 0, ') ' + m[2], 'fix', 'E5');" & vbCrLf
+    s = s & "    }" & vbCrLf
+    s = s & "    // E6: takror belgilar" & vbCrLf
+    s = s & "    re = /,{2,}|;{2,}/g;" & vbCrLf
+    s = s & "    while ((m = re.exec(text)) !== null) A(m.index, m.index + m[0].length, m[0].charAt(0), 'fix', 'E6');" & vbCrLf
+    s = s & "    re = /(^|[^.])(\.\.)(?!\.)/g;" & vbCrLf
+    s = s & "    while ((m = re.exec(text)) !== null) A(m.index + m[1].length, m.index + m[1].length + 2, '. / \u2026', 'flag', 'E6');" & vbCrLf
+    s = s & "    // E7: tire" & vbCrLf
+    s = s & "    re = /(\S)[ \u00A0]+(--|[-\u2010\u2011\u2012\u2212])[ \u00A0]+(?=(\S))/g;" & vbCrLf
+    s = s & "    while ((m = re.exec(text)) !== null) {" & vbCrLf
+    s = s & "      if (/\d/.test(m[1]) && /\d/.test(m[3])) {" & vbCrLf
+    s = s & "        if (bib || /^[\-\u2010\u2011\u2012\u2212]$/.test(m[2])) { var d1 = /(\d+)$/.exec(text.slice(0, m.index + 1)), d2 = /^(\d+)/.exec(text.slice(m.index + m[0].length)); if (d1 && d2 && !/[.,]\d*$/.test(text.slice(0, m.index + 1 - d1[1].length)) && bib) A(m.index, m.index + m[0].length, m[1] + DASH, 'fix', 'E7'); }" & vbCrLf
+    s = s & "        continue;" & vbCrLf
+    s = s & "      }" & vbCrLf
+    s = s & "      if (/[,;:]/.test(m[1])) continue;" & vbCrLf
+    s = s & "      A(m.index, m.index + m[0].length, m[1] + ' ' + DASH + ' ', 'fix', 'E7');" & vbCrLf
+    s = s & "    }" & vbCrLf
+    s = s & "    if (bib) {" & vbCrLf
+    s = s & "      re = /(\S)[ \u00A0]+\u2013[ \u00A0]+(?=\S)/g;" & vbCrLf
+    s = s & "      while ((m = re.exec(text)) !== null) A(m.index, m.index + m[0].length, m[1] + ' \u2014 ', 'fix', 'E7');" & vbCrLf
+    s = s & "      re = /[ \u00A0]*\/\/[ \u00A0]*/g;" & vbCrLf
+    s = s & "      while ((m = re.exec(text)) !== null) { if (m.index > 0 && m.index + m[0].length < n) A(m.index, m.index + m[0].length, ' // ', 'fix', 'E7'); }" & vbCrLf
+    s = s & "    }" & vbCrLf
+    s = s & "    re = /(\S)(\u2013|\u2014)[ \u00A0]+(?=([^\s]))/g;" & vbCrLf
+    s = s & "    while ((m = re.exec(text)) !== null) {" & vbCrLf
+    s = s & "      if (/\d/.test(m[1]) || /\d/.test(m[3])) continue;" & vbCrLf
+    s = s & "      A(m.index, m.index + m[0].length, m[1] + ' ' + m[2] + ' ', 'fix', 'E7');" & vbCrLf
+    s = s & "    }" & vbCrLf
+    s = s & "    re = /([^\s])[ \u00A0]+(\u2013|\u2014)(?=([^\s]))/g;" & vbCrLf
+    s = s & "    while ((m = re.exec(text)) !== null) {" & vbCrLf
+    s = s & "      if (/\d/.test(m[1]) || /\d/.test(m[3])) continue;" & vbCrLf
+    s = s & "      A(m.index, m.index + m[0].length, m[1] + ' ' + m[2] + ' ', 'fix', 'E7');" & vbCrLf
+    s = s & "    }" & vbCrLf
+    s = s & "    // E8: chiziqcha" & vbCrLf
+    s = s & "    re = /\b((?:1[5-9]|20)\d\d)-((?:1[5-9]|20)\d\d)\b(?!-\d)/g;" & vbCrLf
+    s = s & "    while ((m = re.exec(text)) !== null) A(m.index, m.index + m[0].length, m[1] + DASH + m[2], 'fix', 'E7');" & vbCrLf
+    s = s & "    re = /(\b(?:b|bet|betlar|s|p|pp|\u0411|\u0421|\u0431|\u0441)\.?[ \u00A0]*)(\d+)-(\d+)\b/gi;" & vbCrLf
+    s = s & "    while ((m = re.exec(text)) !== null) A(m.index, m.index + m[0].length, m[1] + m[2] + DASH + m[3], 'fix', 'E7');" & vbCrLf
+    s = s & "    re = new RegExp('(' + LETC + ')[\\u2010\\u2011\\u2012\\u2212](' + LETC + ')', 'g');" & vbCrLf
+    s = s & "    while ((m = re.exec(text)) !== null) A(m.index, m.index + 3, m[1] + '-' + m[2], 'fix', 'E8');" & vbCrLf
+    s = s & "    if (!bib) {" & vbCrLf
+    s = s & "      re = new RegExp('(' + LETC + '{2,})[\\u2013\\u2014](' + LETC + '{2,})', 'g');" & vbCrLf
+    s = s & "      while ((m = re.exec(text)) !== null) {" & vbCrLf
+    s = s & "        if (m[1].charAt(0) !== m[1].charAt(0).toLowerCase() || m[2].charAt(0) !== m[2].charAt(0).toLowerCase()) continue;" & vbCrLf
+    s = s & "        A(m.index, m.index + m[0].length, m[1] + '-' + m[2] + ' / ' + m[1] + ' ' + text.charAt(m.index + m[1].length) + ' ' + m[2], 'flag', 'E8');" & vbCrLf
+    s = s & "      }" & vbCrLf
+    s = s & "      re = new RegExp('(' + LETC + '{2,})-[ \\u00A0]+([a-z\\u2018\\u2019\\u02BB\\u02BC\'`]{2,})', 'g');" & vbCrLf
+    s = s & "      while ((m = re.exec(text)) !== null) A(m.index, m.index + m[0].length, m[1] + '-' + m[2] + ' / ' + m[1] + ' \u2013 ' + m[2], 'flag', 'E8');" & vbCrLf
+    s = s & "    }" & vbCrLf
+    s = s & "    re = new RegExp('(' + LETC + '{2,})[ \\u00A0]+-(' + PARTICLE + ')(?![A-Za-z])', 'g');" & vbCrLf
+    s = s & "    while ((m = re.exec(text)) !== null) A(m.index, m.index + m[0].length, m[1] + '-' + m[2], 'fix', 'E8');" & vbCrLf
+    s = s & "    re = new RegExp('(\\d)[ \\u00A0]*[-\\u2013\\u2014][ \\u00A0]*(' + NSUF + ')(?![A-Za-z])', 'g');" & vbCrLf
+    s = s & "    while ((m = re.exec(text)) !== null) A(m.index, m.index + m[0].length, m[1] + '-' + m[2], 'fix', 'E8');" & vbCrLf
+    s = s & "    // E9: qo'shtirnoq" & vbCrLf
+    s = s & "    var qs = [];" & vbCrLf
+    ImcPart6 = s
+End Function
+
+Function ImcPart7()
+    Dim s
+    s = ""
+    s = s & "    for (i = 0; i < n; i++) if (text.charAt(i) === '""' && !mask[i]) qs.push(i);" & vbCrLf
+    s = s & "    if (qs.length > 0 && qs.length % 2 === 0) for (i = 0; i < qs.length; i++) A(qs[i], qs[i] + 1, (i % 2 === 0) ? '\u201C' : '\u201D', 'fix', 'E9');" & vbCrLf
+    s = s & "    // E10: harflar orasidagi bo'shliq: k i t o b" & vbCrLf
+    s = s & "    var tk = [], tr = /\S+/g, mt, a, b, run, j, jn, cand, c;" & vbCrLf
+    s = s & "    while ((mt = tr.exec(text)) !== null) tk.push({ s: mt.index, e: mt.index + mt[0].length, t: mt[0] });" & vbCrLf
+    s = s & "    var SL = /^[A-Za-z][\u2018\u2019\u02BB\u02BC'`]?$/;" & vbCrLf
+    s = s & "    i = 0;" & vbCrLf
+    s = s & "    while (i < tk.length) {" & vbCrLf
+    s = s & "      if (!SL.test(tk[i].t)) { i++; continue; }" & vbCrLf
+    s = s & "      a = i;" & vbCrLf
+    s = s & "      while (i + 1 < tk.length && SL.test(tk[i + 1].t) && /^[ \u00A0]$/.test(text.slice(tk[i].e, tk[i + 1].s))) i++;" & vbCrLf
+    s = s & "      b = i; i++;" & vbCrLf
+    s = s & "      if (b - a + 1 < 4) continue;" & vbCrLf
+    s = s & "      jn = ''; for (j = a; j <= b; j++) jn += tk[j].t;" & vbCrLf
+    s = s & "      var pv = (a > 0 && /^[ \u00A0]$/.test(text.slice(tk[a - 1].e, tk[a].s)) && /^[A-Za-z\u2018\u2019\u02BB\u02BC'`]{1,4}$/.test(tk[a - 1].t)) ? tk[a - 1] : null;" & vbCrLf
+    s = s & "      var nt = (b + 1 < tk.length && /^[ \u00A0]$/.test(text.slice(tk[b].e, tk[b + 1].s)) && /^[a-z\u2018\u2019\u02BB\u02BC'`]{1,4}$/.test(tk[b + 1].t)) ? tk[b + 1] : null;" & vbCrLf
+    s = s & "      cand = [];" & vbCrLf
+    s = s & "      if (pv && nt) cand.push([pv.s, nt.e, pv.t + jn + nt.t]);" & vbCrLf
+    s = s & "      if (nt) cand.push([tk[a].s, nt.e, jn + nt.t]);" & vbCrLf
+    s = s & "      if (pv) cand.push([pv.s, tk[b].e, pv.t + jn]);" & vbCrLf
+    s = s & "      cand.push([tk[a].s, tk[b].e, jn]);" & vbCrLf
+    s = s & "      var done = false;" & vbCrLf
+    s = s & "      for (j = 0; j < cand.length; j++) {" & vbCrLf
+    s = s & "        c = cand[j];" & vbCrLf
+    s = s & "        if (known(norm(c[2]))) { A(c[0], c[1], c[2], 'fix', 'E10'); done = true; break; }" & vbCrLf
+    s = s & "      }" & vbCrLf
+    s = s & "      for (j = 1; !done && j <= 2 && b - a + 1 - j >= 4; j++) {" & vbCrLf
+    s = s & "        var rest = '', lead = [], q;" & vbCrLf
+    s = s & "        for (q = a; q < a + j; q++) lead.push(tk[q].t);" & vbCrLf
+    s = s & "        for (q = a + j; q <= b; q++) rest += tk[q].t;" & vbCrLf
+    s = s & "        if (known(norm(rest))) { A(tk[a].s, tk[b].e, lead.join(' ') + ' ' + rest, 'fix', 'E10'); done = true; }" & vbCrLf
+    s = s & "      }" & vbCrLf
+    s = s & "      if (!done && !(jn === jn.toUpperCase())) A(tk[a].s, tk[b].e, jn, 'flag', 'E10');" & vbCrLf
+    s = s & "    }" & vbCrLf
+    s = s & "    // E11: vergul (taklif)" & vbCrLf
+    s = s & "    var wt = tokens(text), pw;" & vbCrLf
+    s = s & "    for (i = 1; i < wt.length; i++) {" & vbCrLf
+    s = s & "      var k2 = stripAp(wt[i].t);" & vbCrLf
+    s = s & "      if (!has(COMMA_CONJ, k2)) continue;" & vbCrLf
+    s = s & "      pw = wt[i - 1];" & vbCrLf
+    s = s & "      if (!/^[ \u00A0]+$/.test(text.slice(pw.s + pw.t.length, wt[i].s))) continue;" & vbCrLf
+    s = s & "      if (/^(?:va|hamda|yoki|ham|lekin|ammo|biroq|u|bu|shu|va)$/.test(stripAp(pw.t))) continue;" & vbCrLf
+    s = s & "      A(pw.s, wt[i].s + wt[i].t.length, pw.t + ', ' + wt[i].t, 'flag', 'E11');" & vbCrLf
+    s = s & "    }" & vbCrLf
+    s = s & "  }" & vbCrLf
     s = s & "" & vbCrLf
     s = s & "  /* Paragraf matnini tekshiradi. opts: {A,B,C,D: bool, oAp, tAp}. Natija: [{s,e,old,rep,kind,rule,note}] (kind: fix|flag|apos) */" & vbCrLf
     s = s & "  function check(text, opts) {" & vbCrLf
@@ -9755,6 +10038,12 @@ Function ImcPart5()
     s = s & "      if (opts.C && i + 1 < toks.length) {" & vbCrLf
     s = s & "        var t2 = toks[i + 1], between = text.slice(e, t2.s);" & vbCrLf
     s = s & "        if (/^[ \u00A0]+$/.test(between)) {" & vbCrLf
+    ImcPart7 = s
+End Function
+
+Function ImcPart8()
+    Dim s
+    s = ""
     s = s & "          var lw2 = norm(t2.t), pair = lw + ' ' + lw2, e2 = t2.s + t2.t.length;" & vbCrLf
     s = s & "          if (has(FIXED2, pair)) add(s, e2, restoreCase(w, display(FIXED2[pair], oAp, tAp)), 'fix', '60');" & vbCrLf
     s = s & "          else {" & vbCrLf
@@ -9780,12 +10069,6 @@ Function ImcPart5()
     s = s & "        add(s, e, rep, wr.kind, wr.rule, wr.kind === 'flag' ? rep : '');" & vbCrLf
     s = s & "      }" & vbCrLf
     s = s & "      // bosh harflar" & vbCrLf
-    ImcPart5 = s
-End Function
-
-Function ImcPart6()
-    Dim s
-    s = ""
     s = s & "      if (opts.D) {" & vbCrLf
     s = s & "        var pre = text.slice(Math.max(0, s - 3), s);" & vbCrLf
     s = s & "        if (i > 0 && /[.!?]\s+$/.test(pre) && w.charAt(0) === w.charAt(0).toLowerCase() && w.length >= 2) {" & vbCrLf
@@ -9806,6 +10089,7 @@ Function ImcPart6()
     s = s & "        }" & vbCrLf
     s = s & "      }" & vbCrLf
     s = s & "    }" & vbCrLf
+    s = s & "    if (opts.E) punct(text, add);" & vbCrLf
     s = s & "    // ustma-ust tushganlarni olib tashlash: avval qo'shilgan (ustuvor) qoladi" & vbCrLf
     s = s & "    var acc = [];" & vbCrLf
     s = s & "    for (i = 0; i < res.length; i++) {" & vbCrLf
@@ -9832,7 +10116,7 @@ Function ImcPart6()
     s = s & "    var inf = fso.OpenTextFile(a(1), 1, false, -1);" & vbCrLf
     s = s & "    var head = inf.ReadLine().split('\t');" & vbCrLf
     s = s & "    var cats = head[1] || 'ABCD';" & vbCrLf
-    s = s & "    var opts = { A: cats.indexOf('A') >= 0, B: cats.indexOf('B') >= 0, C: cats.indexOf('C') >= 0, D: cats.indexOf('D') >= 0, oAp: head[2] || '\u02BB', tAp: head[3] || '\u02BC' };" & vbCrLf
+    s = s & "    var opts = { E: cats.indexOf('E') >= 0, A: cats.indexOf('A') >= 0, B: cats.indexOf('B') >= 0, C: cats.indexOf('C') >= 0, D: cats.indexOf('D') >= 0, oAp: head[2] || '\u02BB', tAp: head[3] || '\u02BC' };" & vbCrLf
     s = s & "    var paras = [];" & vbCrLf
     s = s & "    while (!inf.AtEndOfStream) paras.push(inf.ReadLine());" & vbCrLf
     s = s & "    inf.Close();" & vbCrLf
@@ -9840,6 +10124,12 @@ Function ImcPart6()
     s = s & "    for (var i = paras.length - 1; i >= 0; i--) {" & vbCrLf
     s = s & "      if (!paras[i]) continue;" & vbCrLf
     s = s & "      var r = IMLO.check(paras[i], opts);" & vbCrLf
+    ImcPart8 = s
+End Function
+
+Function ImcPart9()
+    Dim s
+    s = ""
     s = s & "      for (var k = 0; k < r.length; k++) {" & vbCrLf
     s = s & "        var x = r[k];" & vbCrLf
     s = s & "        out.WriteLine([i, x.s, x.e, x.kind, x.rule, x.rep, x.old, x.note].join('\t'));" & vbCrLf
@@ -9852,11 +10142,11 @@ Function ImcPart6()
     s = s & "    WScript.Quit(1);" & vbCrLf
     s = s & "  }" & vbCrLf
     s = s & "})();" & vbCrLf
-    ImcPart6 = s
+    ImcPart9 = s
 End Function
 
 Function ImloJsText()
-    ImloJsText = ImcPart1() & ImcPart2() & ImcPart3() & ImcPart4() & ImcPart5() & ImcPart6()
+    ImloJsText = ImcPart1() & ImcPart2() & ImcPart3() & ImcPart4() & ImcPart5() & ImcPart6() & ImcPart7() & ImcPart8() & ImcPart9()
 End Function
 
 Function ImdPart1()
@@ -16361,6 +16651,7 @@ Function RbxPart1()
     s = s & "    </group>" & vbCrLf
     s = s & "    <group id=""klGrpI"" label=""Imlo"">" & vbCrLf
     s = s & "     <button id=""klImlo"" label=""Imlo tekshirish"" size=""large"" image=""ic_imlo"" onAction=""KL_Ribbon"" screentip=""Imlo tekshirish"" supertip=""Matnni o'zbek imlosi qoidalari va lug'at bo'yicha tekshiradi. Shubhali so'zlar uchun takliflar menyusi ochiladi.""/>" & vbCrLf
+    s = s & "     <button id=""klPunct"" label=""Tinish belgilari"" size=""large"" image=""ic_punct"" onAction=""KL_Ribbon"" screentip=""Tinish belgilari va bo'shliqlar"" supertip=""Vergul, nuqta va boshqa belgilar atrofidagi bo'shliqlar, tire va chiziqcha (bibliografik matnda ham), qo'shtirnoq, harflar orasidagi bo'shliqni tekshiradi va roziligingiz bilan bir tugmada tuzatadi.""/>" & vbCrLf
     s = s & "     <button id=""klHX"" label=""H/X tekshirish"" size=""large"" image=""ic_hx"" onAction=""KL_Ribbon"" screentip=""H/X tekshirish"" supertip=""h va x harflarini imlo lug'ati asosida tekshiradi.""/>" & vbCrLf
     s = s & "     <button id=""klNext"" label=""Keyingi taklif"" size=""large"" image=""ic_next"" onAction=""KL_Ribbon"" screentip=""Keyingi taklif"" supertip=""Belgilangan keyingi so'z uchun takliflar menyusini ochadi. Taklifni sichqoncha bilan tanlasangiz, so'z o'zi almashadi.""/>" & vbCrLf
     s = s & "     <button id=""klCur"" label=""Shu so'z"" size=""large"" image=""ic_cur"" onAction=""KL_Ribbon"" screentip=""Shu so'z uchun taklif"" supertip=""Kursor turgan belgilangan so'z uchun takliflar menyusini ochadi (o'ng tugma menyusida ham bor).""/>" & vbCrLf
@@ -16450,6 +16741,9 @@ Function RicPart1()
     s = s & "ic_ocr:iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAACXBIWXMAACxLAAAsSwGlPZapAAAEvUlEQVR42u2b21MTVxzHfaj2uaP/gj50fOi0D9Wn+m4nQVum41QM+MBUO15HR4LcrLBhvA6Itt6AwQuMOmqL4liHy+4GNhQCGG5yV7wUYws2BFExOZ7fiZsiu5DdbDbJ7uY3cx4yOefs7/vZ3/mdX3ZzFi1KWMIk2eG0ts8pS3M2ZeFom8XRb0vlpmypDhQfDfuCfQLfwEfwNWLCCy2OVVQax8SPWGmNsjiaD1q4NWELT09vXWzbxJ3DdP1aEz8rMsD3M6BFlvgj6a3LqFTOrl3hc6Ih1cFSKc1LJd95GKAX8f9D4Liibf2fhgQQCHt9iedbgcVxekHxVIp9tbbXfOicgBP61/MD0GHoC3cHrkF8n9/810q9i+ebaJ2A10eOUQBQKdx+YfhDhadg0uLtTvT3iBeFa5cKe8g87M0n6J9nr1Bpbqea22K9SARwQ0omrat6hJTYbABg094ZVKYWBAs3IJYAvUom5R2PFAACYeodKj/QqUYEeIX7v8JJ1QCgJgTNAFALgqYAqAFBcwAiDUGTAPjd4de97ZEHUJDCaQIAWP2VUWU/irBWAYCDPzbFFEDl4d6oVYKgVQAg74fGmAJob3iObGnRAQBaBQC"
     s = s & "y1rMxBQA2PjaNRrpfhmzVZwcV+QpaBQAyzQzK38jFFIBUg2spCX/QKgogW0EUyAHge+dHHbQbtdWNoZk3vqgCAI3zAoD2y4Ym1QE0/hEQcHxrC7pTPhw1AAc2NCJe57wAwl0KcgDcKOknY5jrj8meHg0AoGl/EiMNAHSUC0EOgN9/GyBjGq6OouIdTtUBzBUfEgDfIGTUAGD/IKAsr5OUtmoCmB32sgFAgy1DSpEkB8DQ/YnguLsVI6oAAJ/5hKcIwGwQUEDAxGJlsxwAU563wXHNd55FBAD4BL6Bj1kLCA8bQKhWWyn9kdjoA09wXMmuNuT3ywMA11Lqb0wBXD7UQ+7S6YwOMrbp1lPjAIByN2sdiy5S3cgz/gbl49AFGC7WbQwAsAVC/4H2cfL5cb8nWJ6ez3Ghc1kusixO7m5DVUd60ZPBSf0AmHC/Rjnf24PFz9hDL6kFjm1p+SjZns92oYr8LpLc4DvdALh5KnD3Kw/1kjvMF10ndjrJd0d/CoDI/o4l7wQuFHTDuzztA4C1fq2oL1iN5STbSQ64z7jRq8mZYD/YDfqc46QvVIhF25zIZXdrG8BgxwRJdBDO0O8oDunpqRlFP4c1A6Cr6QXJ+PCe7/jPrSQCoApUapoBULg5UKXBeoY+t0uHIvJARDMAYDvj1z089PT5/MYC8Bq/yHDgWv9By7+yy11dl"
     s = s & "8IJAHoEUFM2HDUANaXD8QcAKjao69U2uEbBJi7+AGitiQCgPUYRbzXT/wkBmOg+A0VArwAApnLPMABMzF2RJcDuMwqADDO9R/h2eG3DcsMASGJWiP5f2Gpmag2QAO/N+2/xTLP9C6uJ9ukXAO3PSGK/WvDMAO5Yot/kRxdLOjKjy6VgYpjc5K4lks4NZaxlP8OD6vSz7pla0CT72BweeALWjWaFQz7DYZ/7Tf0nYZ8ftK6rX4knqdZits/8lv4yYidISZ1govfiyf+EUtJqYibj504zk7j1QIUHPoKvicPOCZNm7wF9hL3y8RsrYwAAAABJRU5ErkJggg==" & vbCrLf
+    s = s & "ic_punct:iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAACXBIWXMAACxLAAAsSwGlPZapAAADxklEQVR42u2b30sUURTHfejHQ+hm2i+KinZ3kpCwgsooiOiph/ofIoJeeiqKanbUSt1Z2R+u7npHsySjwCQo0NQsf0H0A3pLTTQwMoqM8kea5k73DOyyu3d2ndURZ+bOgfOwcN17vp977rnnyt60NNNMU2S2267dTDXPWpGz0y7wH+2Ca5IRXKIWHGKBmCA2iBFiVU94oPSQDfFdWhGr1HHMr63BkmMLV47OrbQjvoZBrpDexEccYkcuAbSkpJ1BZdk25OzRrfD4bBD47py64izFKw9/YBTxkTqB+Fc2n2/1vPqltDeY+EgmBHmUVLy1qjhf13teQU2wI9fBxBXfgKkf71aB75AVv7PGlWt08ZGtINcnMMjpoAWAFZVeI/c/dFG0ZADiX5L7H/GDtADAJ92A3PE3QRGACbIGUCI+7CYAE4AJIK4ICjw14kEr2QlWOakBAFoJANuDJdQAAK0EgM0VN6kBsAlrJQCs8xVQAwC0EgAyPA5xR7CUivQHrbIAsnyFhgcAGhMCAN8aKNaNmDNNDeKF509ifE+tJ+H4LZW3xLDOhAD0tBUGfv4Q4+1IfVB2LGiyeDhlANZ6OV1AUAoAtICmaI1JAYQdU"
+    s = s & "kbvAKLTPmUA4HBkaLVJSgYAYg4XvEUBiAYBDQR8MbSSWrg7yAHIu+OTYp1PT8oAlsKPPxBER3erIj/ZUKvq3JoAAMKUmudttwnABLDcAHbhwnOq8W6M78VFR27s0ftBYizcOKPHbPAXidsCJYp8o/8GMceJh9XEHOvLi5YOwPmWx8TK+N71yI7tGB4kxh6uD6i6ir2j34k5YJFMACYADQDoHB4ixubfq1QVQJ8MAEYLAODW9XViLGbc65Fh4kKyGIcC+md2JmaOpsE+bRyDsNLRBoEmOi0W6qcb62LmGJ2alNpzTQC42vksJjj4rHYPAX1BtJ1tfqSdRqjt00AksDcjn8VMb4HqAN5/+xKZo3moXzudYHZ5oTg581cKbPrfrHigzq+6ePgHx1woJM3xa3pKzKku02crvJxuAjABxFm6xzFGi/h0N/tbJgPYfnoygO2VyQC2jZoM8LAtBACLx3GZoi1wkcwA73U7NQDKOEb298I4NdopSP+2hL8Wx7e4PFwg5gwLwO0IWXzs/qRvBjChCgOvfrmiJzMG3QpdaRy3StGzIUvgSiZujF4YaOXbQVPKz+bS3Q4/7BsdNzxzUtpz3IoFPx9c4+VyM9zsUz1We4ub26faC1LoE/C2uISzohVaSdxMjGuosRnHmfoBOjwpRhyr+djZNGX2HwTg+4H6TAazAAAAAElFTkS"
+    s = s & "uQmCC" & vbCrLf
     s = s & "ic_update:iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAACXBIWXMAACxLAAAsSwGlPZapAAAF+UlEQVR42u1ba0wcVRTmh2KA1qaxPhIfpUhJU4nWNqZtfDUmGl+JxkRNNDH9AQvYQi0zuzzLssuj1AotDymltHYrtCJgEXwVWkpXFNpGJWihvKQi0pbWKi8LsrvHe27cZGFndmdmZ5d9cDbn18zcOd8355x7zr17/fwWZEEESWhW0uqQdNWOFRr2TLCG7QnRKieJgpvoJNqEtqGNaKtswJdnqjYEa1m9G4EVpISQs8vVzCbpyBWKW0M0bBkZzORp4C3UFKJRliIWUdjD1PHLgrVMiwcDn+sN367KTrxD8JfHB7wFvFlXpLOtofmxt9nF/7/bgzcqIWG/7YSnYTd6eMzbzQnBGmY9LwHe6PocXtDM7fpZTLi3gzcrZ51Apos0XyGAeEGKFQG0ivIVAjTsaS4C+l3x8jXvp8GL+/Ngc8UBYGqPQWJ9FWypOgKvHSyER8k1F9UFvdYhoFVOOOuFrxzIhyL9SWj/YxAMJiPwiYn8ekauwKE2PbxaVuBMEia4CJD9RfiV2y71gVTpGP4doj/V8Y7/ZH42pH99HF4u3SPaNqcS8PjeLPh+oBfkktaBPnimaNesd7xQkgt/Tk7Q69OGGXiJhJVbEBBb"
     s = s & "XQ5/3/wH5JbJ6WnYfvyoFXizJH9RPf8EZJ6oo3HsLMGxdedarMCjpH5Z4xgBZBZwCHx2Q70gEEaTCS5cHoK6n3+iYHTnvoOvOjvgl+Ehek2qiCEAsVoR8ICakQx+a/XHdg3E7J5Epry1u9W84zyWq6HTYv/1EacSgFitCLg3bbvkhGcr5semblJQD2pVgsdcmZFAn5mYnnIKAYjVioC7UmIlEWAr2/deu0qnKqme9WzxbsHeIIaAO5NjrQm4XRUt2sB3ykt5Deq6MgzrPkh3KK9wZXs5CECsVgQEsgq4T2QYtF3q5zRmlITEpsIch8A/R77+yPiY7CGA7o9YOQlYkhAj2EAsVflEVVfpsi8vlgDEyEsA6j2p2wQNVKhv5DTk4tXLNIlJBR+WmQjDo385ZRa4OzUOzDh5CRAaCtjYcInYimyurspKklQPxNVU2BwXMQUpo4QRsIjcaIuE8JwUzq5uxmiwOc8L1dymb+hYQqvDll97YHV2sk3wiyzA2yXArOgyXAPinL63uQGO/dA2S5WfV7rd4oel24smABWnDKlF0nwq2mxOeA4RYEkEFhA4MJaSjvYOMi9xUZvQNrQRbbWHRzQB3qYLBHgqAVGVh+Fgq36W4jpE0Jws71QCliVthTN9F8EkcL7+12Aga3e1DoO/Xx1Px5orBqMRsJlzGQG42ClWsLhZmviuQw"
     s = s & "TE1ZRzjn2W9CQuDQE+Q2zJbzeuC8rOfLqYPIsdJpdgCLg1AdcmxuhqjyNff0sV/6rTxj0Z7kuAHOAf2bWDtthc0tTT6fpZQCgBcoAn21ikwxzmfcfz+3LdlwBcCMW9QKngH9qZTJfV+ORUd+f81AFiQmCcLIrGkO2txSISIHZu20h7i8/yCS6YYFPm9gRYegMmMnRpvnGxnkfgeK/NFphMqW8eLp6/SlAKAZbGtw8NQm3Hj7CvpQmKiVa3n6cbI0IKK7yHrf1kfkthLgIw4SEYk8mJW2MygXeYgLk7QZbZfnNFGYndKdnB3yAx//aREvdohjbkZcDUzAzvVPdwTio093bJBv5k9wUIzVC5Vze4Pk8L7312lKziJvDe88ZHH8L5wQHJwE/3dNG/07ikHQ5gFGPOamGfIPuH+WQN0V6iw64ON1twp1lKeStUA9jIUS4P6HZFP4/7Dk+R/UKM5+hKHa0R3tKVwNMFO+k1V9gQwCq6uDyg0VdWgwjWE9YewCgSfGdJLJK1IsBfGbXSVwjwj48I4/y/MImNUz7g/o28/xYPZCPWBDKRRi8mwBTIRKyzeWaAEFDktQQwkQWCjsx4ZSgwCr2f+nV/QceGliTGLCWx0uQ1cU8+KGISfWyOPFxI48ZzXd5I3V6tvkXy8cEgJjqceEO9J2b7QKVirWwnSGmdwCiUpI5uwFKS"
