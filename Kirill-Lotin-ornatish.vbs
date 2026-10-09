@@ -6,7 +6,7 @@ Option Explicit
 ' --- Yangilanish sozlamalari (muallif to'ldiradi) ---
 ' UPDATE_URL: yangilanish fayllari turgan manzil, masalan
 ' "https://raw.githubusercontent.com/FOYDALANUVCHI/OMBOR/main/"
-Const KL_VERSION = "2026.10.09.2"
+Const KL_VERSION = "2026.10.09.3"
 Const UPDATE_URL = "https://raw.githubusercontent.com/Begzodbek87/kirill-lotin-yangilanish/main/"
 Dim silent, updNote
 Dim sh, fso, wd, doc, tmpFile, startup, defStartup, target, ver, v, parts, f
@@ -17272,6 +17272,24 @@ Function UpdPart1()
     s = s & "    LocalVersion = v" & vbCrLf
     s = s & "End Function" & vbCrLf
     s = s & "" & vbCrLf
+    s = s & "Function NumPart(s)" & vbCrLf
+    s = s & "    Dim k, c, d" & vbCrLf
+    s = s & "    d = """"" & vbCrLf
+    s = s & "    s = Trim(CStr(s))" & vbCrLf
+    s = s & "    For k = 1 To Len(s)" & vbCrLf
+    s = s & "        c = Mid(s, k, 1)" & vbCrLf
+    s = s & "        If c >= ""0"" And c <= ""9"" Then d = d & c Else Exit For" & vbCrLf
+    UpdPart1 = s
+End Function
+
+Function UpdPart2()
+    Dim s
+    s = ""
+    s = s & "    Next" & vbCrLf
+    s = s & "    If Len(d) = 0 Or Len(d) > 9 Then d = ""0""" & vbCrLf
+    s = s & "    NumPart = CLng(d)" & vbCrLf
+    s = s & "End Function" & vbCrLf
+    s = s & "" & vbCrLf
     s = s & "Function VerGreater(a, b)" & vbCrLf
     s = s & "    Dim pa, pb, i, x, y, n" & vbCrLf
     s = s & "    pa = Split(a, ""."")" & vbCrLf
@@ -17279,17 +17297,11 @@ Function UpdPart1()
     s = s & "    n = UBound(pa)" & vbCrLf
     s = s & "    If UBound(pb) > n Then n = UBound(pb)" & vbCrLf
     s = s & "    VerGreater = False" & vbCrLf
-    UpdPart1 = s
-End Function
-
-Function UpdPart2()
-    Dim s
-    s = ""
     s = s & "    For i = 0 To n" & vbCrLf
     s = s & "        x = 0" & vbCrLf
     s = s & "        y = 0" & vbCrLf
-    s = s & "        If i <= UBound(pa) Then x = Val(pa(i))" & vbCrLf
-    s = s & "        If i <= UBound(pb) Then y = Val(pb(i))" & vbCrLf
+    s = s & "        If i <= UBound(pa) Then x = NumPart(pa(i))" & vbCrLf
+    s = s & "        If i <= UBound(pb) Then y = NumPart(pb(i))" & vbCrLf
     s = s & "        If x > y Then" & vbCrLf
     s = s & "            VerGreater = True" & vbCrLf
     s = s & "            Exit Function" & vbCrLf
@@ -17353,6 +17365,12 @@ Function UpdPart2()
     s = s & "    sh.Run ""cmd /c certutil -hashfile """""" & path & """""" SHA256 > """""" & outF & """""""", 0, True" & vbCrLf
     s = s & "    If fso.FileExists(outF) Then" & vbCrLf
     s = s & "        Set f = fso.OpenTextFile(outF, 1, False)" & vbCrLf
+    UpdPart2 = s
+End Function
+
+Function UpdPart3()
+    Dim s
+    s = ""
     s = s & "        i = 0" & vbCrLf
     s = s & "        Do While Not f.AtEndOfStream" & vbCrLf
     s = s & "            ln = f.ReadLine" & vbCrLf
@@ -17365,12 +17383,6 @@ Function UpdPart2()
     s = s & "    On Error GoTo 0" & vbCrLf
     s = s & "    FileHash = h" & vbCrLf
     s = s & "End Function" & vbCrLf
-    UpdPart2 = s
-End Function
-
-Function UpdPart3()
-    Dim s
-    s = ""
     s = s & "" & vbCrLf
     s = s & "Function WordRunning()" & vbCrLf
     s = s & "    Dim w, c" & vbCrLf
@@ -17439,6 +17451,12 @@ Function UpdPart3()
     s = s & "    End If" & vbCrLf
     s = s & "    txt = Replace(txt, vbCr, """")" & vbCrLf
     s = s & "    ln = Split(txt, vbLf)" & vbCrLf
+    UpdPart3 = s
+End Function
+
+Function UpdPart4()
+    Dim s
+    s = ""
     s = s & "    remVer = """"" & vbCrLf
     s = s & "    remHash = """"" & vbCrLf
     s = s & "    If UBound(ln) >= 0 Then remVer = CleanTok(ln(0))" & vbCrLf
@@ -17451,12 +17469,6 @@ Function UpdPart3()
     s = s & "    If Not VerGreater(remVer, loc) Then" & vbCrLf
     s = s & "        WriteLog ""Yangilanish kerak emas (o'rnatilgan "" & loc & "", serverda "" & remVer & "").""" & vbCrLf
     s = s & "        Say ""Eng so'nggi versiya o'rnatilgan: "" & loc, 64" & vbCrLf
-    UpdPart3 = s
-End Function
-
-Function UpdPart4()
-    Dim s
-    s = ""
     s = s & "        Exit Sub" & vbCrLf
     s = s & "    End If" & vbCrLf
     s = s & "" & vbCrLf
@@ -17525,14 +17537,20 @@ Function UpdPart4()
     s = s & "        WriteLog ""Yangilash tugamadi (kod "" & rc & "").""" & vbCrLf
     s = s & "        Say ""Yangilash tugallanmadi. Sabab: "" & root & ""\update.log"" & vbCrLf & ""Muallifga murojaat qiling: +998 99 724 40 12"", 48" & vbCrLf
     s = s & "    End If" & vbCrLf
-    s = s & "End Sub" & vbCrLf
-    s = s & "" & vbCrLf
-    s = s & "Main" & vbCrLf
     UpdPart4 = s
 End Function
 
+Function UpdPart5()
+    Dim s
+    s = ""
+    s = s & "End Sub" & vbCrLf
+    s = s & "" & vbCrLf
+    s = s & "Main" & vbCrLf
+    UpdPart5 = s
+End Function
+
 Function UpdaterText()
-    UpdaterText = UpdPart1() & UpdPart2() & UpdPart3() & UpdPart4()
+    UpdaterText = UpdPart1() & UpdPart2() & UpdPart3() & UpdPart4() & UpdPart5()
 End Function
 
 Sub WaitWordGone()
