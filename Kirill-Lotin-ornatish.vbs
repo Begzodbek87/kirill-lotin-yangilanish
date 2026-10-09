@@ -6,7 +6,7 @@ Option Explicit
 ' --- Yangilanish sozlamalari (muallif to'ldiradi) ---
 ' UPDATE_URL: yangilanish fayllari turgan manzil, masalan
 ' "https://raw.githubusercontent.com/FOYDALANUVCHI/OMBOR/main/"
-Const KL_VERSION = "2026.10.09.1"
+Const KL_VERSION = "2026.10.09.2"
 Const UPDATE_URL = "https://raw.githubusercontent.com/Begzodbek87/kirill-lotin-yangilanish/main/"
 Dim silent, updNote
 Dim sh, fso, wd, doc, tmpFile, startup, defStartup, target, ver, v, parts, f
@@ -2359,7 +2359,7 @@ Function ModPart27()
     s = s & "    Next para" & vbCrLf
     s = s & "    ans = InputBox(""Ro'yxat topildi: "" & nE & "" ta yozuv (birinchisi: "" & preview & ""...)"" & vbCrLf & vbCrLf & _" & vbCrLf
     s = s & "                   ""Amalni tanlang (raqam kiriting):"" & vbCrLf & _" & vbCrLf
-    s = s & "                   ""  1 - alifbo bo'yicha tartiblash (3-4 qismga bo'lib), matndagi [n] havolalarini yangilash"" & vbCrLf & _" & vbCrLf
+    s = s & "                   ""  1 - alifbo bo'yicha tartiblash (I normativ, II o'zbekcha, III ruscha, IV ingliz/xorijiy, V internet), matndagi [n] havolalarini yangilash"" & vbCrLf & _" & vbCrLf
     s = s & "                   ""  2 - matnda birinchi uchrash ketma-ketligida tartiblash, havolalarni yangilash"" & vbCrLf & _" & vbCrLf
     s = s & "                   ""  3 - faqat tekshirish (hujjat o'zgarmaydi; OAK shakliga keltirish takliflari hisobotda)"", _" & vbCrLf
     s = s & "                   ""Adabiyotlar ro'yxati (OAK)"", ""3"")" & vbCrLf
@@ -13546,7 +13546,7 @@ Function AtwPart1()
     s = s & "</div>" & vbCrLf
     s = s & "<div class=""pane"" id=""p_text"">" & vbCrLf
     s = s & "<div class=""scroll"">" & vbCrLf
-    s = s & "<div class=""small"">Word hujjatidagi (yoki tanlangan) matnda lug'atdagi qaysi atamalar uchrashini topadi. Matnni shu yerga qo'yishingiz ham mumkin.</div>" & vbCrLf
+    s = s & "<div class=""small"">Word hujjatidagi (yoki tanlangan) matnda lug'atdagi qaysi atamalar uchrashini topadi: o'zbekcha, ruscha va inglizcha matnda ham (qo'shimchali shakllari bilan). Matnni shu yerga qo'yishingiz ham mumkin.</div>" & vbCrLf
     s = s & "<textarea id=""tx""></textarea><br>" & vbCrLf
     s = s & "<button class=""btn"" onclick=""scanText()"">Atamalarni topish</button>" & vbCrLf
     s = s & "<span class=""small"" id=""scanInfo""></span>" & vbCrLf
@@ -13731,35 +13731,89 @@ Function AtwPart3()
     s = s & "  try { window.clipboardData.setData(""Text"", cardText(3)); setStatus(""Nusxalandi.""); } catch (e) { setStatus(""Nusxalab bo'lmadi.""); }" & vbCrLf
     s = s & "}" & vbCrLf
     s = s & "" & vbCrLf
-    s = s & "/* ---------- matndagi atamalar ---------- */" & vbCrLf
-    s = s & "function scanText() {" & vbCrLf
-    s = s & "  var raw = $(""tx"").value, txt = norm(raw), i, o, p, c, res = [], from, k;" & vbCrLf
-    s = s & "  if (txt.length < 3) { $(""scanInfo"").innerHTML = ""Matn kiriting.""; return; }" & vbCrLf
-    s = s & "  for (i = 0; i < T.length; i++) {" & vbCrLf
+    s = s & "/* ---------- matndagi atamalar (o'zbekcha, ruscha, inglizcha) ---------- */" & vbCrLf
+    s = s & "function wordsOf(nf) {" & vbCrLf
+    s = s & "  var parts = String(nf).replace(/\([^)]*\)/g, "" "").split(/[^a-z0-9\u0430-\u044f\u049b\u0493\u04b3\u045e'\-]+/), out = [], i;" & vbCrLf
+    s = s & "  for (i = 0; i < parts.length; i++) if (parts[i]) out.push(parts[i]);" & vbCrLf
+    s = s & "  return out;" & vbCrLf
     AtwPart3 = s
 End Function
 
 Function AtwPart4()
     Dim s
     s = ""
+    s = s & "}" & vbCrLf
+    s = s & "function reEsc(s) { return s.replace(/[\\^$.*+?()[\]{}|\-]/g, ""\\$&""); }" & vbCrLf
+    s = s & "var RU_END = ""\u0430\u043c\u0438|\u044f\u043c\u0438|\u043e\u0433\u043e|\u0435\u0433\u043e|\u043e\u043c\u0443|\u0435\u043c\u0443|\u044b\u043c\u0438|\u0438\u043c\u0438|\u0430\u0445|\u044f\u0445|\u043e\u0432|\u0435\u0432|\u0435\u0439|\u043e\u0439|\u043e\u043c|\u0435\u043c|\u0430\u043c|\u044f\u043c|\u0443\u044e|\u044e\u044e|\u0430\u044f|\u044f\u044f|\u043e\u0435|\u0435\u0435|\u044b\u0435|\u0438\u0435|\u044b\u0439|\u0438\u0439|\u044b\u0445|\u0438\u0445|\u044b\u043c|\u0438\u043c|\u044b|\u0438|\u0430|\u044f|\u0443|\u044e|\u0435|\u043e|\u044c"";" & vbCrLf
+    s = s & "var EN_END = ""e|es|s|ed|ing|ic|ics|ical|al|ly|y"";" & vbCrLf
+    s = s & "function ruStem(w) {" & vbCrLf
+    s = s & "  var m = new RegExp(""(?:"" + RU_END + "")$"").exec(w);" & vbCrLf
+    s = s & "  if (m && w.length - m[0].length >= 3) return w.substr(0, w.length - m[0].length);" & vbCrLf
+    s = s & "  return w;" & vbCrLf
+    s = s & "}" & vbCrLf
+    s = s & "function enStem(w) {" & vbCrLf
+    s = s & "  if (w.length >= 5 && /e$/.test(w)) return w.substr(0, w.length - 1);" & vbCrLf
+    s = s & "  return w;" & vbCrLf
+    s = s & "}" & vbCrLf
+    s = s & "/* atama so'zlaridan qo'shimchaga chidamli regex quradi (null - juda qisqa/noaniq) */" & vbCrLf
+    s = s & "function buildRx(nf, lang) {" & vbCrLf
+    s = s & "  var ws = wordsOf(nf), keep = [], i, st = [], tail, pre, cls, total = 0;" & vbCrLf
+    s = s & "  for (i = 0; i < ws.length; i++) if (ws[i].length > 3 || ws.length === 1) keep.push(ws[i]);" & vbCrLf
+    s = s & "  if (!keep.length) return null;" & vbCrLf
+    s = s & "  for (i = 0; i < keep.length; i++) total += keep[i].length;" & vbCrLf
+    s = s & "  if (total < 5) return null;" & vbCrLf
+    s = s & "  cls = lang === ""ru"" ? ""[\\u0430-\\u044f]"" : ""[a-z]"";" & vbCrLf
+    s = s & "  tail = ""(?:"" + (lang === ""ru"" ? RU_END : EN_END) + "")?(?!"" + cls + "")"";" & vbCrLf
+    s = s & "  for (i = 0; i < keep.length; i++) st.push(reEsc(lang === ""ru"" ? ruStem(keep[i]) : enStem(keep[i])));" & vbCrLf
+    s = s & "  pre = lang === ""ru"" ? ""(?:^|[^\\u0430-\\u044fa-z0-9])"" : ""(?:^|[^a-z0-9])"";" & vbCrLf
+    s = s & "  try { return new RegExp(pre + st.join(tail + ""[\\s\\-]+(?:"" + cls + ""+[\\s\\-]+)?"") + tail, ""g""); } catch (e) { return null; }" & vbCrLf
+    s = s & "}" & vbCrLf
+    s = s & "function countRx(rx, txt) {" & vbCrLf
+    s = s & "  var c = 0, m;" & vbCrLf
+    s = s & "  if (!rx) return 0;" & vbCrLf
+    s = s & "  rx.lastIndex = 0;" & vbCrLf
+    s = s & "  while ((m = rx.exec(txt)) !== null) { c++; if (m.index === rx.lastIndex) rx.lastIndex++; if (c > 5000) break; }" & vbCrLf
+    s = s & "  return c;" & vbCrLf
+    s = s & "}" & vbCrLf
+    s = s & "function scanText() {" & vbCrLf
+    s = s & "  var raw = $(""tx"").value, txt = norm(raw), i, o, p, c, cu, cr, ce, res = [], from, k, hasCyr, hasLat;" & vbCrLf
+    s = s & "  if (txt.length < 3) { $(""scanInfo"").innerHTML = ""Matn kiriting.""; return; }" & vbCrLf
+    s = s & "  hasCyr = /[\u0430-\u044f]/.test(txt);" & vbCrLf
+    s = s & "  hasLat = /[a-z]/.test(txt);" & vbCrLf
+    s = s & "  for (i = 0; i < T.length; i++) {" & vbCrLf
     s = s & "    o = T[i];" & vbCrLf
-    s = s & "    if (o.nu.length < 4) continue;" & vbCrLf
-    s = s & "    c = 0; from = 0;" & vbCrLf
-    s = s & "    while ((p = txt.indexOf(o.nu, from)) >= 0) {" & vbCrLf
-    s = s & "      if (p === 0 || !isLetter(txt.charAt(p - 1))) c++;" & vbCrLf
-    s = s & "      from = p + o.nu.length;" & vbCrLf
+    s = s & "    cu = 0; cr = 0; ce = 0;" & vbCrLf
+    s = s & "    if (hasLat && o.nu.length >= 4) {" & vbCrLf
+    s = s & "      from = 0;" & vbCrLf
+    s = s & "      while ((p = txt.indexOf(o.nu, from)) >= 0) {" & vbCrLf
+    s = s & "        if (p === 0 || !isLetter(txt.charAt(p - 1))) cu++;" & vbCrLf
+    s = s & "        from = p + o.nu.length;" & vbCrLf
+    s = s & "      }" & vbCrLf
     s = s & "    }" & vbCrLf
-    s = s & "    if (c > 0) res.push([c, i]);" & vbCrLf
+    s = s & "    if (hasCyr && o.nr) {" & vbCrLf
+    s = s & "      if (o.rxR === undefined) o.rxR = buildRx(o.nr, ""ru"");" & vbCrLf
+    s = s & "      cr = countRx(o.rxR, txt);" & vbCrLf
+    s = s & "    }" & vbCrLf
+    s = s & "    if (hasLat && o.ne) {" & vbCrLf
+    s = s & "      if (o.rxE === undefined) o.rxE = buildRx(o.ne, ""en"");" & vbCrLf
+    s = s & "      ce = countRx(o.rxE, txt);" & vbCrLf
+    s = s & "    }" & vbCrLf
+    s = s & "    c = cu + cr + ce;" & vbCrLf
+    s = s & "    if (c > 0) res.push([c, i, cu, cr, ce]);" & vbCrLf
     s = s & "  }" & vbCrLf
     s = s & "  res.sort(function (a, b) { return b[0] - a[0] || a[1] - b[1]; });" & vbCrLf
-    s = s & "  var h = ['<table><tr><th>Atama</th><th>Soni</th><th>Ruscha</th><th>Inglizcha</th><th>Soha</th></tr>'];" & vbCrLf
+    s = s & "  var h = ['<table><tr><th>Atama</th><th>Soni</th><th>Qaysi tilda topildi</th><th>Ruscha</th><th>Inglizcha</th><th>Soha</th></tr>'], lg;" & vbCrLf
     s = s & "  for (k = 0; k < res.length && k < 400; k++) {" & vbCrLf
     s = s & "    o = T[res[k][1]];" & vbCrLf
-    s = s & "    h.push('<tr style=""cursor:pointer"" onclick=""goDict(' + res[k][1] + ')""><td><b>' + esc(styled(o.u)) + '</b></td><td class=""n"">' + res[k][0] + '</td><td>' + esc(o.r) + '</td><td>' + esc(o.e) + '</td><td>' + esc(o.s) + '</td></tr>');" & vbCrLf
+    s = s & "    lg = [];" & vbCrLf
+    s = s & "    if (res[k][2]) lg.push(""o'zbekcha "" + res[k][2]);" & vbCrLf
+    s = s & "    if (res[k][3]) lg.push(""ruscha "" + res[k][3]);" & vbCrLf
+    s = s & "    if (res[k][4]) lg.push(""inglizcha "" + res[k][4]);" & vbCrLf
+    s = s & "    h.push('<tr style=""cursor:pointer"" onclick=""goDict(' + res[k][1] + ')""><td><b>' + esc(styled(o.u)) + '</b></td><td class=""n"">' + res[k][0] + '</td><td>' + lg.join("", "") + '</td><td>' + esc(o.r) + '</td><td>' + esc(o.e) + '</td><td>' + esc(o.s) + '</td></tr>');" & vbCrLf
     s = s & "  }" & vbCrLf
     s = s & "  h.push('</table>');" & vbCrLf
     s = s & "  $(""scanRes"").innerHTML = res.length ? h.join("""") : ""Lug'atdagi atamalar topilmadi."";" & vbCrLf
-    s = s & "  $(""scanInfo"").innerHTML = res.length + "" ta atama topildi. Qatorni bossangiz, lug'atda ochiladi."";" & vbCrLf
+    s = s & "  $(""scanInfo"").innerHTML = res.length + "" ta atama topildi (o'zbekcha, ruscha va inglizcha matn bo'yicha). Qatorni bossangiz, lug'atda ochiladi."";" & vbCrLf
     s = s & "}" & vbCrLf
     s = s & "function goDict(id) { showTab(""dict""); $(""q"").value = """"; doSearch(); pick(id); }" & vbCrLf
     s = s & "" & vbCrLf
@@ -13768,6 +13822,12 @@ Function AtwPart4()
     s = s & "  for (i = 0; i < names.length; i++) {" & vbCrLf
     s = s & "    $(""t_"" + names[i]).className = ""tab"" + (names[i] === n ? "" on"" : """");" & vbCrLf
     s = s & "    $(""p_"" + names[i]).className = ""pane"" + (names[i] === n ? "" on"" : """");" & vbCrLf
+    AtwPart4 = s
+End Function
+
+Function AtwPart5()
+    Dim s
+    s = ""
     s = s & "  }" & vbCrLf
     s = s & "  if (n === ""dict"") $(""q"").focus();" & vbCrLf
     s = s & "}" & vbCrLf
@@ -13821,11 +13881,11 @@ Function AtwPart4()
     s = s & "</script>" & vbCrLf
     s = s & "</body>" & vbCrLf
     s = s & "</html>" & vbCrLf
-    AtwPart4 = s
+    AtwPart5 = s
 End Function
 
 Function AtamaHtaText()
-    AtamaHtaText = AtwPart1() & AtwPart2() & AtwPart3() & AtwPart4()
+    AtamaHtaText = AtwPart1() & AtwPart2() & AtwPart3() & AtwPart4() & AtwPart5()
 End Function
 
 Function AtdPart1()
@@ -16224,12 +16284,13 @@ Function BibPart1()
     s = s & "  var HEADS = {" & vbCrLf
     s = s & "    1: ""Normativ-huquqiy hujjatlar va metodologik ahamiyatga molik nashrlar""," & vbCrLf
     s = s & "    2: ""Monografiya, ilmiy maqola, to'plam va boshqa ilmiy-o'quv adabiyotlar""," & vbCrLf
-    s = s & "    3: ""Xorijiy adabiyotlar""," & vbCrLf
-    s = s & "    4: ""Internet saytlari va elektron resurslar""" & vbCrLf
+    s = s & "    3: ""Rus tilidagi adabiyotlar""," & vbCrLf
+    s = s & "    4: ""Ingliz va boshqa xorijiy tillardagi adabiyotlar""," & vbCrLf
+    s = s & "    5: ""Internet saytlari va elektron resurslar""" & vbCrLf
     s = s & "  };" & vbCrLf
-    s = s & "  var ROMAN = ['I', 'II', 'III', 'IV'];" & vbCrLf
+    s = s & "  var ROMAN = ['I', 'II', 'III', 'IV', 'V'];" & vbCrLf
     s = s & "  var LAT = 'abcdefghijklmnopqrstuvwxyz';" & vbCrLf
-    s = s & "  var CYR = '\u0430\u0431\u0432\u0433\u0434\u0435\u0451\u0436\u0437\u0438\u0439\u043A\u043B\u043C\u043D\u043E\u043F\u0440\u0441\u0442\u0443\u0444\u0445\u0446\u0447\u0448\u0449\u044A\u044B\u044C\u044D\u044E\u044F\u045E\u049B\u0493\u04B3';" & vbCrLf
+    s = s & "  var CYR = '\u0430\u0431\u0432\u0433\u0493\u0434\u0435\u0451\u0436\u0437\u0438\u0439\u043A\u049B\u043B\u043C\u043D\u043E\u043F\u0440\u0441\u0442\u0443\u045E\u0444\u0445\u04B3\u0446\u0447\u0448\u0449\u044A\u044B\u044C\u044D\u044E\u044F';" & vbCrLf
     s = s & "" & vbCrLf
     s = s & "  function trim(s) { return String(s).replace(/^[\s\u00A0]+|[\s\u00A0]+$/g, ''); }" & vbCrLf
     s = s & "  function normApos(s) { return String(s).replace(/[\u2018\u2019\u02BB\u02BC`\u00B4\u2032]/g, ""'""); }" & vbCrLf
@@ -16288,30 +16349,32 @@ Function BibPart1()
     s = s & "    return m ? parseInt(m[0], 10) : 0;" & vbCrLf
     s = s & "  }" & vbCrLf
     s = s & "" & vbCrLf
-    s = s & "  function classify(t) {" & vbCrLf
-    s = s & "    var l = lower(t), r = { part: 2, lang: 'uz', rank: 0 }, cyr = 0, lat = 0, i, c, uzc = /[\u045E\u049B\u0493\u04B3\u040E\u049A\u0492\u04B2]/.test(t);" & vbCrLf
-    s = s & "    for (i = 0; i < t.length; i++) {" & vbCrLf
+    s = s & "  /* o'zbek kirill matnini ruschadan ajratuvchi belgilar (maxsus harf bo'lmasa ham) */" & vbCrLf
+    s = s & "  var RE_UZC = /(\u0422\u043E\u0448\u043A\u0435\u043D\u0442|\u0421\u0430\u043C\u0430\u0440\u049B\u0430\u043D\u0434|\u0411\u0443\u0445\u043E\u0440\u043E|\u0424\u0430\u0440\u0493\u043E\u043D\u0430|\u041D\u0430\u043C\u0430\u043D\u0433\u0430\u043D|\u0410\u043D\u0434\u0438\u0436\u043E\u043D|\u049A\u0430\u0440\u0448\u0438|\u0423\u0440\u0433\u0430\u043D\u0447|\u041D\u0443\u043A\u0443\u0441|\u043D\u0430\u0448\u0440\u0438\u0451\u0442|\u045E\u0437\u0431\u0435\u043A|\u040E\u0437\u0431\u0435\u043A|\u0442\u0430\u044A\u043B\u0438\u043C|\u0430\u0434\u0430\u0431\u0438\u0451\u0442|\u0431\u0438\u043B\u0430\u043D|\u0443\u0447\u0443\u043D|\d\s*\u0431\.|(?:^|[^\u0400-\u04FF])\u0411\.\s*\d)/;" & vbCrLf
     BibPart1 = s
 End Function
 
 Function BibPart2()
     Dim s
     s = ""
+    s = s & "  function classify(t) {" & vbCrLf
+    s = s & "    var l = lower(t), r = { part: 2, lang: 'uz', rank: 0 }, cyr = 0, lat = 0, i, c, uzc = /[\u045E\u049B\u0493\u04B3\u040E\u049A\u0492\u04B2]/.test(t) || RE_UZC.test(t);" & vbCrLf
+    s = s & "    for (i = 0; i < t.length; i++) {" & vbCrLf
     s = s & "      c = t.charCodeAt(i);" & vbCrLf
     s = s & "      if (c >= 0x400 && c <= 0x4FF) cyr++; else if ((c >= 65 && c <= 90) || (c >= 97 && c <= 122)) lat++;" & vbCrLf
     s = s & "    }" & vbCrLf
     s = s & "    var norm = (RE_NORMKW.test(t) && (RE_STATE.test(t) || RE_CODE.test(t) || RE_SON.test(t))) || RE_CODE.test(t);" & vbCrLf
     s = s & "    if (norm) { r.part = 1; r.rank = normRank(t); r.lang = cyr > lat ? 'ru' : 'uz'; return r; }" & vbCrLf
-    s = s & "    if (RE_URL.test(t) && !RE_PRINT.test(t)) { r.part = 4; r.lang = 'uz'; return r; }" & vbCrLf
+    s = s & "    if (RE_URL.test(t) && !RE_PRINT.test(t)) { r.part = 5; r.lang = 'uz'; return r; }" & vbCrLf
     s = s & "    if (cyr > lat) { r.lang = uzc ? 'uzc' : 'ru'; r.part = uzc ? 2 : 3; return r; }" & vbCrLf
-    s = s & "    if (/[\u0131\u011F\u015F\u0130\u00E7]/.test(t)) { r.part = 3; r.lang = 'tr'; return r; }" & vbCrLf
+    s = s & "    if (/[\u0131\u011F\u015F\u0130\u00E7]/.test(t)) { r.part = 4; r.lang = 'tr'; return r; }" & vbCrLf
     s = s & "    var en = countRe(EN_WORDS, l), uz = countRe(UZ_MARK, l);" & vbCrLf
-    s = s & "    if (en > uz) { r.part = 3; r.lang = 'en'; return r; }" & vbCrLf
+    s = s & "    if (en > uz) { r.part = 4; r.lang = 'en'; return r; }" & vbCrLf
     s = s & "    return r;" & vbCrLf
     s = s & "  }" & vbCrLf
     s = s & "" & vbCrLf
     s = s & "  /* ---- kirishni o'qish ---- */" & vbCrLf
-    s = s & "  var RE_HEAD = /^(?:[IVX]{1,4}\s*[\.\)]\s+|(normativ|xorijiy adabiyot|internet sayt|monografiya, ilmiy|foydalanilgan boshqa|ilmiy adabiyot|rus tilidagi|ingliz tilidagi))/i;" & vbCrLf
+    s = s & "  var RE_HEAD = /^(?:[IVX]{1,4}\s*[\.\)]\s+|(normativ|xorijiy adabiyot|internet sayt|monografiya, ilmiy|foydalanilgan boshqa|ilmiy adabiyot|rus tilidagi|ingliz tilidagi|ingliz va boshqa|o'zbek tilidagi|chet tilidagi|xorijiy tillardagi|\u0440\u0443\u0441\u0441\u043A\u043E\u044F\u0437\u044B\u0447\u043D|\u043B\u0438\u0442\u0435\u0440\u0430\u0442\u0443\u0440\u0430 \u043D\u0430))/i;" & vbCrLf
     s = s & "  function isHeading(t) {" & vbCrLf
     s = s & "    return t.length < 130 && RE_HEAD.test(lower(t)) && !NEEDS_YEAR.test(t);" & vbCrLf
     s = s & "  }" & vbCrLf
@@ -16325,7 +16388,7 @@ Function BibPart2()
     s = s & "      num = 0; forced = 0;" & vbCrLf
     s = s & "      m = t.match(/^(\d{1,3})\s*[\.\)]\s+([\s\S]*)$/);" & vbCrLf
     s = s & "      if (m) { num = parseInt(m[1], 10); t = trim(m[2]); }" & vbCrLf
-    s = s & "      m = t.match(/^#([1-4])\s*([\s\S]*)$/);" & vbCrLf
+    s = s & "      m = t.match(/^#([1-5])\s*([\s\S]*)$/);" & vbCrLf
     s = s & "      if (m) { forced = parseInt(m[1], 10); t = trim(m[2]); }" & vbCrLf
     s = s & "      if (!t) continue;" & vbCrLf
     s = s & "      list.push({ text: t, num: num, forced: forced });" & vbCrLf
@@ -16374,15 +16437,15 @@ Function BibPart2()
     s = s & "      while ((m = RE_BR.exec(body[p])) !== null) {" & vbCrLf
     s = s & "        inner = m[1];" & vbCrLf
     s = s & "        mm = RE_NUMS.exec(inner);" & vbCrLf
-    s = s & "        if (!mm) continue;" & vbCrLf
-    s = s & "        prefix = mm[1];" & vbCrLf
-    s = s & "        nums = expand(prefix);" & vbCrLf
     BibPart2 = s
 End Function
 
 Function BibPart3()
     Dim s
     s = ""
+    s = s & "        if (!mm) continue;" & vbCrLf
+    s = s & "        prefix = mm[1];" & vbCrLf
+    s = s & "        nums = expand(prefix);" & vbCrLf
     s = s & "        if (!nums) continue;" & vbCrLf
     s = s & "        off = m.index + 1;" & vbCrLf
     s = s & "        res.push({ p: p, s: off + (prefix.length - prefix.replace(/^\s+/, '').length), e: off + prefix.replace(/\s+$/, '').length, text: trim(prefix), nums: nums });" & vbCrLf
@@ -16411,7 +16474,7 @@ Function BibPart3()
     s = s & "  var RE_AUTH_INI1 = new RegExp('^\\s*(' + INIP + ')\\s*(' + NAMEP + ')');" & vbCrLf
     s = s & "  var RE_PUB = new RegExp('(?:^|[\\s.\\u2013\\u2014\\-])((?:[' + UP + '][' + UP + LOW + '\\\' \\-]{0,28}?)|(?:[' + UP + ']{1,3}\\.))\\s*:\\s*([^,:]{2,70}?)\\s*[,.]\\s*((?:1[5-9]|20)\\d\\d)(?=\\D|$)', 'g');" & vbCrLf
     s = s & "  var RE_CITYYEAR = new RegExp('(?:^|[\\s.\\u2013\\u2014\\-])([' + UP + '][' + UP + LOW + '\\\' \\-]{0,28}?|[' + UP + ']{1,3}\\.)\\s*,\\s*((?:1[5-9]|20)\\d\\d)(?=\\D|$)', 'g');" & vbCrLf
-    s = s & "  var CITY_ABBR = { 'toshkent': 'T.', 'moskva': 'M.', 'leningrad': 'L.', 'sankt-peterburg': 'SPb.', '\u043C\u043E\u0441\u043A\u0432\u0430': '\u041C.', '\u0441\u0430\u043D\u043A\u0442-\u043F\u0435\u0442\u0435\u0440\u0431\u0443\u0440\u0433': '\u0421\u041F\u0431.' };" & vbCrLf
+    s = s & "  var CITY_ABBR = { 'toshkent': 'T.', 'moskva': 'M.', 'leningrad': 'L.', 'sankt-peterburg': 'SPb.', '\u043C\u043E\u0441\u043A\u0432\u0430': '\u041C.', '\u0442\u043E\u0448\u043A\u0435\u043D\u0442': '\u0422.', '\u0441\u0430\u043D\u043A\u0442-\u043F\u0435\u0442\u0435\u0440\u0431\u0443\u0440\u0433': '\u0421\u041F\u0431.' };" & vbCrLf
     s = s & "" & vbCrLf
     s = s & "  function ini1(tok) {" & vbCrLf
     s = s & "    var m = tok.match(new RegExp('^([OoGg])([' + APOS + '])'));" & vbCrLf
@@ -16435,8 +16498,10 @@ Function BibPart3()
     s = s & "    }" & vbCrLf
     s = s & "    return sur + (out ? ' ' + out : '');" & vbCrLf
     s = s & "  }" & vbCrLf
-    s = s & "  function pagesWord(lang) { return lang === 'ru' ? '\u0441.' : (lang === 'en' ? 'p.' : (lang === 'tr' ? 's.' : 'b.')); }" & vbCrLf
-    s = s & "  function rangeWord(lang) { return lang === 'ru' ? '\u0421.' : (lang === 'en' ? 'P.' : (lang === 'tr' ? 'S.' : 'B.')); }" & vbCrLf
+    s = s & "  function pagesWord(lang) { return lang === 'ru' ? '\u0441.' : (lang === 'en' ? 'p.' : (lang === 'tr' ? 's.' : (lang === 'uzc' ? '\u0431.' : 'b.'))); }" & vbCrLf
+    s = s & "  function rangeWord(lang) { return lang === 'ru' ? '\u0421.' : (lang === 'en' ? 'P.' : (lang === 'tr' ? 'S.' : (lang === 'uzc' ? '\u0411.' : 'B.'))); }" & vbCrLf
+    s = s & "  function volWord(lang) { return lang === 'ru' ? '\u0422.' : (lang === 'en' ? 'Vol.' : (lang === 'tr' ? 'C.' : (lang === 'uzc' ? '\u0416\u0438\u043B\u0434' : 'Jild'))); }" & vbCrLf
+    s = s & "  function etAl(lang) { return lang === 'ru' ? ' \u0438 \u0434\u0440.' : (lang === 'en' ? ' et al.' : (lang === 'uzc' ? ' \u0432\u0430 \u0431\u043E\u0448\u049B.' : ' va boshq.')); }" & vbCrLf
     s = s & "  function endDot(s) { s = trim(s); return /[.?!\u2026]$/.test(s) ? s : s + '.'; }" & vbCrLf
     s = s & "  function noDot(s) { return trim(s).replace(/[.\s]+$/, ''); }" & vbCrLf
     s = s & "  function cityText(c, abbr) {" & vbCrLf
@@ -16456,19 +16521,19 @@ Function BibPart3()
     s = s & "    if (!title) miss.push('nom');" & vbCrLf
     s = s & "    var many = au.length > 3;" & vbCrLf
     s = s & "    var autStr = au.join(', ');" & vbCrLf
-    s = s & "    if (au.length > 4) autStr = au.slice(0, 3).join(', ') + (lang === 'ru' ? ' \u0438 \u0434\u0440.' : (lang === 'en' ? ' et al.' : ' va boshq.'));" & vbCrLf
+    s = s & "    if (au.length > 4) autStr = au.slice(0, 3).join(', ') + etAl(lang);" & vbCrLf
     s = s & "    if (!au.length && type !== 'book') miss.push('muallif');" & vbCrLf
-    s = s & "    if (type === 'book') {" & vbCrLf
-    s = s & "      head = many || !au.length ? title + (many ? ' / ' + autStr : '') : au.join(', ') + ' ' + title;" & vbCrLf
-    s = s & "    } else {" & vbCrLf
-    s = s & "      head = many ? title + ' / ' + autStr : au.join(', ') + ' ' + title;" & vbCrLf
-    s = s & "    }" & vbCrLf
     BibPart3 = s
 End Function
 
 Function BibPart4()
     Dim s
     s = ""
+    s = s & "    if (type === 'book') {" & vbCrLf
+    s = s & "      head = many || !au.length ? title + (many ? ' / ' + autStr : '') : au.join(', ') + ' ' + title;" & vbCrLf
+    s = s & "    } else {" & vbCrLf
+    s = s & "      head = many ? title + ' / ' + autStr : au.join(', ') + ' ' + title;" & vbCrLf
+    s = s & "    }" & vbCrLf
     s = s & "    var city = cityText(f.city || '', f.abbr), year = trim(f.year || ''), pubn = trim(f.publisher || '');" & vbCrLf
     s = s & "    if (!year) miss.push('yil');" & vbCrLf
     s = s & "    function pubArea(optPub) {" & vbCrLf
@@ -16486,6 +16551,7 @@ Function BibPart4()
     s = s & "      if (!trim(f.journal || '')) miss.push('jurnal nomi');" & vbCrLf
     s = s & "      t = head + ' // ' + noDot(f.journal || '?') + '. ' + DASH + ' ' + (year || '?') + '.';" & vbCrLf
     s = s & "      if (trim(f.issue || '')) t += ' ' + DASH + ' \u2116 ' + trim(f.issue) + (trim(f.vol || '') ? ' (' + trim(f.vol) + ')' : '') + '.';" & vbCrLf
+    s = s & "      else if (trim(f.vol || '')) t += ' ' + DASH + ' ' + volWord(lang) + ' ' + trim(f.vol) + '.';" & vbCrLf
     s = s & "      if (trim(f.range || '')) t += ' ' + DASH + ' ' + rw + ' ' + rng(f.range) + '.'; else miss.push('betlar (dan-gacha)');" & vbCrLf
     s = s & "    } else if (type === 'collection') {" & vbCrLf
     s = s & "      if (!trim(f.journal || '')) miss.push('to\'plam nomi');" & vbCrLf
@@ -16493,7 +16559,7 @@ Function BibPart4()
     s = s & "      if (trim(f.range || '')) t += ' ' + DASH + ' ' + rw + ' ' + rng(f.range) + '.'; else miss.push('betlar (dan-gacha)');" & vbCrLf
     s = s & "    } else if (type === 'diss' || type === 'avtoref') {" & vbCrLf
     s = s & "      if (!trim(f.degree || '')) miss.push('ilmiy daraja');" & vbCrLf
-    s = s & "      var dw = type === 'avtoref' ? 'Avtoref. dis\u2026 ' : 'Dis\u2026 ';" & vbCrLf
+    s = s & "      var cyr = (lang === 'ru' || lang === 'uzc'), dw = type === 'avtoref' ? (cyr ? '\u0410\u0432\u0442\u043E\u0440\u0435\u0444. \u0434\u0438\u0441\u2026 ' : 'Avtoref. dis\u2026 ') : (cyr ? '\u0414\u0438\u0441\u2026 ' : 'Dis\u2026 ');" & vbCrLf
     s = s & "      t = (au.length ? au.join(', ') + ' ' : '') + title + ': ' + dw + noDot(f.degree || '?') + '. ' + DASH + ' ' + pubArea() + '.';" & vbCrLf
     s = s & "      if (f.pages) t += ' ' + DASH + ' ' + trim(f.pages) + ' ' + pw; else miss.push('bet');" & vbCrLf
     s = s & "    }" & vbCrLf
@@ -16521,18 +16587,72 @@ Function BibPart4()
     s = s & "    return { authors: au, rest: rest.replace(/^[\s.,]+/, '') };" & vbCrLf
     s = s & "  }" & vbCrLf
     s = s & "  function pagesOf(s) {" & vbCrLf
-    s = s & "    var m = s.match(/(\d{1,4})\s*(?:bet|b|pp|p|\u0441\u0442\u0440|\u0441|c|pages?)(?![A-Za-z\u0400-\u04FF])\.?/i);" & vbCrLf
+    s = s & "    var m = s.match(/(\d{1,4})\s*(?:bet|b|pp|p|\u0441\u0442\u0440|\u0441|c|\u0431\u0435\u0442|\u0431|pages?)(?![A-Za-z\u0400-\u04FF])\.?/i);" & vbCrLf
     s = s & "    return m ? m[1] : '';" & vbCrLf
     s = s & "  }" & vbCrLf
+    s = s & "  var RE_PGSTART = /(?:^|[^A-Za-z\u0400-\u04FF])(?:(?:PP|pp|Pp|\u0421\u0442\u0440|\u0441\u0442\u0440|Bet|bet)\.?|[BbSsPp\u0411\u0431\u0421\u0441]\.)\s*\d/;" & vbCrLf
+    s = s & "  var RE_PGRANGE = /(?:^|[^A-Za-z\u0400-\u04FF])(?:(?:PP|pp|Pp|\u0421\u0442\u0440|\u0441\u0442\u0440|Bet|bet)\.?|[BbSsPp\u0411\u0431\u0421\u0441]\.)\s*(\d+)\s*[-\u2013\u2014]\s*(\d+)/;" & vbCrLf
+    s = s & "  var RE_PGONE = /(?:^|[^A-Za-z\u0400-\u04FF])(?:(?:PP|pp|Pp|\u0421\u0442\u0440|\u0441\u0442\u0440|Bet|bet)\.?|[BbSsPp\u0411\u0431\u0421\u0441]\.)\s*(\d+)/;" & vbCrLf
     s = s & "  function rangeOf(s) {" & vbCrLf
-    s = s & "    var m = s.match(/(?:\b(?:B|S|P|PP|b|s|p|pp)\.|\u0421\.|\u0441\.)\s*(\d+)\s*[-\u2013\u2014]\s*(\d+)/);" & vbCrLf
+    s = s & "    var m = s.match(RE_PGRANGE);" & vbCrLf
     s = s & "    if (m) return m[1] + DASH + m[2];" & vbCrLf
-    s = s & "    m = s.match(/(\d+)\s*[-\u2013\u2014]\s*(\d+)\s*-?\s*(?:bet|b|p|\u0441|c|s)(?![A-Za-z\u0400-\u04FF])\.?/i);" & vbCrLf
+    s = s & "    m = s.match(/(\d+)\s*[-\u2013\u2014]\s*(\d+)\s*-?\s*(?:bet|b|p|\u0441|c|s|\u0431\u0435\u0442|\u0431)(?![A-Za-z\u0400-\u04FF])\.?/i);" & vbCrLf
     s = s & "    if (m) return m[1] + DASH + m[2];" & vbCrLf
-    s = s & "    m = s.match(/(?:\b(?:B|S|P|b|s|p)\.|\u0421\.)\s*(\d+)/);" & vbCrLf
+    s = s & "    m = s.match(RE_PGONE);" & vbCrLf
     s = s & "    if (m) return m[1];" & vbCrLf
-    s = s & "    m = s.match(/(\d{1,4})\s*(?:bet|b|p|\u0441|c|s)(?![A-Za-z\u0400-\u04FF])\.?\s*$/i);" & vbCrLf
+    s = s & "    m = s.match(/(\d{1,4})\s*(?:bet|b|p|\u0441|c|s|\u0431\u0435\u0442|\u0431)(?![A-Za-z\u0400-\u04FF])\.?\s*$/i);" & vbCrLf
     s = s & "    return m ? m[1] : '';" & vbCrLf
+    s = s & "  }" & vbCrLf
+    s = s & "  /* ""... Journal. \u2013 2020. \u2013 B. 12\u201318."" -> asosiy qism va bet qismi */" & vbCrLf
+    s = s & "  function splitPages(s) {" & vbCrLf
+    s = s & "    var m = RE_PGSTART.exec(s);" & vbCrLf
+    s = s & "    if (m) return { main: s.substr(0, m.index), pages: s.substr(m.index) };" & vbCrLf
+    s = s & "    m = s.match(/[\s.,\u2013\u2014-]*\d+\s*[-\u2013\u2014]\s*\d+\s*-?\s*(?:bet|b|p|s|\u0441|\u0431)\.?\s*$/i);" & vbCrLf
+    s = s & "    if (m) return { main: s.substr(0, m.index), pages: m[0] };" & vbCrLf
+    BibPart4 = s
+End Function
+
+Function BibPart5()
+    Dim s
+    s = ""
+    s = s & "    m = s.match(/\s[\u2013\u2014-]\s*\d{1,4}\s*[-\u2013\u2014]\s*\d{1,4}\.?\s*$/);" & vbCrLf
+    s = s & "    if (m) return { main: s.substr(0, m.index), pages: m[0] };" & vbCrLf
+    s = s & "    return { main: s, pages: '' };" & vbCrLf
+    s = s & "  }" & vbCrLf
+    s = s & "  function yearIn(s) {" & vbCrLf
+    s = s & "    var m = s.match(/(?:^|[^\d])((?:1[5-9]|20)\d\d)(?!\d)/);" & vbCrLf
+    s = s & "    return m ? m[1] : '';" & vbCrLf
+    s = s & "  }" & vbCrLf
+    s = s & "  function volOf(s) {" & vbCrLf
+    s = s & "    var m = s.match(/(?:^|[^A-Za-z\u0400-\u04FF])(?:volume|vol\.?|\u0442\u043E\u043C|\u0442\.|tom|jild|\u0436\u0438\u043B\u0434)\s*[:.]?\s*(\d+)/i);" & vbCrLf
+    s = s & "    return m ? m[1] : '';" & vbCrLf
+    s = s & "  }" & vbCrLf
+    s = s & "  function issueOf(s) {" & vbCrLf
+    s = s & "    var m = s.match(/(?:^|[^A-Za-z\u0400-\u04FF])(?:issue|\u0432\u044B\u043F\u0443\u0441\u043A|\u0432\u044B\u043F\.|nashr|son|\u0441\u043E\u043D)\s*[:.]?\s*(\d+)/i);" & vbCrLf
+    s = s & "    if (m) return m[1];" & vbCrLf
+    s = s & "    m = s.match(/(\d+)\s*-\s*(?:son|\u0441\u043E\u043D)(?![A-Za-z\u0400-\u04FF])/i);" & vbCrLf
+    s = s & "    return m ? m[1] : '';" & vbCrLf
+    s = s & "  }" & vbCrLf
+    s = s & "  function cleanJournal(j) {" & vbCrLf
+    s = s & "    j = String(j);" & vbCrLf
+    s = s & "    j = j.replace(/\s*[\/|].*$/, '');" & vbCrLf
+    s = s & "    j = j.replace(/[,;]?\s+(?:volume|vol\.?|issue|no\.?|\u0442\u043E\u043C|\u0442\.|\u0432\u044B\u043F\u0443\u0441\u043A|\u0432\u044B\u043F\.|\u2116|tom|jild|son)\s*\d.*$/i, '');" & vbCrLf
+    s = s & "    j = j.replace(/,\s*\d.*$/, '');" & vbCrLf
+    s = s & "    return trim(j.replace(/[\s.,;:\u2013\u2014-]+$/, ''));" & vbCrLf
+    s = s & "  }" & vbCrLf
+    s = s & "  /* APA / Garvard uslubi: Familiya, I. (2015). Nom. Jurnal, 12(3), 45-60. */" & vbCrLf
+    s = s & "  function parseApa(t, f) {" & vbCrLf
+    s = s & "    var m = t.match(/^(.*?)\(\s*((?:1[5-9]|20)\d\d)[a-z]?\s*\)\.?\s*(.+)$/), au, rest, a;" & vbCrLf
+    s = s & "    if (!m || m[1].length > 220 || m[1].length < 4) return '';" & vbCrLf
+    s = s & "    au = takeAuthors(m[1].replace(/,?\s*(?:&|and|\u0438)\s+/g, ', ').replace(/\s+/g, ' '));" & vbCrLf
+    s = s & "    if (!au.authors.length || trim(au.rest)) return '';" & vbCrLf
+    s = s & "    f.authors = au.authors; f.year = m[2];" & vbCrLf
+    s = s & "    rest = trim(m[3]);" & vbCrLf
+    s = s & "    a = rest.match(/^(.+?)[.?!]\s+(.+),\s*(\d+)(?:\s*\((\d+)\))?\s*,\s*(?:pp?\.\s*)?(\d+)\s*[-\u2013\u2014]\s*(\d+)\.?\s*$/);" & vbCrLf
+    s = s & "    if (a) { f.title = a[1]; f.journal = trim(a[2]); f.vol = a[3]; f.issue = a[4] || ''; f.range = a[5] + DASH + a[6]; return 'article'; }" & vbCrLf
+    s = s & "    a = rest.match(/^(.+?)[.?!]\s+(?:([^:.]+?):\s*)?([^:]+?)\.?\s*$/);" & vbCrLf
+    s = s & "    if (a) { f.title = a[1]; f.city = a[2] ? trim(a[2]) : ''; f.publisher = trim(a[3]); return 'book'; }" & vbCrLf
+    s = s & "    return '';" & vbCrLf
     s = s & "  }" & vbCrLf
     s = s & "  function parseEntry(text, lang) {" & vbCrLf
     s = s & "    var t = trim(text).replace(/\s+/g, ' '), r = { type: '', f: { lang: lang || 'uz', authors: [] }, ok: false }, f = r.f, m, ta, left, right, mm, rest, head;" & vbCrLf
@@ -16540,31 +16660,29 @@ Function BibPart4()
     s = s & "    var isDis = /(:|\.)\s*(avtoref\.?\s*)?dis(s|\.|\u2026|\s|ertatsiya)/i.test(t) || /:\s*\u0430\u0432\u0442\u043E\u0440\u0435\u0444|:\s*\u0434\u0438\u0441/i.test(t);" & vbCrLf
     s = s & "    var sl = t.search(/(^|[^:\/])\/\/(?!\/)/);" & vbCrLf
     s = s & "    if (sl >= 0) { sl = t.indexOf('//', sl); }" & vbCrLf
-    s = s & "    if (sl >= 0 && !isDis) {" & vbCrLf
+    s = s & "    var apa = (sl < 0 && !isDis) ? parseApa(t, f) : '';" & vbCrLf
+    s = s & "    if (apa) {" & vbCrLf
+    s = s & "      r.type = apa;" & vbCrLf
+    s = s & "    } else if (sl >= 0 && !isDis) {" & vbCrLf
     s = s & "      left = t.substr(0, sl); right = trim(t.substr(sl + 2));" & vbCrLf
     s = s & "      ta = takeAuthors(left); f.authors = ta.authors; f.title = ta.rest;" & vbCrLf
     s = s & "      var slash = f.title.match(/^(.*?)\s+\/\s+(.*)$/);" & vbCrLf
     s = s & "      if (slash && !f.authors.length) { f.title = slash[1]; var tb = takeAuthors(slash[2]); f.authors = tb.authors; }" & vbCrLf
-    s = s & "      var pubm = lastMatch(RE_PUB, right);" & vbCrLf
-    s = s & "      var isColl = /(konf|conf|tezis|materiallar|to'plam|toplam|\u0441\u0431\u043E\u0440\u043D\u0438\u043A|\u043C\u0430\u0442\u0435\u0440\u0438\u0430\u043B|\u043A\u043E\u043D\u0444|proceedings|collection|symposium|simpozium|seminar)/i.test(right);" & vbCrLf
-    s = s & "      var jm = right.match(/^(.*?)(?:\.\s*[\u2013\u2014-]|\.\s*(?:1[5-9]|20)\d\d|,\s*(?:1[5-9]|20)\d\d|\s[\u2013\u2014-]\s)/);" & vbCrLf
-    s = s & "      var jn = jm ? jm[1] : right;" & vbCrLf
-    BibPart4 = s
-End Function
-
-Function BibPart5()
-    Dim s
-    s = ""
-    s = s & "      var ym = right.match(/(1[5-9]\d\d|20[0-3]\d)/);" & vbCrLf
-    s = s & "      f.journal = trim(jn);" & vbCrLf
-    s = s & "      f.year = ym ? ym[1] : '';" & vbCrLf
+    s = s & "      var sp = splitPages(right), mainR = sp.main;" & vbCrLf
+    s = s & "      var pubm = lastMatch(RE_PUB, mainR);" & vbCrLf
+    s = s & "      var isColl = /(konf|conf|tezis|materiallar|to'plam|toplam|\u0441\u0431\u043E\u0440\u043D\u0438\u043A|\u043C\u0430\u0442\u0435\u0440\u0438\u0430\u043B|\u043A\u043E\u043D\u0444|proceedings|collection|symposium|simpozium|seminar|\u0442\u045E\u043F\u043B\u0430\u043C|\u0430\u043D\u0436\u0443\u043C\u0430\u043D|\u0441\u0438\u043C\u043F\u043E\u0437\u0438\u0443\u043C)/i.test(right);" & vbCrLf
+    s = s & "      var jm = mainR.match(/^(.*?)(?:\.\s*[\u2013\u2014-]|\.\s*(?:1[5-9]|20)\d\d|,\s*(?:1[5-9]|20)\d\d|\s[\u2013\u2014-]\s)/);" & vbCrLf
+    s = s & "      f.journal = cleanJournal(jm ? jm[1] : mainR);" & vbCrLf
+    s = s & "      f.year = yearIn(mainR);" & vbCrLf
     s = s & "      var im = right.match(/(?:\u2116|No\.?|N\.?)\s*(\d+)(?:\s*\((\d+)\))?/);" & vbCrLf
     s = s & "      if (im) { f.issue = im[1]; if (im[2]) f.vol = im[2]; }" & vbCrLf
+    s = s & "      if (!f.issue) f.issue = issueOf(right);" & vbCrLf
+    s = s & "      if (!f.vol) f.vol = volOf(right);" & vbCrLf
     s = s & "      f.range = rangeOf(right);" & vbCrLf
-    s = s & "      if (isColl || (pubm && !im)) {" & vbCrLf
+    s = s & "      if (isColl || (pubm && !f.issue && !f.vol)) {" & vbCrLf
     s = s & "        r.type = 'collection';" & vbCrLf
-    s = s & "        if (pubm) { f.city = trim(pubm[1]); f.publisher = trim(pubm[2]); f.year = pubm[3]; var bef = right.substr(0, pubm.index); f.journal = trim(bef.replace(/[\s.\u2013\u2014-]+$/, '')); }" & vbCrLf
-    s = s & "        else { var cy = lastMatch(RE_CITYYEAR, right); if (cy) { f.city = trim(cy[1]); f.year = cy[2]; f.journal = trim(right.substr(0, cy.index).replace(/[\s.\u2013\u2014-]+$/, '')); } }" & vbCrLf
+    s = s & "        if (pubm) { f.city = trim(pubm[1]); f.publisher = trim(pubm[2]); f.year = pubm[3]; var bef = mainR.substr(0, pubm.index); f.journal = cleanJournal(bef.replace(/[\s.\u2013\u2014-]+$/, '')); }" & vbCrLf
+    s = s & "        else { var cy = lastMatch(RE_CITYYEAR, mainR); if (cy) { f.city = trim(cy[1]); f.year = cy[2]; f.journal = cleanJournal(mainR.substr(0, cy.index).replace(/[\s.\u2013\u2014-]+$/, '')); } }" & vbCrLf
     s = s & "      } else r.type = 'article';" & vbCrLf
     s = s & "    } else if (isDis) {" & vbCrLf
     s = s & "      ta = takeAuthors(t); f.authors = ta.authors; rest = ta.rest;" & vbCrLf
@@ -16577,6 +16695,12 @@ Function BibPart5()
     s = s & "        else { f.degree = trim(tail.replace(/[\s.\u2013\u2014-]+$/, '')); var y2 = tail.match(/(1[5-9]\d\d|20[0-3]\d)/); f.year = y2 ? y2[1] : ''; }" & vbCrLf
     s = s & "      }" & vbCrLf
     s = s & "    } else {" & vbCrLf
+    BibPart5 = s
+End Function
+
+Function BibPart6()
+    Dim s
+    s = ""
     s = s & "      ta = takeAuthors(t); f.authors = ta.authors; rest = ta.rest;" & vbCrLf
     s = s & "      var pm2 = lastMatch(RE_PUB, rest);" & vbCrLf
     s = s & "      if (pm2) {" & vbCrLf
@@ -16635,12 +16759,6 @@ Function BibPart5()
     s = s & "    for (i = 0; i < cites.length; i++) {" & vbCrLf
     s = s & "      for (k = 0; k < cites[i].nums.length; k++) {" & vbCrLf
     s = s & "        var nn = cites[i].nums[k];" & vbCrLf
-    BibPart5 = s
-End Function
-
-Function BibPart6()
-    Dim s
-    s = ""
     s = s & "        if (nn > n) outRange[nn] = 1;" & vbCrLf
     s = s & "        else { if (citedFirst[nn] === undefined) citedFirst[nn] = i * 1000 + k; citedCnt[nn] = (citedCnt[nn] || 0) + 1; }" & vbCrLf
     s = s & "      }" & vbCrLf
@@ -16649,20 +16767,26 @@ Function BibPart6()
     s = s & "      e = list[i]; cls = classify(e.text);" & vbCrLf
     s = s & "      e.part = e.forced || cls.part; e.lang = cls.lang; e.rank = cls.rank; e.year = yearOf(e.text);" & vbCrLf
     s = s & "      e.rf = null;" & vbCrLf
-    s = s & "      if ((e.part === 2 || e.part === 3) && e.lang !== 'uzc') {" & vbCrLf
+    s = s & "      if (e.part >= 2 && e.part <= 4) {" & vbCrLf
     s = s & "        e.rf = reformat(e.text, e.lang, false);" & vbCrLf
     s = s & "        if (opts.fmt && e.rf.ok && e.rf.text !== e.text) { fmtList.push({ o: e.text, n: e.rf.text, old: e.old }); if (opts.mode !== 'check') e.text = e.rf.text; }" & vbCrLf
     s = s & "      }" & vbCrLf
-    s = s & "      e.key = akey(e.text, opts.digr && e.lang !== 'en' && e.lang !== 'tr' && e.part !== 4);" & vbCrLf
+    s = s & "      e.key = akey(e.text, opts.digr && e.lang !== 'en' && e.lang !== 'tr' && e.lang !== 'ru' && e.lang !== 'uzc' && e.part !== 5);" & vbCrLf
     s = s & "      e.cf = citedFirst[e.old] === undefined ? 999999999 : citedFirst[e.old];" & vbCrLf
     s = s & "    }" & vbCrLf
-    s = s & "    function langOrd(e) { return e.part === 2 ? (e.lang === 'uzc' ? 1 : 0) : (e.part === 3 ? (e.lang === 'ru' ? 0 : (e.lang === 'en' ? 1 : 2)) : 0); }" & vbCrLf
+    s = s & "    function langOrd(e) { return e.part === 2 ? (e.lang === 'uzc' ? 1 : 0) : (e.part === 4 ? (e.lang === 'en' ? 0 : 1) : 0); }" & vbCrLf
     s = s & "    function cmp(a, b) {" & vbCrLf
     s = s & "      if (a.part !== b.part) return a.part - b.part;" & vbCrLf
     s = s & "      if (a.part === 1 && a.rank !== b.rank) return a.rank - b.rank;" & vbCrLf
     s = s & "      if (a.part === 1 && a.year !== b.year) return a.year - b.year;" & vbCrLf
     s = s & "      if (a.part !== 1 && opts.mode === 'cite' && a.cf !== b.cf) return a.cf - b.cf;" & vbCrLf
     s = s & "      if (a.part !== 1 && langOrd(a) !== langOrd(b)) return langOrd(a) - langOrd(b);" & vbCrLf
+    BibPart6 = s
+End Function
+
+Function BibPart7()
+    Dim s
+    s = ""
     s = s & "      if (a.key < b.key) return -1;" & vbCrLf
     s = s & "      if (a.key > b.key) return 1;" & vbCrLf
     s = s & "      return a.old - b.old;" & vbCrLf
@@ -16672,7 +16796,7 @@ Function BibPart6()
     s = s & "    function R(s) { rep.push(s); }" & vbCrLf
     s = s & "" & vbCrLf
     s = s & "    /* hisobot */" & vbCrLf
-    s = s & "    var cnt = { 1: 0, 2: 0, 3: 0, 4: 0 }, recent = 0, withYear = 0;" & vbCrLf
+    s = s & "    var cnt = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 }, recent = 0, withYear = 0;" & vbCrLf
     s = s & "    for (i = 0; i < n; i++) {" & vbCrLf
     s = s & "      cnt[list[i].part]++;" & vbCrLf
     s = s & "      if (list[i].part !== 1 && list[i].year) { withYear++; if (list[i].year >= opts.year - 15) recent++; }" & vbCrLf
@@ -16681,9 +16805,10 @@ Function BibPart6()
     s = s & "    R('');" & vbCrLf
     s = s & "    R('Jami yozuv: ' + n);" & vbCrLf
     s = s & "    R('  I qism - normativ-huquqiy hujjatlar: ' + cnt[1]);" & vbCrLf
-    s = s & "    R('  II qism - monografiya, maqola, to\'plam va boshqa (o\'zbekcha): ' + cnt[2]);" & vbCrLf
-    s = s & "    R('  III qism - xorijiy adabiyotlar: ' + cnt[3]);" & vbCrLf
-    s = s & "    R('  IV qism - internet saytlari: ' + cnt[4]);" & vbCrLf
+    s = s & "    R('  II qism - monografiya, maqola, to\'plam va boshqa (o\'zbekcha, lotin va kirill): ' + cnt[2]);" & vbCrLf
+    s = s & "    R('  III qism - rus tilidagi adabiyotlar: ' + cnt[3]);" & vbCrLf
+    s = s & "    R('  IV qism - ingliz va boshqa xorijiy tillardagi adabiyotlar: ' + cnt[4]);" & vbCrLf
+    s = s & "    R('  V qism - internet saytlari: ' + cnt[5]);" & vbCrLf
     s = s & "    if (withYear > 0) R('Oxirgi 15 yilda chop etilgan manbalar (normativ hujjatlarsiz): ' + recent + ' / ' + withYear + ' (' + Math.round(100 * recent / withYear) + '%). OAK qoidalari asosan oxirgi 10-15 yil adabiyotlarini tavsiya etadi.');" & vbCrLf
     s = s & "    R('');" & vbCrLf
     s = s & "    R('Rasmiy talab (OAK qoidalari, 13-14-bandlar): ro\'yxat uch qismdan iborat bo\'ladi; alifbo, sistematik yoki havola ketma-ketligida tuziladi;');" & vbCrLf
@@ -16707,11 +16832,11 @@ Function BibPart6()
     s = s & "      if (e.rf && e.rf.type) {" & vbCrLf
     s = s & "        if (e.rf.missing.length) msg.push('OAK shakli bo\'yicha yetishmaydi: ' + e.rf.missing.join(', ') + ' (tur: ' + e.rf.type + ')');" & vbCrLf
     s = s & "      } else if (e.part !== 1 && !NEEDS_YEAR.test(t)) msg.push('nashr yili ko\'rsatilmagan');" & vbCrLf
-    s = s & "      if ((e.part === 2 || e.part === 3) && !(e.rf && e.rf.type)) {" & vbCrLf
+    s = s & "      if ((e.part >= 2 && e.part <= 4) && !(e.rf && e.rf.type)) {" & vbCrLf
     s = s & "        if (!/(\d+\s*(b|bet|p|pp|c|\u0441|\u0441\u0442\u0440|pages?)\.?(\s|$|,|\.|;)|\b(b|p|pp|c|\u0441|\u0441\u0442\u0440)\.\s*\d)/i.test(t)) msg.push('bet/sahifa soni ko\'rsatilmagan');" & vbCrLf
     s = s & "        if (!RE_AUTH_A.test(t) && !RE_AUTH_B.test(t)) msg.push('muallif ""Familiya I.O."" ko\'rinishida emas (muallifsiz nashr bo\'lsa, e\'tiborsiz qoldiring)');" & vbCrLf
     s = s & "      }" & vbCrLf
-    s = s & "      if (e.part === 4 && !/(murojaat|\u043E\u0431\u0440\u0430\u0449\u0435\u043D\u0438\u044F|accessed|kirilgan)/i.test(t)) msg.push('murojaat (kirish) sanasi yo\'q (tavsiya)');" & vbCrLf
+    s = s & "      if (e.part === 5 && !/(murojaat|\u043E\u0431\u0440\u0430\u0449\u0435\u043D\u0438\u044F|accessed|kirilgan)/i.test(t)) msg.push('murojaat (kirish) sanasi yo\'q (tavsiya)');" & vbCrLf
     s = s & "      if (body.length > 0 && !citedCnt[e.old]) msg.push('matnda havola qilinmagan (OAK: bunday manbani ro\'yxatga kiritish mumkin emas)');" & vbCrLf
     s = s & "      if (e.forced) msg.push('qism qo\'lda belgilangan (#' + e.forced + ')');" & vbCrLf
     s = s & "      if (msg.length) { probs++; R(e.old + '-yozuv: ' + t.substr(0, 90) + (t.length > 90 ? '...' : '')); for (k = 0; k < msg.length; k++) R('    - ' + msg[k]); }" & vbCrLf
@@ -16721,15 +16846,9 @@ Function BibPart6()
     s = s & "    for (k in outRange) if (outRange.hasOwnProperty(k) && parseInt(k, 10) < 1000) oor.push(parseInt(k, 10));" & vbCrLf
     s = s & "    if (oor.length) { oor.sort(function (x, y) { return x - y; }); R(''); R('Ro\'yxatda yo\'q raqamli havolalar matnda uchradi: [' + oor.join('], [') + ']. Bu yil yoki boshqa raqam bo\'lishi ham mumkin - tekshiring.'); }" & vbCrLf
     s = s & "    if (body.length === 0) { R(''); R('Eslatma: matndagi [n] havolalari tekshirilmadi (hujjatda mos abzatslar topilmadi).'); }" & vbCrLf
-    BibPart6 = s
-End Function
-
-Function BibPart7()
-    Dim s
-    s = ""
     s = s & "    else R('Matnda topilgan havolalar: ' + cites.length + ' ta.');" & vbCrLf
     s = s & "    R('');" & vbCrLf
-    s = s & "    R('Qismni qo\'lda belgilash: yozuv boshiga #1, #2, #3 yoki #4 qo\'ying (masalan, ""#3 Smith J. ...""). Qism avtomatik aniqlanadi, shuning uchun hisobotdagi taqsimotni ko\'zdan kechiring.');" & vbCrLf
+    s = s & "    R('Qismni qo\'lda belgilash: yozuv boshiga #1 (normativ), #2 (o\'zbekcha), #3 (ruscha), #4 (ingliz va boshqa xorijiy), #5 (internet) qo\'ying (masalan, ""#4 Smith J. ...""). Qism avtomatik aniqlanadi, shuning uchun hisobotdagi taqsimotni ko\'zdan kechiring.');" & vbCrLf
     s = s & "" & vbCrLf
     s = s & "    /* tartiblash */" & vbCrLf
     s = s & "    if (opts.mode === 'alpha' || opts.mode === 'cite') {" & vbCrLf
@@ -16748,6 +16867,12 @@ Function BibPart7()
     s = s & "        var c = cites[i], nw = [], changed = false;" & vbCrLf
     s = s & "        for (k = 0; k < c.nums.length; k++) {" & vbCrLf
     s = s & "          if (map[c.nums[k]] === undefined) nw.push(c.nums[k]); else { nw.push(map[c.nums[k]]); if (map[c.nums[k]] !== c.nums[k]) changed = true; }" & vbCrLf
+    BibPart7 = s
+End Function
+
+Function BibPart8()
+    Dim s
+    s = ""
     s = s & "        }" & vbCrLf
     s = s & "        if (!changed) continue;" & vbCrLf
     s = s & "        var txt = compress(nw);" & vbCrLf
@@ -16785,11 +16910,11 @@ Function BibPart7()
     s = s & "    WScript.Quit(1);" & vbCrLf
     s = s & "  }" & vbCrLf
     s = s & "})();" & vbCrLf
-    BibPart7 = s
+    BibPart8 = s
 End Function
 
 Function BibJsText()
-    BibJsText = BibPart1() & BibPart2() & BibPart3() & BibPart4() & BibPart5() & BibPart6() & BibPart7()
+    BibJsText = BibPart1() & BibPart2() & BibPart3() & BibPart4() & BibPart5() & BibPart6() & BibPart7() & BibPart8()
 End Function
 
 Function MnbPart1()
@@ -16849,6 +16974,7 @@ Function MnbPart1()
     s = s & "<div class=""half""><label>Manba tili</label>" & vbCrLf
     s = s & "<select id=""lang"" onchange=""upd()"">" & vbCrLf
     s = s & "<option value=""uz"">O'zbekcha (lotin)</option>" & vbCrLf
+    s = s & "<option value=""uzc"">O'zbekcha (kirill)</option>" & vbCrLf
     s = s & "<option value=""ru"">Ruscha</option>" & vbCrLf
     s = s & "<option value=""en"">Inglizcha</option>" & vbCrLf
     s = s & "<option value=""tr"">Turkcha</option>" & vbCrLf
@@ -16874,13 +17000,13 @@ Function MnbPart1()
     s = s & "<div class=""half""><label>Shahar</label><input type=""text"" id=""city"" onkeyup=""upd()"" oninput=""upd()""></div>" & vbCrLf
     s = s & "<div class=""half""><label>Nashriyot</label><input type=""text"" id=""publisher"" onkeyup=""upd()"" oninput=""upd()""></div>" & vbCrLf
     s = s & "</div>" & vbCrLf
-    s = s & "<div class=""half""><label>Yil</label><input type=""text"" id=""year"" onkeyup=""upd()"" oninput=""upd()""></div>" & vbCrLf
     MnbPart1 = s
 End Function
 
 Function MnbPart2()
     Dim s
     s = ""
+    s = s & "<div class=""half""><label>Yil</label><input type=""text"" id=""year"" onkeyup=""upd()"" oninput=""upd()""></div>" & vbCrLf
     s = s & "<div class=""half"" id=""r_pages""><label>Jami betlar soni</label><input type=""text"" id=""pages"" onkeyup=""upd()"" oninput=""upd()""></div>" & vbCrLf
     s = s & "<div id=""r_issue"">" & vbCrLf
     s = s & "<div class=""half""><label>Son (&#8470;)</label><input type=""text"" id=""issue"" onkeyup=""upd()"" oninput=""upd()""></div>" & vbCrLf
@@ -16960,16 +17086,16 @@ Function MnbPart2()
     s = s & "  }" & vbCrLf
     s = s & "}" & vbCrLf
     s = s & "function setVal(id, v) { $(id).value = v ? String(v) : """"; }" & vbCrLf
-    s = s & "function parseRaw() {" & vbCrLf
     MnbPart2 = s
 End Function
 
 Function MnbPart3()
     Dim s
     s = ""
-    s = s & "  var txt = trimS($(""raw"").value.replace(/[\r\n]+/g, "" "")), lang = /[\u0400-\u04FF]/.test(txt) ? ""ru"" : $(""lang"").value, p, f;" & vbCrLf
+    s = s & "function parseRaw() {" & vbCrLf
+    s = s & "  var txt = trimS($(""raw"").value.replace(/[\r\n]+/g, "" "")), lang = BIB.classify(txt).lang, p, f;" & vbCrLf
     s = s & "  if (!txt) { $(""rawInfo"").innerText = "" Yozuvni kiriting.""; return; }" & vbCrLf
-    s = s & "  if (lang === ""ru"") $(""lang"").value = ""ru"";" & vbCrLf
+    s = s & "  $(""lang"").value = lang;" & vbCrLf
     s = s & "  p = BIB.parseEntry(txt, lang);" & vbCrLf
     s = s & "  if (!p.type) { $(""rawInfo"").innerText = "" Yozuv turi aniqlanmadi. Maydonlarni qo'lda to'ldiring.""; return; }" & vbCrLf
     s = s & "  f = p.f;" & vbCrLf
@@ -17046,13 +17172,13 @@ Function MnbPart3()
     s = s & "  if (!actGate()) return;" & vbCrLf
     s = s & "  onType();" & vbCrLf
     s = s & "  try {" & vbCrLf
-    s = s & "    var m = /""([^""]+\.txt)""\s*$/i.exec(oApp.commandLine);" & vbCrLf
     MnbPart3 = s
 End Function
 
 Function MnbPart4()
     Dim s
     s = ""
+    s = s & "    var m = /""([^""]+\.txt)""\s*$/i.exec(oApp.commandLine);" & vbCrLf
     s = s & "    if (m && fso.FileExists(m[1])) {" & vbCrLf
     s = s & "      var inp = trimS(readUtf8(m[1]).replace(/^\uFEFF/, """"));" & vbCrLf
     s = s & "      if (inp.length > 0) { $(""raw"").value = inp.substr(0, 1500); parseRaw(); }" & vbCrLf
