@@ -6,7 +6,8 @@ Option Explicit
 ' --- Yangilanish sozlamalari (muallif to'ldiradi) ---
 ' UPDATE_URL: yangilanish fayllari turgan manzil, masalan
 ' "https://raw.githubusercontent.com/FOYDALANUVCHI/OMBOR/main/"
-Const KL_VERSION = "2026.10.09.8"
+Const KL_VERSION = "2026.10.10.2"
+Const KL_DATA_VERSION = "2026.10.09.1"
 Const UPDATE_URL = "https://raw.githubusercontent.com/Begzodbek87/kirill-lotin-yangilanish/main/"
 Dim silent, updNote
 Dim sh, fso, wd, doc, tmpFile, startup, defStartup, target, ver, v, parts, f
@@ -1601,19 +1602,196 @@ Function ModPart18()
     s = s & "    Err.Clear" & vbCrLf
     s = s & "End Sub" & vbCrLf
     s = s & "" & vbCrLf
-    s = s & "Public Sub TinishTekshirish()" & vbCrLf
-    s = s & "    gImCats = ""E""" & vbCrLf
-    s = s & "    ImloTekshirish" & vbCrLf
-    s = s & "    gImCats = """"" & vbCrLf
-    s = s & "End Sub" & vbCrLf
-    s = s & "" & vbCrLf
-    s = s & "' Faqat o'zgargan qismini almashtiradi (qo'shni harflarning formati buzilmasligi uchun)" & vbCrLf
+    s = s & "'------------- Snoska / manba: sayt manzilidan keyin murojaat sanasi ---------" & vbCrLf
+    s = s & "' Snoska (yoki tanlangan abzats) oxirida sayt manzili bo'lsa va murojaat sanasi yo'q bo'lsa:" & vbCrLf
+    s = s & "' o'zbekcha matnda "" - Murojaat sanasi: kk.oo.yyyy."", ruscha matnda "" - Data obrashcheniya: ..."" (kirill) qo'shadi." & vbCrLf
+    s = s & "Private Function SnCyr(ByVal codes As String) As String" & vbCrLf
+    s = s & "    Dim a() As String, i As Long, r As String" & vbCrLf
+    s = s & "    a = Split(codes, "","")" & vbCrLf
+    s = s & "    For i = 0 To UBound(a)" & vbCrLf
     ModPart18 = s
 End Function
 
 Function ModPart19()
     Dim s
     s = ""
+    s = s & "        r = r & ChrW(CLng(a(i)))" & vbCrLf
+    s = s & "    Next i" & vbCrLf
+    s = s & "    SnCyr = r" & vbCrLf
+    s = s & "End Function" & vbCrLf
+    s = s & "" & vbCrLf
+    s = s & "Private Function SnLang(ByVal ctx As String, ByVal t As String) As String" & vbCrLf
+    s = s & "    Dim s As String, i As Long, c As Long, cyr As Long, lat As Long, mk As Long, en As Long, uz As Long, sl As String" & vbCrLf
+    s = s & "    s = ctx" & vbCrLf
+    s = s & "    If Len(s) < 30 Then s = ctx & "" "" & t" & vbCrLf
+    s = s & "    For i = 1 To Len(s)" & vbCrLf
+    s = s & "        c = AscW(Mid$(s, i, 1))" & vbCrLf
+    s = s & "        If c < 0 Then c = c + 65536" & vbCrLf
+    s = s & "        If c >= 1024 And c <= 1279 Then" & vbCrLf
+    s = s & "            cyr = cyr + 1" & vbCrLf
+    s = s & "            If c = 1118 Or c = 1038 Or c = 1179 Or c = 1178 Or c = 1171 Or c = 1170 Or c = 1203 Or c = 1202 Then mk = mk + 1" & vbCrLf
+    s = s & "        ElseIf (c >= 65 And c <= 90) Or (c >= 97 And c <= 122) Then" & vbCrLf
+    s = s & "            lat = lat + 1" & vbCrLf
+    s = s & "        End If" & vbCrLf
+    s = s & "    Next i" & vbCrLf
+    s = s & "    If cyr > lat Then" & vbCrLf
+    s = s & "        If mk > 0 Then SnLang = ""uzc"" Else SnLang = ""ru""" & vbCrLf
+    s = s & "        Exit Function" & vbCrLf
+    s = s & "    End If" & vbCrLf
+    s = s & "    sl = "" "" & LCase$(s) & "" """ & vbCrLf
+    s = s & "    en = SnCount(sl, "" the "") + SnCount(sl, "" and "") + SnCount(sl, "" of "")" & vbCrLf
+    s = s & "    uz = SnCount(sl, "" va "") + SnCount(sl, "" bilan "") + SnCount(sl, "" uchun "") + SnCount(sl, "" esa "") + SnCount(sl, "" ham "")" & vbCrLf
+    s = s & "    If en >= 3 And en > uz Then SnLang = ""en"" Else SnLang = ""uz""" & vbCrLf
+    s = s & "End Function" & vbCrLf
+    s = s & "" & vbCrLf
+    s = s & "Private Function SnCount(ByVal s As String, ByVal w As String) As Long" & vbCrLf
+    s = s & "    Dim p As Long, n As Long" & vbCrLf
+    s = s & "    p = InStr(1, s, w)" & vbCrLf
+    s = s & "    Do While p > 0" & vbCrLf
+    s = s & "        n = n + 1" & vbCrLf
+    s = s & "        p = InStr(p + Len(w), s, w)" & vbCrLf
+    s = s & "    Loop" & vbCrLf
+    s = s & "    SnCount = n" & vbCrLf
+    s = s & "End Function" & vbCrLf
+    s = s & "" & vbCrLf
+    s = s & "Private Function SnWord(ByVal lang As String) As String" & vbCrLf
+    s = s & "    Select Case lang" & vbCrLf
+    s = s & "        Case ""ru"": SnWord = SnCyr(""1044,1072,1090,1072,32,1086,1073,1088,1072,1097,1077,1085,1080,1103"")" & vbCrLf
+    s = s & "        Case ""uzc"": SnWord = SnCyr(""1052,1091,1088,1086,1078,1072,1072,1090,32,1089,1072,1085,1072,1089,1080"")" & vbCrLf
+    s = s & "        Case ""en"": SnWord = ""Date accessed""" & vbCrLf
+    s = s & "        Case Else: SnWord = ""Murojaat sanasi""" & vbCrLf
+    s = s & "    End Select" & vbCrLf
+    s = s & "End Function" & vbCrLf
+    s = s & "" & vbCrLf
+    s = s & "Private Function SnHasDate(ByVal tl As String) As Boolean" & vbCrLf
+    s = s & "    SnHasDate = (InStr(tl, ""murojaat sana"") > 0) Or (InStr(tl, ""accessed"") > 0) Or (InStr(tl, ""date of access"") > 0) Or _" & vbCrLf
+    s = s & "        (InStr(tl, SnCyr(""1086,1073,1088,1072,1097,1077,1085,1080,1103"")) > 0) Or _" & vbCrLf
+    s = s & "        (InStr(tl, SnCyr(""1084,1091,1088,1086,1078,1072,1072,1090"")) > 0) Or (InStr(tl, ""retrieved"") > 0)" & vbCrLf
+    s = s & "End Function" & vbCrLf
+    s = s & "" & vbCrLf
+    s = s & "' Natija: 1 = qo'shildi, 2 = belgilandi, 3 = sana allaqachon bor, 0 = sayt manzili yo'q yoki oxirida emas" & vbCrLf
+    s = s & "Private Function SnProc(ByVal r As Range, ByVal ctx As String, ByVal mode As Long) As Long" & vbCrLf
+    s = s & "    Dim t As String, tl As String, p As Long, q As Long, core As String, lang As String, add As String, ins As Range, d As Range, tr As Long" & vbCrLf
+    s = s & "    t = r.Text" & vbCrLf
+    s = s & "    Do While Len(t) > 0" & vbCrLf
+    s = s & "        If InStr("" "" & vbCr & vbLf & Chr$(7) & Chr$(11) & Chr$(160), Right$(t, 1)) > 0 Then t = Left$(t, Len(t) - 1) Else Exit Do" & vbCrLf
+    s = s & "    Loop" & vbCrLf
+    s = s & "    If Len(t) < 8 Then Exit Function" & vbCrLf
+    s = s & "    tl = LCase$(t)" & vbCrLf
+    s = s & "    p = InStrRev(tl, ""http"")" & vbCrLf
+    s = s & "    q = InStrRev(tl, ""www."")" & vbCrLf
+    s = s & "    If q > p Then p = q" & vbCrLf
+    s = s & "    If p = 0 Then Exit Function" & vbCrLf
+    s = s & "    If SnHasDate(tl) Then" & vbCrLf
+    s = s & "        SnProc = 3" & vbCrLf
+    s = s & "        Exit Function" & vbCrLf
+    s = s & "    End If" & vbCrLf
+    s = s & "    core = Mid$(t, p)" & vbCrLf
+    s = s & "    If Right$(core, 1) = ""."" Or Right$(core, 1) = "","" Or Right$(core, 1) = "";"" Then core = Left$(core, Len(core) - 1)" & vbCrLf
+    s = s & "    If InStr(core, "" "") > 0 Or InStr(core, "")"") > 0 Then Exit Function" & vbCrLf
+    s = s & "    If InStr(core, ""."") = 0 Then Exit Function" & vbCrLf
+    s = s & "    If mode <> 1 Then" & vbCrLf
+    s = s & "        r.HighlightColorIndex = 7" & vbCrLf
+    s = s & "        SnProc = 2" & vbCrLf
+    s = s & "        Exit Function" & vbCrLf
+    s = s & "    End If" & vbCrLf
+    ModPart19 = s
+End Function
+
+Function ModPart20()
+    Dim s
+    s = ""
+    s = s & "    lang = SnLang(ctx, t)" & vbCrLf
+    s = s & "    add = "" "" & ChrW(8211) & "" "" & SnWord(lang) & "": "" & Format$(Date, ""dd.mm.yyyy"") & "".""" & vbCrLf
+    s = s & "    tr = Len(r.Text) - Len(t)" & vbCrLf
+    s = s & "    If Right$(t, 1) = ""."" Or Right$(t, 1) = "","" Or Right$(t, 1) = "";"" Then" & vbCrLf
+    s = s & "        Set d = r.Duplicate" & vbCrLf
+    s = s & "        d.SetRange r.End - tr - 1, r.End - tr" & vbCrLf
+    s = s & "        If d.Text = ""."" Or d.Text = "","" Or d.Text = "";"" Then d.Delete" & vbCrLf
+    s = s & "    End If" & vbCrLf
+    s = s & "    Set ins = r.Duplicate" & vbCrLf
+    s = s & "    ins.SetRange r.End - tr, r.End - tr" & vbCrLf
+    s = s & "    ins.InsertAfter add" & vbCrLf
+    s = s & "    ins.HighlightColorIndex = 4" & vbCrLf
+    s = s & "    SnProc = 1" & vbCrLf
+    s = s & "End Function" & vbCrLf
+    s = s & "" & vbCrLf
+    s = s & "Public Sub SnoskaSana()" & vbCrLf
+    s = s & "    Dim ans As Long, mode As Long, i As Long, k As Long, nAdd As Long, nMark As Long, nHave As Long, rc As Long" & vbCrLf
+    s = s & "    Dim para As Paragraph, rr As Range, msg As String, errNum As Long, errDesc As String, doc As Document" & vbCrLf
+    s = s & "" & vbCrLf
+    s = s & "    If Not CheckAct() Then Exit Sub" & vbCrLf
+    s = s & "    If Documents.Count = 0 Then Exit Sub" & vbCrLf
+    s = s & "    ans = MsgBox(""Snoskalarda (va oxirgi snoskalarda) oxirida sayt manzili bor, lekin murojaat sanasi yo'q yozuvlar topiladi."" & vbCrLf & vbCrLf & _" & vbCrLf
+    s = s & "                 ""O'zbekcha matnda:  - Murojaat sanasi: bugungi sana."" & vbCrLf & _" & vbCrLf
+    s = s & "                 ""Ruscha matnda:  - Data obrashcheniya (kirillcha) shu jumlaning ruscha tarjimasi."" & vbCrLf & _" & vbCrLf
+    s = s & "                 ""(Inglizcha matnda: Date accessed.)"" & vbCrLf & vbCrLf & _" & vbCrLf
+    s = s & "                 ""Ha - sanani avtomatik qo'shish (yashil rang)"" & vbCrLf & _" & vbCrLf
+    s = s & "                 ""Yo'q - qo'shmasdan, faqat belgilash (sariq rang)"" & vbCrLf & vbCrLf & _" & vbCrLf
+    s = s & "                 ""Matn tanlangan bo'lsa - tanlangan abzatslardagi sayt manzillari ham tekshiriladi."", _" & vbCrLf
+    s = s & "                 vbYesNoCancel + vbQuestion, ""Murojaat sanasi"")" & vbCrLf
+    s = s & "    If ans = vbCancel Then Exit Sub" & vbCrLf
+    s = s & "    If ans = vbYes Then mode = 1 Else mode = 2" & vbCrLf
+    s = s & "    On Error GoTo Fail" & vbCrLf
+    s = s & "    Set doc = ActiveDocument" & vbCrLf
+    s = s & "    Application.ScreenUpdating = False" & vbCrLf
+    s = s & "    BeginUndo" & vbCrLf
+    s = s & "    For i = doc.Footnotes.Count To 1 Step -1" & vbCrLf
+    s = s & "        Set rr = doc.Footnotes(i).Range" & vbCrLf
+    s = s & "        rc = SnProc(rr, doc.Footnotes(i).Reference.Paragraphs(1).Range.Text, mode)" & vbCrLf
+    s = s & "        If rc = 1 Then nAdd = nAdd + 1" & vbCrLf
+    s = s & "        If rc = 2 Then nMark = nMark + 1" & vbCrLf
+    s = s & "        If rc = 3 Then nHave = nHave + 1" & vbCrLf
+    s = s & "    Next i" & vbCrLf
+    s = s & "    For i = doc.Endnotes.Count To 1 Step -1" & vbCrLf
+    s = s & "        Set rr = doc.Endnotes(i).Range" & vbCrLf
+    s = s & "        rc = SnProc(rr, doc.Endnotes(i).Reference.Paragraphs(1).Range.Text, mode)" & vbCrLf
+    s = s & "        If rc = 1 Then nAdd = nAdd + 1" & vbCrLf
+    s = s & "        If rc = 2 Then nMark = nMark + 1" & vbCrLf
+    s = s & "        If rc = 3 Then nHave = nHave + 1" & vbCrLf
+    s = s & "    Next i" & vbCrLf
+    s = s & "    If Selection.Start <> Selection.End Then" & vbCrLf
+    s = s & "        For k = Selection.Range.Paragraphs.Count To 1 Step -1" & vbCrLf
+    s = s & "            Set para = Selection.Range.Paragraphs(k)" & vbCrLf
+    s = s & "            Set rr = para.Range" & vbCrLf
+    s = s & "            rr.MoveEnd 1, -1" & vbCrLf
+    s = s & "            rc = SnProc(rr, para.Range.Text, mode)" & vbCrLf
+    s = s & "            If rc = 1 Then nAdd = nAdd + 1" & vbCrLf
+    s = s & "            If rc = 2 Then nMark = nMark + 1" & vbCrLf
+    s = s & "            If rc = 3 Then nHave = nHave + 1" & vbCrLf
+    s = s & "        Next k" & vbCrLf
+    s = s & "    End If" & vbCrLf
+    s = s & "    EndUndo" & vbCrLf
+    s = s & "    Application.ScreenUpdating = True" & vbCrLf
+    s = s & "    If mode = 1 Then" & vbCrLf
+    s = s & "        msg = ""Sana qo'shildi (yashil): "" & nAdd & vbCrLf" & vbCrLf
+    s = s & "    Else" & vbCrLf
+    s = s & "        msg = ""Sanasi yo'q, belgilandi (sariq): "" & nMark & vbCrLf" & vbCrLf
+    s = s & "    End If" & vbCrLf
+    s = s & "    msg = msg & ""Sanasi allaqachon bor: "" & nHave & vbCrLf & vbCrLf & ""Ctrl+Z bilan qaytarish mumkin.""" & vbCrLf
+    s = s & "    MsgBox msg, vbInformation, ""Murojaat sanasi""" & vbCrLf
+    s = s & "    Exit Sub" & vbCrLf
+    s = s & "Fail:" & vbCrLf
+    s = s & "    errNum = Err.Number" & vbCrLf
+    s = s & "    errDesc = Err.Description" & vbCrLf
+    s = s & "    EndUndo" & vbCrLf
+    s = s & "    Application.ScreenUpdating = True" & vbCrLf
+    s = s & "    MsgBox ""Xatolik "" & CStr(errNum) & "": "" & errDesc, vbExclamation, ""Murojaat sanasi""" & vbCrLf
+    s = s & "End Sub" & vbCrLf
+    s = s & "" & vbCrLf
+    s = s & "Public Sub TinishTekshirish()" & vbCrLf
+    s = s & "    gImCats = ""E""" & vbCrLf
+    ModPart20 = s
+End Function
+
+Function ModPart21()
+    Dim s
+    s = ""
+    s = s & "    ImloTekshirish" & vbCrLf
+    s = s & "    gImCats = """"" & vbCrLf
+    s = s & "End Sub" & vbCrLf
+    s = s & "" & vbCrLf
+    s = s & "' Faqat o'zgargan qismini almashtiradi (qo'shni harflarning formati buzilmasligi uchun)" & vbCrLf
     s = s & "Private Sub ImReplaceNarrow(ByVal r As Range, ByVal newT As String)" & vbCrLf
     s = s & "    Dim oldT As String, lo As Long, ln As Long, p As Long, q As Long, rr As Range, mid2 As String" & vbCrLf
     s = s & "    oldT = r.Text" & vbCrLf
@@ -1642,12 +1820,12 @@ Function ModPart19()
     s = s & "    Dim pA() As Long, pT() As String, pCnt As Long, a As Long, b As Long, t As String, rr As Range" & vbCrLf
     s = s & "    Dim ln As String, parts() As String, idx As Long, s As Long, e As Long, r As Range" & vbCrLf
     s = s & "    Dim nFix As Long, nFlag As Long, nMark As Long, nApos As Long, msg As String" & vbCrLf
-    s = s & "    Dim errNum As Long, errDesc As String, cats As String, onlyE As Boolean" & vbCrLf
+    s = s & "    Dim errNum As Long, errDesc As String, cats As String, onlyE As Boolean, nFail As Long, runId As String" & vbCrLf
     s = s & "" & vbCrLf
     s = s & "    If Not CheckAct() Then Exit Sub" & vbCrLf
     s = s & "    If Documents.Count = 0 Then Exit Sub" & vbCrLf
     s = s & "    cats = gImCats" & vbCrLf
-    s = s & "    If Len(cats) = 0 Then cats = ""ABCDE""" & vbCrLf
+    s = s & "    If Len(cats) = 0 Then cats = ""ABCDEFK""" & vbCrLf
     s = s & "    If gImQuick Then cats = ""ABCD""" & vbCrLf
     s = s & "    onlyE = (cats = ""E"")" & vbCrLf
     s = s & "    root = Environ$(""PUBLIC"") & ""\KirillLotinOCR""" & vbCrLf
@@ -1677,7 +1855,7 @@ Function ModPart19()
     s = s & "    Else" & vbCrLf
     s = s & "        ans = MsgBox(""Matn o'zbek tilining imlo qoidalari va o'quv imlo lug'ati asosida tekshiriladi"" & vbCrLf & _" & vbCrLf
     s = s & "                     ""(o', g' va tutuq; h/x; qo'shimchalar; og'zaki shakllar; qo'shib/ajratib/chiziqcha bilan yozish; bosh harflar;"" & vbCrLf & _" & vbCrLf
-    s = s & "                     ""tinish belgilari, bo'shliqlar va tire/chiziqcha)."" & vbCrLf & vbCrLf & _" & vbCrLf
+    s = s & "                     ""tinish belgilari, bo'shliqlar, tire/chiziqcha; adabiyotlar ro'yxati yozuvlari - OAK namunasi bo'yicha: o'zbek, rus, ingliz)."" & vbCrLf & vbCrLf & _" & vbCrLf
     s = s & "                     ""Ha - aniq xatolarni avtomatik tuzatish (yashil rang)"" & vbCrLf & _" & vbCrLf
     s = s & "                     ""Yo'q - tuzatmasdan, belgilash (pushti rang)"" & vbCrLf & vbCrLf & _" & vbCrLf
     s = s & "                     ""Shubhali joylar sariq rangda belgilanadi. Keyin takliflar menyusidan"" & vbCrLf & _" & vbCrLf
@@ -1689,17 +1867,17 @@ Function ModPart19()
     s = s & "    If ans = vbYes Then mode = 1 Else mode = 2" & vbCrLf
     s = s & "QuickStart:" & vbCrLf
     s = s & "    On Error GoTo Fail" & vbCrLf
+    ModPart21 = s
+End Function
+
+Function ModPart22()
+    Dim s
+    s = ""
     s = s & "    If Selection.Start <> Selection.End Then" & vbCrLf
     s = s & "        Set scope = Selection.Range" & vbCrLf
     s = s & "    Else" & vbCrLf
     s = s & "        Set scope = ActiveDocument.Content" & vbCrLf
     s = s & "    End If" & vbCrLf
-    ModPart19 = s
-End Function
-
-Function ModPart20()
-    Dim s
-    s = ""
     s = s & "" & vbCrLf
     s = s & "    ' 1. Abzatslarni yig'ish" & vbCrLf
     s = s & "    pCnt = 0" & vbCrLf
@@ -1731,9 +1909,16 @@ Function ModPart20()
     s = s & "    If pCnt = 0 Then Exit Sub" & vbCrLf
     s = s & "" & vbCrLf
     s = s & "    ' 2. Tekshiruvni ishga tushirish" & vbCrLf
-    s = s & "    inF = root & ""\tmp\imlo_in.txt""" & vbCrLf
-    s = s & "    outF = root & ""\tmp\imlo_out.txt""" & vbCrLf
     s = s & "    If Not fso.FolderExists(root & ""\tmp"") Then fso.CreateFolder root & ""\tmp""" & vbCrLf
+    s = s & "    ' har safar yangi fayl nomi (eski fayl band bo'lsa ham xalaqit bermaydi)" & vbCrLf
+    s = s & "    runId = Format$(Now, ""hhnnss"") & CStr(Int(Rnd * 900) + 100)" & vbCrLf
+    s = s & "    inF = root & ""\tmp\imlo_in_"" & runId & "".txt""" & vbCrLf
+    s = s & "    outF = root & ""\tmp\imlo_out_"" & runId & "".txt""" & vbCrLf
+    s = s & "    On Error Resume Next" & vbCrLf
+    s = s & "    If fso.FileExists(root & ""\tmp\imlo_in.txt"") Then fso.DeleteFile root & ""\tmp\imlo_in.txt"", True" & vbCrLf
+    s = s & "    If fso.FileExists(root & ""\tmp\imlo_out.txt"") Then fso.DeleteFile root & ""\tmp\imlo_out.txt"", True" & vbCrLf
+    s = s & "    Err.Clear" & vbCrLf
+    s = s & "    On Error GoTo Fail" & vbCrLf
     s = s & "    If fso.FileExists(outF) Then fso.DeleteFile outF, True" & vbCrLf
     s = s & "    If fso.FileExists(outF & "".err"") Then fso.DeleteFile outF & "".err"", True" & vbCrLf
     s = s & "    Set f = fso.CreateTextFile(inF, True, True)" & vbCrLf
@@ -1768,10 +1953,17 @@ Function ModPart20()
     s = s & "        ln = f.ReadLine" & vbCrLf
     s = s & "        parts = Split(ln, vbTab)" & vbCrLf
     s = s & "        If UBound(parts) >= 6 Then" & vbCrLf
+    ModPart22 = s
+End Function
+
+Function ModPart23()
+    Dim s
+    s = ""
     s = s & "            idx = CLng(parts(0))" & vbCrLf
     s = s & "            s = CLng(parts(1))" & vbCrLf
     s = s & "            e = CLng(parts(2))" & vbCrLf
     s = s & "            If idx >= 0 And idx < pCnt Then" & vbCrLf
+    s = s & "                On Error Resume Next" & vbCrLf
     s = s & "                Set r = scope.Duplicate" & vbCrLf
     s = s & "                r.SetRange pA(idx) + s, pA(idx) + e" & vbCrLf
     s = s & "                If r.Text = parts(6) Then" & vbCrLf
@@ -1780,16 +1972,10 @@ Function ModPart20()
     s = s & "                            If mode = 1 Then" & vbCrLf
     s = s & "                                r.Text = parts(5)" & vbCrLf
     s = s & "                                nApos = nApos + 1" & vbCrLf
-    ModPart20 = s
-End Function
-
-Function ModPart21()
-    Dim s
-    s = ""
     s = s & "                            End If" & vbCrLf
     s = s & "                        Case ""fix""" & vbCrLf
     s = s & "                            If mode = 1 Then" & vbCrLf
-    s = s & "                                If Left$(parts(4), 1) = ""E"" Then" & vbCrLf
+    s = s & "                                If Left$(parts(4), 1) = ""E"" Or Left$(parts(4), 1) = ""F"" Or Left$(parts(4), 1) = ""K"" Then" & vbCrLf
     s = s & "                                    ImReplaceNarrow r, parts(5)" & vbCrLf
     s = s & "                                Else" & vbCrLf
     s = s & "                                    r.Text = parts(5)" & vbCrLf
@@ -1807,10 +1993,20 @@ Function ModPart21()
     s = s & "                            nFlag = nFlag + 1" & vbCrLf
     s = s & "                    End Select" & vbCrLf
     s = s & "                End If" & vbCrLf
+    s = s & "                If Err.Number <> 0 Then" & vbCrLf
+    s = s & "                    nFail = nFail + 1" & vbCrLf
+    s = s & "                    Err.Clear" & vbCrLf
+    s = s & "                End If" & vbCrLf
+    s = s & "                On Error GoTo Fail" & vbCrLf
     s = s & "            End If" & vbCrLf
     s = s & "        End If" & vbCrLf
     s = s & "    Loop" & vbCrLf
     s = s & "    f.Close" & vbCrLf
+    s = s & "    On Error Resume Next" & vbCrLf
+    s = s & "    fso.DeleteFile inF, True" & vbCrLf
+    s = s & "    fso.DeleteFile outF, True" & vbCrLf
+    s = s & "    Err.Clear" & vbCrLf
+    s = s & "    On Error GoTo Fail" & vbCrLf
     s = s & "    ' h/x xatolari ham shu tekshiruvda (H/X bazasi asosida)" & vbCrLf
     s = s & "    gHxFix = 0" & vbCrLf
     s = s & "    gHxAmb = 0" & vbCrLf
@@ -1841,7 +2037,14 @@ Function ModPart21()
     s = s & "    Else" & vbCrLf
     s = s & "        msg = msg & ""Xato deb belgilandi (pushti): "" & nMark & vbCrLf" & vbCrLf
     s = s & "    End If" & vbCrLf
+    s = s & "    If nFail > 0 Then msg = msg & ""O'zgartirib bo'lmadi (himoyalangan joy): "" & nFail & vbCrLf" & vbCrLf
     s = s & "    msg = msg & ""Tekshirish kerak (sariq): "" & nFlag & vbCrLf & vbCrLf & _" & vbCrLf
+    ModPart23 = s
+End Function
+
+Function ModPart24()
+    Dim s
+    s = ""
     s = s & "          ""Ctrl+Z bilan barcha o'zgarishlarni qaytarish mumkin.""" & vbCrLf
     s = s & "    If nMark + nFlag + gHxMark + gHxAmb > 0 Then" & vbCrLf
     s = s & "        msg = msg & vbCrLf & vbCrLf & ""Belgilangan joylar uchun takliflar menyusini hozir ochaymi?"" & vbCrLf & _" & vbCrLf
@@ -1866,12 +2069,6 @@ Function ModPart21()
     s = s & "'------------------------- Takliflar: bosib almashtirish ------------------" & vbCrLf
     s = s & "' Imlo va H/X tekshiruvi shubhali so'zlarni yashirin xatcho'p (_klN) bilan belgilaydi." & vbCrLf
     s = s & "' Takliflar hujjat o'zgaruvchisida (klN) saqlanadi: ""tur|qoida|taklif1 / taklif2""." & vbCrLf
-    ModPart21 = s
-End Function
-
-Function ModPart22()
-    Dim s
-    s = ""
     s = s & "' ImKeyingi / ImJoriy takliflar menyusini ochadi; tanlangan taklif so'zni o'zi almashtiradi." & vbCrLf
     s = s & "" & vbCrLf
     s = s & "Private Function ImMarkNum(ByVal nm As String) As Long" & vbCrLf
@@ -1928,6 +2125,12 @@ Function ModPart22()
     s = s & "    gMarkN = gMarkN + 1" & vbCrLf
     s = s & "    n = gMarkN" & vbCrLf
     s = s & "    v = kind & ""|"" & rule & ""|"" & sug" & vbCrLf
+    ModPart24 = s
+End Function
+
+Function ModPart25()
+    Dim s
+    s = ""
     s = s & "    ActiveDocument.Bookmarks.ShowHidden = True" & vbCrLf
     s = s & "    ActiveDocument.Bookmarks.Add ""_kl"" & n, r" & vbCrLf
     s = s & "    Err.Clear" & vbCrLf
@@ -1952,12 +2155,6 @@ Function ModPart22()
     s = s & "    p = Split(v, ""|"")" & vbCrLf
     s = s & "    If UBound(p) < 2 Then Exit Function" & vbCrLf
     s = s & "    kind = p(0)" & vbCrLf
-    ModPart22 = s
-End Function
-
-Function ModPart23()
-    Dim s
-    s = ""
     s = s & "    rule = p(1)" & vbCrLf
     s = s & "    sug = p(2)" & vbCrLf
     s = s & "    ImMarkInfo = True" & vbCrLf
@@ -1989,6 +2186,9 @@ Function ModPart23()
     s = s & "        Case ""E10"": ImRuleName = ""harflar orasidagi bo'shliq""" & vbCrLf
     s = s & "        Case ""E11"": ImRuleName = ""vergul qo'yilishi kerak""" & vbCrLf
     s = s & "        Case ""E12"": ImRuleName = ""satr oxiridagi bo'shliq""" & vbCrLf
+    s = s & "        Case ""F1"": ImRuleName = ""bibliografik yozuv (OAK)""" & vbCrLf
+    s = s & "        Case ""F2"": ImRuleName = ""murojaat sanasi""" & vbCrLf
+    s = s & "        Case ""K1"": ImRuleName = ""kirill: q, g', h, o' harflari""" & vbCrLf
     s = s & "        Case Else: ImRuleName = rule & ""-qoida""" & vbCrLf
     s = s & "    End Select" & vbCrLf
     s = s & "End Function" & vbCrLf
@@ -2011,6 +2211,12 @@ Function ModPart23()
     s = s & "" & vbCrLf
     s = s & "Private Sub ImShowPopup(ByVal bm As String)" & vbCrLf
     s = s & "    Dim cb As Object, ctl As Object, kind As String, rule As String, sug As String" & vbCrLf
+    ModPart25 = s
+End Function
+
+Function ModPart26()
+    Dim s
+    s = ""
     s = s & "    Dim a() As String, i As Long, n As Long, r As Range, x As Long, y As Long, w As Long, h As Long" & vbCrLf
     s = s & "    Dim txt As String, shown As String, ro As Object" & vbCrLf
     s = s & "    If Not ImMarkInfo(bm, kind, rule, sug) Then Exit Sub" & vbCrLf
@@ -2038,12 +2244,6 @@ Function ModPart23()
     s = s & "    End If" & vbCrLf
     s = s & "    ctl.Style = 2" & vbCrLf
     s = s & "    ctl.Enabled = False" & vbCrLf
-    ModPart23 = s
-End Function
-
-Function ModPart24()
-    Dim s
-    s = ""
     s = s & "    For i = 0 To n - 1" & vbCrLf
     s = s & "        Set ctl = cb.Controls.Add(1)" & vbCrLf
     s = s & "        ctl.Caption = ""&"" & CStr(i + 1) & ""  "" & Replace(a(i), ""&"", ""&&"")" & vbCrLf
@@ -2097,6 +2297,12 @@ Function ModPart24()
     s = s & "    r.Select" & vbCrLf
     s = s & "    Err.Clear" & vbCrLf
     s = s & "End Sub" & vbCrLf
+    ModPart26 = s
+End Function
+
+Function ModPart27()
+    Dim s
+    s = ""
     s = s & "" & vbCrLf
     s = s & "Public Sub ImPick()" & vbCrLf
     s = s & "    Dim ctl As Object, w As String" & vbCrLf
@@ -2124,12 +2330,6 @@ Function ModPart24()
     s = s & "        If ImMarkNum(b.Name) > 0 Then" & vbCrLf
     s = s & "            If b.Range.Text = old Then col.Add b.Name" & vbCrLf
     s = s & "        End If" & vbCrLf
-    ModPart24 = s
-End Function
-
-Function ModPart25()
-    Dim s
-    s = ""
     s = s & "    Next b" & vbCrLf
     s = s & "    Application.ScreenUpdating = False" & vbCrLf
     s = s & "    BeginUndo" & vbCrLf
@@ -2183,6 +2383,12 @@ Function ModPart25()
     s = s & "                If bestS < 0 Or s < bestS Then" & vbCrLf
     s = s & "                    bestS = s" & vbCrLf
     s = s & "                    bestNm = b.Name" & vbCrLf
+    ModPart27 = s
+End Function
+
+Function ModPart28()
+    Dim s
+    s = ""
     s = s & "                End If" & vbCrLf
     s = s & "            End If" & vbCrLf
     s = s & "        End If" & vbCrLf
@@ -2210,12 +2416,6 @@ Function ModPart25()
     s = s & "    If Documents.Count = 0 Then Exit Sub" & vbCrLf
     s = s & "    ImNext True" & vbCrLf
     s = s & "End Sub" & vbCrLf
-    ModPart25 = s
-End Function
-
-Function ModPart26()
-    Dim s
-    s = ""
     s = s & "" & vbCrLf
     s = s & "Private Function ImFindAt(ByVal pos As Long) As String" & vbCrLf
     s = s & "    Dim b As Bookmark" & vbCrLf
@@ -2269,6 +2469,12 @@ Function ModPart26()
     s = s & "        Selection.SetRange ws, we" & vbCrLf
     s = s & "        gImQuick = True" & vbCrLf
     s = s & "        ImloTekshirish" & vbCrLf
+    ModPart28 = s
+End Function
+
+Function ModPart29()
+    Dim s
+    s = ""
     s = s & "        gImQuick = False" & vbCrLf
     s = s & "        Selection.SetRange ws, ws" & vbCrLf
     s = s & "        nm = ImFindAt(ws)" & vbCrLf
@@ -2296,12 +2502,6 @@ Function ModPart26()
     s = s & "    If ans <> vbYes Then Exit Sub" & vbCrLf
     s = s & "    BeginUndo" & vbCrLf
     s = s & "    ImClearMarks scope" & vbCrLf
-    ModPart26 = s
-End Function
-
-Function ModPart27()
-    Dim s
-    s = ""
     s = s & "    scope.HighlightColorIndex = 0" & vbCrLf
     s = s & "    EndUndo" & vbCrLf
     s = s & "    Err.Clear" & vbCrLf
@@ -2340,6 +2540,7 @@ Function ModPart27()
     s = s & "        Case ""klApO"": ApostrofOddiy" & vbCrLf
     s = s & "        Case ""klImlo"": ImloTekshirish" & vbCrLf
     s = s & "        Case ""klPunct"": TinishTekshirish" & vbCrLf
+    s = s & "        Case ""klSana"": SnoskaSana" & vbCrLf
     s = s & "        Case ""klHX"": HXTekshirish" & vbCrLf
     s = s & "        Case ""klNext"": ImKeyingi" & vbCrLf
     s = s & "        Case ""klCur"": ImJoriy" & vbCrLf
@@ -2354,6 +2555,12 @@ Function ModPart27()
     s = s & "        Case ""klManba"": ManbaForma" & vbCrLf
     s = s & "        Case ""klUpdate"": KL_Yangilash" & vbCrLf
     s = s & "        Case ""klAbout"": MuallifHaqida" & vbCrLf
+    ModPart29 = s
+End Function
+
+Function ModPart30()
+    Dim s
+    s = ""
     s = s & "    End Select" & vbCrLf
     s = s & "    Exit Sub" & vbCrLf
     s = s & "EH:" & vbCrLf
@@ -2382,12 +2589,6 @@ Function ModPart27()
     s = s & "    End If" & vbCrLf
     s = s & "    Err.Clear" & vbCrLf
     s = s & "    txt = Trim$(Replace(Replace(Replace(txt, vbCr, "" ""), Chr$(11), "" ""), Chr$(7), "" ""))" & vbCrLf
-    ModPart27 = s
-End Function
-
-Function ModPart28()
-    Dim s
-    s = ""
     s = s & "    If Len(txt) > 2000 Then txt = Left$(txt, 2000)" & vbCrLf
     s = s & "    Kill f" & vbCrLf
     s = s & "    Err.Clear" & vbCrLf
@@ -2440,6 +2641,12 @@ Function ModPart28()
     s = s & "    Else" & vbCrLf
     s = s & "        Shell ""mshta.exe """""" & hta & """""""", vbNormalFocus" & vbCrLf
     s = s & "    End If" & vbCrLf
+    ModPart30 = s
+End Function
+
+Function ModPart31()
+    Dim s
+    s = ""
     s = s & "End Sub" & vbCrLf
     s = s & "" & vbCrLf
     s = s & "Public Sub KL_Yangilash()" & vbCrLf
@@ -2468,12 +2675,6 @@ Function ModPart28()
     s = s & "        s = Left$(s, Len(s) - 1)" & vbCrLf
     s = s & "    Loop" & vbCrLf
     s = s & "    Do While Len(s) > 0 And (Left$(s, 1) Like ""[0-9. ]"")" & vbCrLf
-    ModPart28 = s
-End Function
-
-Function ModPart29()
-    Dim s
-    s = ""
     s = s & "        s = Mid$(s, 2)" & vbCrLf
     s = s & "    Loop" & vbCrLf
     s = s & "    BibNorm = s" & vbCrLf
@@ -2526,6 +2727,12 @@ Function ModPart29()
     s = s & "End Function" & vbCrLf
     s = s & "" & vbCrLf
     s = s & "Private Function BibClean(ByVal t As String) As String" & vbCrLf
+    ModPart31 = s
+End Function
+
+Function ModPart32()
+    Dim s
+    s = ""
     s = s & "    Do While Len(t) > 0 And (Right$(t, 1) = vbCr Or Right$(t, 1) = Chr$(7))" & vbCrLf
     s = s & "        t = Left$(t, Len(t) - 1)" & vbCrLf
     s = s & "    Loop" & vbCrLf
@@ -2554,12 +2761,6 @@ Function ModPart29()
     s = s & "    If Not BibFindList(lS, lE) Then" & vbCrLf
     s = s & "        MsgBox ""Adabiyotlar ro'yxati topilmadi."" & vbCrLf & vbCrLf & _" & vbCrLf
     s = s & "               ""Ro'yxat sarlavhasi ('Foydalanilgan adabiyotlar' yoki 'Adabiyotlar ro'yxati') bo'lishi kerak,"" & vbCrLf & _" & vbCrLf
-    ModPart29 = s
-End Function
-
-Function ModPart30()
-    Dim s
-    s = ""
     s = s & "               ""yoki ro'yxat yozuvlarini sichqoncha bilan belgilab (tanlab), tugmani qayta bosing."" & vbCrLf & _" & vbCrLf
     s = s & "               ""Har bir manba alohida abzatsda bo'lishi kerak."", vbInformation, ""Adabiyotlar ro'yxati""" & vbCrLf
     s = s & "        Exit Sub" & vbCrLf
@@ -2612,6 +2813,12 @@ Function ModPart30()
     s = s & "    End If" & vbCrLf
     s = s & "" & vbCrLf
     s = s & "    On Error GoTo Fail" & vbCrLf
+    ModPart32 = s
+End Function
+
+Function ModPart33()
+    Dim s
+    s = ""
     s = s & "    inF = root & ""\tmp\bib_in.txt""" & vbCrLf
     s = s & "    outF = root & ""\tmp\bib_out.txt""" & vbCrLf
     s = s & "    If Not fso.FolderExists(root & ""\tmp"") Then fso.CreateFolder root & ""\tmp""" & vbCrLf
@@ -2640,12 +2847,6 @@ Function ModPart30()
     s = s & "    Next para" & vbCrLf
     s = s & "    f.Close" & vbCrLf
     s = s & "    Application.StatusBar = ""Adabiyotlar ro'yxati tekshirilmoqda...""" & vbCrLf
-    ModPart30 = s
-End Function
-
-Function ModPart31()
-    Dim s
-    s = ""
     s = s & "    Set wsh = CreateObject(""WScript.Shell"")" & vbCrLf
     s = s & "    rc = wsh.Run(""cscript.exe //nologo //E:JScript """""" & root & ""\oak_biblio.js"""" """""" & inF & """""" """""" & outF & """""""", 0, True)" & vbCrLf
     s = s & "    Application.StatusBar = False" & vbCrLf
@@ -2698,6 +2899,12 @@ Function ModPart31()
     s = s & "        ' 1. matndagi havolalarni yangilash (faylda oxiridan boshiga qarab)" & vbCrLf
     s = s & "        nEdit = 0" & vbCrLf
     s = s & "        For Each v In items" & vbCrLf
+    ModPart33 = s
+End Function
+
+Function ModPart34()
+    Dim s
+    s = ""
     s = s & "            parts = Split(CStr(v), vbTab)" & vbCrLf
     s = s & "            If parts(0) = ""C"" Then" & vbCrLf
     s = s & "                idx = CLng(parts(1))" & vbCrLf
@@ -2726,12 +2933,6 @@ Function ModPart31()
     s = s & "            Set pr = r.Paragraphs(CLng(v))" & vbCrLf
     s = s & "            pr.Alignment = 1" & vbCrLf
     s = s & "            pr.FirstLineIndent = 0" & vbCrLf
-    ModPart31 = s
-End Function
-
-Function ModPart32()
-    Dim s
-    s = ""
     s = s & "            pr.LeftIndent = 0" & vbCrLf
     s = s & "            pr.SpaceBefore = 6" & vbCrLf
     s = s & "            pr.KeepWithNext = True" & vbCrLf
@@ -2784,6 +2985,12 @@ Function ModPart32()
     s = s & "        r = r & ""|"" & st & ""ka""" & vbCrLf
     s = s & "    Else" & vbCrLf
     s = s & "        r = r & ""|"" & st & ""ga""" & vbCrLf
+    ModPart34 = s
+End Function
+
+Function ModPart35()
+    Dim s
+    s = ""
     s = s & "    End If" & vbCrLf
     s = s & "    If ImIsVowelEnd(st) Then" & vbCrLf
     s = s & "        r = r & ""|"" & st & ""si""" & vbCrLf
@@ -2812,12 +3019,6 @@ Function ModPart32()
     s = s & "End Function" & vbCrLf
     s = s & "" & vbCrLf
     s = s & "Private Function ImAcRun(ByVal mode As Long) As Long" & vbCrLf
-    ModPart32 = s
-End Function
-
-Function ModPart33()
-    Dim s
-    s = ""
     s = s & "    Dim p As String, fso As Object, f As Object, ln As String, parts() As String" & vbCrLf
     s = s & "    Dim wf() As String, rf() As String, i As Long, cnt As Long, pass As Long, total As Long" & vbCrLf
     s = s & "    Dim skip As Object, d As Document, langs As Variant, recs() As String, rec As String, j As Long" & vbCrLf
@@ -2870,6 +3071,12 @@ Function ModPart33()
     s = s & "                                If UBound(wf) = UBound(rf) Then" & vbCrLf
     s = s & "                                    For i = 0 To UBound(wf)" & vbCrLf
     s = s & "                                        If Not skip.Exists(wf(i)) Then total = total + ImAcPair(wf(i), rf(i), mode)" & vbCrLf
+    ModPart35 = s
+End Function
+
+Function ModPart36()
+    Dim s
+    s = ""
     s = s & "                                    Next i" & vbCrLf
     s = s & "                                End If" & vbCrLf
     s = s & "                            End If" & vbCrLf
@@ -2898,12 +3105,6 @@ Function ModPart33()
     s = s & "    Dim saved As String" & vbCrLf
     s = s & "    If gActChecked Then" & vbCrLf
     s = s & "        ActOkSilent = gActOk" & vbCrLf
-    ModPart33 = s
-End Function
-
-Function ModPart34()
-    Dim s
-    s = ""
     s = s & "        Exit Function" & vbCrLf
     s = s & "    End If" & vbCrLf
     s = s & "    On Error Resume Next" & vbCrLf
@@ -2956,6 +3157,12 @@ Function ModPart34()
     s = s & "                            rf = Split(ImSufForms(parts(1)), ""|"")" & vbCrLf
     s = s & "                            If UBound(wf) = UBound(rf) Then" & vbCrLf
     s = s & "                                For i = 0 To UBound(wf)" & vbCrLf
+    ModPart36 = s
+End Function
+
+Function ModPart37()
+    Dim s
+    s = ""
     s = s & "                                    If Not skip.Exists(wf(i)) Then gIm(wf(i)) = rf(i)" & vbCrLf
     s = s & "                                Next i" & vbCrLf
     s = s & "                            End If" & vbCrLf
@@ -2984,12 +3191,6 @@ Function ModPart34()
     s = s & "    Dim i As Long, r As String, pc As String" & vbCrLf
     s = s & "    w = LCase$(w)" & vbCrLf
     s = s & "    For i = 1 To Len(w)" & vbCrLf
-    ModPart34 = s
-End Function
-
-Function ModPart35()
-    Dim s
-    s = ""
     s = s & "        If HxIsApos(CodeAt(w, i)) Then" & vbCrLf
     s = s & "            pc = Right$(r, 1)" & vbCrLf
     s = s & "            If pc = ""o"" Or pc = ""g"" Then r = r & ""'"" Else r = r & ""`""" & vbCrLf
@@ -3042,6 +3243,12 @@ Function ModPart35()
     s = s & "    e = Len(t)" & vbCrLf
     s = s & "    Do While e > 0" & vbCrLf
     s = s & "        If InStr("".,!?;:)"""""" & ChrW(&HBB) & ChrW(&H201D) & ChrW(&H2026), Mid$(t, e, 1)) > 0 Then e = e - 1 Else Exit Do" & vbCrLf
+    ModPart37 = s
+End Function
+
+Function ModPart38()
+    Dim s
+    s = ""
     s = s & "    Loop" & vbCrLf
     s = s & "    s = e" & vbCrLf
     s = s & "    Do While s > 0" & vbCrLf
@@ -3070,12 +3277,6 @@ Function ModPart35()
     s = s & "            If gIm.Exists(k) Then cand = ImCase(cand, ImDisp(gIm(k)))" & vbCrLf
     s = s & "        End If" & vbCrLf
     s = s & "    End If" & vbCrLf
-    ModPart35 = s
-End Function
-
-Function ModPart36()
-    Dim s
-    s = ""
     s = s & "    ' 2b) o', g' va tutuq belgisini to'g'rilash" & vbCrLf
     s = s & "    If nC = 0 Then cand = ImFixApos(cand)" & vbCrLf
     s = s & "    ' 3) Word'ning o'z avtozamena yozuvlari" & vbCrLf
@@ -3128,6 +3329,12 @@ Function ModPart36()
     s = s & "" & vbCrLf
     s = s & "Private Sub ImBindKeys(ByVal turnOn As Boolean)" & vbCrLf
     s = s & "    Dim app As Object, mc As Object, kb As Object" & vbCrLf
+    ModPart38 = s
+End Function
+
+Function ModPart39()
+    Dim s
+    s = ""
     s = s & "    On Error Resume Next" & vbCrLf
     s = s & "    Set app = Application" & vbCrLf
     s = s & "    Set mc = app.MacroContainer" & vbCrLf
@@ -3156,12 +3363,6 @@ Function ModPart36()
     s = s & "End Function" & vbCrLf
     s = s & "" & vbCrLf
     s = s & "Public Sub ImAutoOn()" & vbCrLf
-    ModPart36 = s
-End Function
-
-Function ModPart37()
-    Dim s
-    s = ""
     s = s & "    If Not CheckAct() Then Exit Sub" & vbCrLf
     s = s & "    Application.StatusBar = ""Bazalar yuklanmoqda...""" & vbCrLf
     s = s & "    ImPreload" & vbCrLf
@@ -3193,7 +3394,7 @@ Function ModPart37()
     s = s & "Public Sub HxAutoOff()" & vbCrLf
     s = s & "    ImAutoOff" & vbCrLf
     s = s & "End Sub" & vbCrLf
-    ModPart37 = s
+    ModPart39 = s
 End Function
 
 Function ModuleText()
@@ -3201,7 +3402,7 @@ Function ModuleText()
     s = ""
     s = s & ModPart1() & ModPart2() & ModPart3() & ModPart4() & ModPart5() & ModPart6() & ModPart7() & ModPart8() & ModPart9() & ModPart10() & ModPart11() & ModPart12() & ModPart13() & ModPart14() & ModPart15()
     s = s & ModPart16() & ModPart17() & ModPart18() & ModPart19() & ModPart20() & ModPart21() & ModPart22() & ModPart23() & ModPart24() & ModPart25() & ModPart26() & ModPart27() & ModPart28() & ModPart29() & ModPart30()
-    s = s & ModPart31() & ModPart32() & ModPart33() & ModPart34() & ModPart35() & ModPart36() & ModPart37()
+    s = s & ModPart31() & ModPart32() & ModPart33() & ModPart34() & ModPart35() & ModPart36() & ModPart37() & ModPart38() & ModPart39()
     ModuleText = s
 End Function
 
@@ -9640,17 +9841,66 @@ Function ImcPart3()
     s = s & "    for (var i = 0; i < a.length; i++) if (a.charAt(i) !== b.charAt(i)) return ((a.charAt(i) === 'h' && b.charAt(i) === 'x') || (a.charAt(i) === 'x' && b.charAt(i) === 'h'));" & vbCrLf
     s = s & "    return false;" & vbCrLf
     s = s & "  }" & vbCrLf
+    s = s & "  // taklif sifatida faqat lug'atdagi so'z yoki aniq o'zak (4+ harf) + oddiy qo'shimcha shakli qabul qilinadi" & vbCrLf
+    s = s & "  var PART_ONLY = { u: 1, yu: 1, ku: 1, chi: 1, ov: 1, ey: 1, oq: 1, yoq: 1, gina: 1, kina: 1, qina: 1 };" & vbCrLf
+    s = s & "  function strictOk(c) {" & vbCrLf
+    s = s & "    if (has(W, c) || has(H, c) || has(FUNC, c)) return true;" & vbCrLf
+    s = s & "    for (var L = c.length - 1; L >= 4; L--) {" & vbCrLf
+    s = s & "      var st = c.slice(0, L), rest = c.slice(L);" & vbCrLf
+    s = s & "      if (has(PART_ONLY, rest)) continue;" & vbCrLf
+    s = s & "      if ((has(W, st) && has(NOUN_SUF, rest)) || (has(V, st) && has(VERB_SUF, rest))) return true;" & vbCrLf
+    s = s & "    }" & vbCrLf
+    s = s & "    return false;" & vbCrLf
+    s = s & "  }" & vbCrLf
+    s = s & "  /* qisqa so'zlar uchun: oxirgi undosh jarangsizlanishi va tushib qolgan kelishik/egalik qo'shimchasi */" & vbCrLf
+    s = s & "  var DEVOICE = { p: 'b', t: 'd', k: 'g', f: 'v' };" & vbCrLf
+    s = s & "  var CASE_SUF = ['ni', 'ga', 'da', 'dan', 'ning', 'lar', 'larni', 'lari', 'ini', 'imiz', 'ingiz', 'iga'];" & vbCrLf
+    s = s & "  function stemOk(st) { return st.length >= 3 && (has(W, st) || has(H, st) || has(FUNC, st) || (' ' + PRON.join(' ') + ' ').indexOf(' ' + st + ' ') >= 0); }" & vbCrLf
+    s = s & "  // 'sizn', 'kitobn': oxirgi 'ni' dagi 'i' tushib qolgan, lekin so'z qo'shimcha sifatida ""taniladi""" & vbCrLf
+    s = s & "  function truncSuf(lw) { return /n$/.test(lw) && !/(dan|ngan|gan|lan|nan)$/.test(lw) && !has(W, lw) && !has(H, lw) && !has(FUNC, lw) && !has(V, lw) && stemOk(lw.slice(0, -1)); }" & vbCrLf
+    s = s & "  function joinW(a) { var r = [], i; for (i = 0; i < a.length; i++) r.push(a[i].w); return r.join(' / '); }" & vbCrLf
+    s = s & "  function morphSuggest(lw) {" & vbCrLf
+    s = s & "    var out = [], seen = {}, n = lw.length, i, j, c;" & vbCrLf
+    s = s & "    function put(w, sc) { if (!has(seen, w)) { seen[w] = 1; out.push({ w: w, sc: sc }); } }" & vbCrLf
+    s = s & "    // 1) jarangsizlanish: kitop -> kitob, odop -> odob (so'z oxirida yoki qo'shimcha oldida)" & vbCrLf
+    s = s & "    for (i = 2; i < n; i++) {" & vbCrLf
+    s = s & "      var ch = lw.charAt(i);" & vbCrLf
+    s = s & "      if (!has(DEVOICE, ch)) continue;" & vbCrLf
+    s = s & "      var rest = lw.slice(i + 1);" & vbCrLf
+    s = s & "      if (rest !== '' && !has(NOUN_SUF, rest)) continue;" & vbCrLf
+    s = s & "      c = lw.slice(0, i) + DEVOICE[ch] + rest;" & vbCrLf
+    s = s & "      if (c !== lw && known(c) && (has(W, lw.slice(0, i) + DEVOICE[ch]) || has(H, c))) put(c, 4);" & vbCrLf
+    s = s & "    }" & vbCrLf
+    s = s & "    // 2) tushib qolgan qo'shimcha oxiri: sizn -> sizni, kitobn -> kitobni, maktabd -> maktabda" & vbCrLf
+    s = s & "    for (i = n - 1; i >= 3; i--) {" & vbCrLf
+    s = s & "      var st = lw.slice(0, i), rs = lw.slice(i);" & vbCrLf
+    s = s & "      if (!stemOk(st)) continue;" & vbCrLf
+    s = s & "      for (j = 0; j < CASE_SUF.length; j++) {" & vbCrLf
+    s = s & "        var sf = CASE_SUF[j];" & vbCrLf
+    s = s & "        if (sf.length > rs.length && sf.indexOf(rs) === 0) { c = st + sf; if (known(c)) put(c, 3.5); }" & vbCrLf
+    s = s & "      }" & vbCrLf
+    s = s & "    }" & vbCrLf
+    s = s & "    out.sort(function (a, b) { return b.sc - a.sc; });" & vbCrLf
+    s = s & "    if (out.length > 1 && out[0].sc > out[1].sc) return [out[0]];" & vbCrLf
+    s = s & "    return out;" & vbCrLf
+    s = s & "  }" & vbCrLf
     s = s & "  function lexSuggest(lw) {" & vbCrLf
     s = s & "    var e = edits1(lw), seen = {}, res = [], i;" & vbCrLf
     s = s & "    for (i = 0; i < e.length; i++) {" & vbCrLf
     s = s & "      var c = e[i][0];" & vbCrLf
     s = s & "      if (c.length < 2 || has(seen, c) || /^['`]|['`]{2}|-['`]|^-|-$/.test(c)) continue;" & vbCrLf
     s = s & "      seen[c] = 1;" & vbCrLf
-    s = s & "      if (cats(c)) res.push({ w: c, op: e[i][1] });" & vbCrLf
+    s = s & "      if (cats(c) && strictOk(c)) res.push({ w: c, op: e[i][1] });" & vbCrLf
     s = s & "    }" & vbCrLf
     s = s & "    return res;" & vbCrLf
     s = s & "  }" & vbCrLf
     s = s & "  // ichki shaklga keltirish: kichik harf, o'/g' -> ', boshqa apostrof -> `" & vbCrLf
+    ImcPart3 = s
+End Function
+
+Function ImcPart4()
+    Dim s
+    s = ""
     s = s & "  var APOS = /[\u02BB\u02BC\u2018\u2019'`\u00B4\u2032]/;" & vbCrLf
     s = s & "  function norm(w) {" & vbCrLf
     s = s & "    var r = '', i, c;" & vbCrLf
@@ -9694,12 +9944,6 @@ Function ImcPart3()
     s = s & "" & vbCrLf
     s = s & "  // bitta so'z qoidalari. Qaytaradi: {kind, sug, rule} yoki null. lw - ichki shakl." & vbCrLf
     s = s & "  function wordRule(lw, lex) {" & vbCrLf
-    ImcPart3 = s
-End Function
-
-Function ImcPart4()
-    Dim s
-    s = ""
     s = s & "    var m, i, j;" & vbCrLf
     s = s & "    if (has(FIXED, lw)) return { kind: 'fix', sug: FIXED[lw], rule: '35.4' };" & vbCrLf
     s = s & "    m = /^(.+)-(mi|gina|kina|qina|oq|yoq|ov|yov)$/.exec(lw);" & vbCrLf
@@ -9737,6 +9981,12 @@ Function ImcPart4()
     s = s & "      var cw = keys(candApostrophe(lw)), cw2 = [];" & vbCrLf
     s = s & "      for (i = 0; i < cw.length; i++) if (has(W, cw[i])) cw2.push(cw[i]);" & vbCrLf
     s = s & "      if (cw2.length && known(lw)) return { kind: 'flag', sug: cw2.join(' / '), rule: 'alifbo' };" & vbCrLf
+    ImcPart4 = s
+End Function
+
+Function ImcPart5()
+    Dim s
+    s = ""
     s = s & "    }" & vbCrLf
     s = s & "    if (lw.length >= 5 && !known(lw)) {" & vbCrLf
     s = s & "      var c1 = keys(candApostrophe(lw));" & vbCrLf
@@ -9745,6 +9995,12 @@ Function ImcPart4()
     s = s & "      var c2 = keys(candTutuq(lw));" & vbCrLf
     s = s & "      if (c2.length === 1) return { kind: lex === 0 ? 'flag' : 'fix', sug: c2[0], rule: '32' };" & vbCrLf
     s = s & "      if (c2.length > 1) return { kind: 'flag', sug: c2.join(' / '), rule: '32' };" & vbCrLf
+    s = s & "    }" & vbCrLf
+    s = s & "    // morfologik tuzatish: qisqa so'zlar (4+ harf): oxirgi jarangsizlanish (odop -> odob) va qo'shimchaning tushib qolishi (sizn -> sizni)" & vbCrLf
+    s = s & "    if (lex && lw.length >= 4 && lw.length <= 20 && !/[^a-z'`]/.test(lw) && lw.slice(-1) !== '`' && (!known(lw) || truncSuf(lw))) {" & vbCrLf
+    s = s & "      var mc = morphSuggest(lw);" & vbCrLf
+    s = s & "      if (mc.length === 1) return { kind: (lex === 2 && mc[0].sc >= 4) ? 'fix' : 'flag', sug: mc[0].w, rule: ""lug'at"" };" & vbCrLf
+    s = s & "      if (mc.length > 1) return { kind: 'flag', sug: joinW(mc.slice(0, 3)), rule: ""lug'at"" };" & vbCrLf
     s = s & "    }" & vbCrLf
     s = s & "    // lug'atda yo'q so'z: bitta harfi farq qiladigan lug'at so'zini taklif qilish (abajir -> abajur)" & vbCrLf
     s = s & "    if (lex && lw.length >= 5 && lw.length <= 20 && !/[^a-z'`]/.test(lw) && lw.slice(-1) !== '`' && !known(lw)) {" & vbCrLf
@@ -9780,12 +10036,6 @@ Function ImcPart4()
     s = s & "" & vbCrLf
     s = s & "  // ichki shakl -> hujjatdagi ko'rinish" & vbCrLf
     s = s & "  function display(s, oAp, tAp) { return s.replace(/'/g, oAp).replace(/`/g, tAp); }" & vbCrLf
-    ImcPart4 = s
-End Function
-
-Function ImcPart5()
-    Dim s
-    s = ""
     s = s & "  function capFirst(s) { return s.charAt(0).toUpperCase() + s.slice(1); }" & vbCrLf
     s = s & "  function restoreCase(orig, s) { return (orig.charAt(0) !== orig.charAt(0).toLowerCase()) ? capFirst(s) : s; }" & vbCrLf
     s = s & "" & vbCrLf
@@ -9817,9 +10067,128 @@ Function ImcPart5()
     s = s & "    if (t.length > 700) return false;" & vbCrLf
     s = s & "    if (!/\b(?:1[89]|20)\d\d\b/.test(t)) return false;" & vbCrLf
     s = s & "    if (/\/\//.test(t)) return true;" & vbCrLf
+    ImcPart5 = s
+End Function
+
+Function ImcPart6()
+    Dim s
+    s = ""
     s = s & "    if (/(?:^|\s)[\u2014\u2013-]\s*(?:T\.|M\.|SPb\.|Toshkent|Tashkent|Samarqand|Moskva|London|New York|Berlin|Paris|Cambridge|Oxford|\u041C\u043E\u0441\u043A\u0432\u0430|\u041C\.)/.test(t)) return true;" & vbCrLf
     s = s & "    if (/\b\d+\s*(?:b|bet|p|pp|\u0441|\u0441\u0442\u0440)\.?\s*$/.test(t)) return true;" & vbCrLf
     s = s & "    return /(?:^|\s)(?:B|b|\u0411|\u0431|\u0421|\u0441|P|p|pp|S|s)\.\s*\d+\s*[\u2013\u2014-]\s*\d+/.test(t);" & vbCrLf
+    s = s & "  }" & vbCrLf
+    s = s & "  /* F: bibliografik yozuvlarni OAK/GOST namunasi bo'yicha tekshirish (BIB = oak_biblio.js) */" & vbCrLf
+    s = s & "  function bibSig(x) { return x.replace(/[^A-Za-z0-9\u0400-\u04FF]/g, '').toLowerCase(); }" & vbCrLf
+    s = s & "  function detLang(t) {" & vbCrLf
+    s = s & "    var cyr = 0, lat = 0, i, c, mk = 0;" & vbCrLf
+    s = s & "    for (i = 0; i < t.length; i++) {" & vbCrLf
+    s = s & "      c = t.charCodeAt(i);" & vbCrLf
+    s = s & "      if (c >= 0x400 && c <= 0x4FF) { cyr++; if (c === 0x45E || c === 0x40E || c === 0x49B || c === 0x49A || c === 0x493 || c === 0x492 || c === 0x4B3 || c === 0x4B2) mk++; }" & vbCrLf
+    s = s & "      else if ((c >= 65 && c <= 90) || (c >= 97 && c <= 122)) lat++;" & vbCrLf
+    s = s & "    }" & vbCrLf
+    s = s & "    if (cyr > lat) return mk > 0 ? 'uzc' : 'ru';" & vbCrLf
+    s = s & "    var l = ' ' + t.toLowerCase() + ' ', en = 0, m, re = /\s(the|and|of|in|for)\s/g;" & vbCrLf
+    s = s & "    while ((m = re.exec(l)) !== null) en++;" & vbCrLf
+    s = s & "    return en >= 2 ? 'en' : 'uz';" & vbCrLf
+    s = s & "  }" & vbCrLf
+    s = s & "  function accWord(lang) {" & vbCrLf
+    s = s & "    return lang === 'ru' ? '\u0414\u0430\u0442\u0430 \u043E\u0431\u0440\u0430\u0449\u0435\u043D\u0438\u044F' :" & vbCrLf
+    s = s & "      (lang === 'uzc' ? '\u041C\u0443\u0440\u043E\u0436\u0430\u0430\u0442 \u0441\u0430\u043D\u0430\u0441\u0438' : (lang === 'en' ? 'Date accessed' : 'Murojaat sanasi'));" & vbCrLf
+    s = s & "  }" & vbCrLf
+    s = s & "  function todayStr() {" & vbCrLf
+    s = s & "    var d = new Date(), dd = d.getDate(), mm = d.getMonth() + 1;" & vbCrLf
+    s = s & "    return (dd < 10 ? '0' : '') + dd + '.' + (mm < 10 ? '0' : '') + mm + '.' + d.getFullYear();" & vbCrLf
+    s = s & "  }" & vbCrLf
+    s = s & "  function biblio(text, add, BIB) {" & vbCrLf
+    s = s & "    var pm = /^(\s*(?:\[\d{1,3}\]|\d{1,3}[.)])\s+)/.exec(text), off = pm ? pm[1].length : 0, body = text.slice(off), cls, r, canon, m;" & vbCrLf
+    s = s & "    if (body.length < 25 || body.length > 900) return;" & vbCrLf
+    s = s & "    var lowb = body.toLowerCase();" & vbCrLf
+    s = s & "    if (/(?:https?:\/\/|www\.)\S+[.]?\s*$/i.test(body)) {" & vbCrLf
+    s = s & "      var listy = pm || /URL:|\[elektron resurs\]|\u044D\u043B\u0435\u043A\u0442\u0440\u043E\u043D\u043D\u044B\u0439 \u0440\u0435\u0441\u0443\u0440\u0441|\u0440\u0435\u0436\u0438\u043C \u0434\u043E\u0441\u0442\u0443\u043F\u0430|available at/i.test(body) || /^[A-Z\u0410-\u042F][\w\u0400-\u04FF'\u02BB\u02BC-]+\s+[A-Z\u0410-\u042F]\.\s?[A-Z\u0410-\u042F]?\.?/.test(body);" & vbCrLf
+    s = s & "      if (listy && !/murojaat sana|\u043E\u0431\u0440\u0430\u0449\u0435\u043D\u0438\u044F|\u043C\u0443\u0440\u043E\u0436\u0430\u0430\u0442|accessed|retrieved|date of access/i.test(body)) {" & vbCrLf
+    s = s & "        var lang0 = detLang(body);" & vbCrLf
+    s = s & "        var endU = off + body.replace(/[.,;\s]+$/, '').length;" & vbCrLf
+    s = s & "        add(endU, text.replace(/\s+$/, '').length, ' \u2014 ' + accWord(lang0) + ': ' + todayStr() + '.', 'fix', 'F2');" & vbCrLf
+    s = s & "      }" & vbCrLf
+    s = s & "      return;" & vbCrLf
+    s = s & "    }" & vbCrLf
+    s = s & "    if (!isBiblio(body)) return;" & vbCrLf
+    s = s & "    cls = BIB.classify(body);" & vbCrLf
+    s = s & "    if (cls.part === 1 || cls.part === 5) return;" & vbCrLf
+    s = s & "    r = BIB.reformat(body, cls.lang, false);" & vbCrLf
+    s = s & "    if (!r || !r.parsed || !r.text) return;" & vbCrLf
+    s = s & "    canon = r.text;" & vbCrLf
+    s = s & "    if (canon.indexOf('?') >= 0 && body.indexOf('?') < 0) {" & vbCrLf
+    s = s & "      /* yetishmaydigan element bor: faqat taklif (sariq) */" & vbCrLf
+    s = s & "      add(off, text.length, (pm ? pm[1] : '') + canon, 'flag', 'F1', 'Yetishmaydi: ' + r.missing.join(', '));" & vbCrLf
+    s = s & "      return;" & vbCrLf
+    s = s & "    }" & vbCrLf
+    s = s & "    if (canon === body) return;" & vbCrLf
+    s = s & "    if (bibSig(canon) === bibSig(body)) add(off, text.length, canon, 'fix', 'F1');" & vbCrLf
+    s = s & "    else add(off, text.length, (pm ? pm[1] : '') + canon, 'flag', 'F1', 'OAK namunasi bo\'yicha yozuv');" & vbCrLf
+    s = s & "  }" & vbCrLf
+    s = s & "  /* K: kirill yozuvdagi o'zbekcha so'zlar - q/k, g'/g, h/x, o'/u harflarini lug'at bo'yicha tekshirish */" & vbCrLf
+    s = s & "  var CYR = { '\u0430': 'a', '\u0431': 'b', '\u0432': 'v', '\u0433': 'g', '\u0493': ""g'"", '\u0434': 'd', '\u0436': 'j', '\u0437': 'z', '\u0438': 'i', '\u0439': 'y'," & vbCrLf
+    s = s & "    '\u043A': 'k', '\u049B': 'q', '\u043B': 'l', '\u043C': 'm', '\u043D': 'n', '\u043E': 'o', '\u045E': ""o'"", '\u043F': 'p', '\u0440': 'r', '\u0441': 's', '\u0442': 't'," & vbCrLf
+    s = s & "    '\u0443': 'u', '\u0444': 'f', '\u0445': 'x', '\u04B3': 'h', '\u0446': 'ts', '\u0447': 'ch', '\u0448': 'sh', '\u044A': ""'"", '\u044D': 'e', '\u044E': 'yu', '\u044F': 'ya', '\u0451': 'yo' };" & vbCrLf
+    s = s & "  var CYRV = '\u0430\u0435\u0451\u0438\u043E\u0443\u045E\u044D\u044E\u044F';" & vbCrLf
+    s = s & "  function c2l(w) {" & vbCrLf
+    s = s & "    var r = '', i, c, p, lc;" & vbCrLf
+    s = s & "    for (i = 0; i < w.length; i++) {" & vbCrLf
+    s = s & "      c = w.charAt(i).toLowerCase();" & vbCrLf
+    s = s & "      if (c === '\u0435') { p = i > 0 ? w.charAt(i - 1).toLowerCase() : ''; r += (i === 0 || CYRV.indexOf(p) >= 0 || p === '\u044A') ? 'ye' : 'e'; continue; }" & vbCrLf
+    s = s & "      lc = has(CYR, c) ? CYR[c] : null;" & vbCrLf
+    s = s & "      if (lc === null) return null;" & vbCrLf
+    s = s & "      r += lc;" & vbCrLf
+    s = s & "    }" & vbCrLf
+    s = s & "    return r;" & vbCrLf
+    s = s & "  }" & vbCrLf
+    s = s & "  var CPAIR = { '\u043A': '\u049B', '\u049B': '\u043A', '\u0433': '\u0493', '\u0493': '\u0433', '\u0445': '\u04B3', '\u04B3': '\u0445', '\u0443': '\u045E', '\u045E': '\u0443' };" & vbCrLf
+    s = s & "  function cyrWordCase(orig, w) {" & vbCrLf
+    s = s & "    if (orig.length > 1 && orig === orig.toUpperCase()) return w.toUpperCase();" & vbCrLf
+    s = s & "    if (orig.charAt(0) !== orig.charAt(0).toLowerCase()) return w.charAt(0).toUpperCase() + w.slice(1);" & vbCrLf
+    s = s & "    return w;" & vbCrLf
+    s = s & "  }" & vbCrLf
+    s = s & "  function cyrillic(text, add) {" & vbCrLf
+    s = s & "    var re = /[\u0400-\u04FF]+/g, m, w, lw, pos, k, i, vars, base, cands, lat, bad;" & vbCrLf
+    s = s & "    var cyrN = 0, latN = 0;" & vbCrLf
+    s = s & "    for (i = 0; i < text.length; i++) { k = text.charCodeAt(i); if (k >= 0x400 && k <= 0x4FF) cyrN++; else if ((k >= 65 && k <= 90) || (k >= 97 && k <= 122)) latN++; }" & vbCrLf
+    ImcPart6 = s
+End Function
+
+Function ImcPart7()
+    Dim s
+    s = ""
+    s = s & "    if (cyrN < 3 || cyrN < latN) return;" & vbCrLf
+    s = s & "    if (/[\u044B\u0451\u0449\u042B\u0401\u0429]/.test(text)) return; /* ruscha matn */" & vbCrLf
+    s = s & "    while ((m = re.exec(text)) !== null) {" & vbCrLf
+    s = s & "      w = m[0];" & vbCrLf
+    s = s & "      if (w.length < 3 || w.length > 24) continue;" & vbCrLf
+    s = s & "      lw = w.toLowerCase();" & vbCrLf
+    s = s & "      if (/[\u044C\u0446\u0449\u044B\u0451]/.test(lw)) continue;" & vbCrLf
+    s = s & "      lat = c2l(lw);" & vbCrLf
+    s = s & "      if (lat === null || known(norm(lat))) continue;" & vbCrLf
+    s = s & "      pos = [];" & vbCrLf
+    s = s & "      for (i = 0; i < lw.length; i++) if (has(CPAIR, lw.charAt(i))) pos.push(i);" & vbCrLf
+    s = s & "      if (!pos.length || pos.length > 5) continue;" & vbCrLf
+    s = s & "      cands = [];" & vbCrLf
+    s = s & "      for (k = 1; k < (1 << pos.length); k++) {" & vbCrLf
+    s = s & "        vars = lw.split('');" & vbCrLf
+    s = s & "        for (i = 0; i < pos.length; i++) if (k & (1 << i)) vars[pos[i]] = CPAIR[lw.charAt(pos[i])];" & vbCrLf
+    s = s & "        base = vars.join('');" & vbCrLf
+    s = s & "        bad = c2l(base);" & vbCrLf
+    s = s & "        if (bad !== null && known(norm(bad))) cands.push(base);" & vbCrLf
+    s = s & "      }" & vbCrLf
+    s = s & "      if (!cands.length) continue;" & vbCrLf
+    s = s & "      /* eng kam harf almashgan variantlar ustuvor */" & vbCrLf
+    s = s & "      var best = [], bd = 99, d;" & vbCrLf
+    s = s & "      for (i = 0; i < cands.length; i++) {" & vbCrLf
+    s = s & "        d = 0; for (k = 0; k < lw.length; k++) if (cands[i].charAt(k) !== lw.charAt(k)) d++;" & vbCrLf
+    s = s & "        if (d < bd) { bd = d; best = [cands[i]]; } else if (d === bd) best.push(cands[i]);" & vbCrLf
+    s = s & "      }" & vbCrLf
+    s = s & "      if (best.length === 1) add(m.index, m.index + w.length, cyrWordCase(w, best[0]), 'fix', 'K1');" & vbCrLf
+    s = s & "      else { for (i = 0; i < best.length; i++) best[i] = cyrWordCase(w, best[i]); add(m.index, m.index + w.length, best.join(' / '), 'flag', 'K1'); }" & vbCrLf
+    s = s & "    }" & vbCrLf
     s = s & "  }" & vbCrLf
     s = s & "  function stripAp(w) { return w.toLowerCase().replace(/[\u02BB\u02BC\u2018\u2019'`\u00B4]/g, ''); }" & vbCrLf
     s = s & "  function punct(text, add0) {" & vbCrLf
@@ -9866,16 +10235,16 @@ Function ImcPart5()
     s = s & "    re = /(\S)([ \u00A0]+)([,;:!?])(?=[ \u00A0]*$)/g;" & vbCrLf
     s = s & "    while ((m = re.exec(text)) !== null) { if (!/[,;:!?]/.test(m[1])) A(m.index, m.index + m[0].length, m[1] + m[3], 'fix', 'E2'); }" & vbCrLf
     s = s & "    // E2 (nuqta): so'z . / so'z  ." & vbCrLf
-    ImcPart5 = s
-End Function
-
-Function ImcPart6()
-    Dim s
-    s = ""
     s = s & "    re = /(\S)([ \u00A0]+)\.(?=[ \u00A0]|$|[)\]\u00BB\u201D""])/g;" & vbCrLf
     s = s & "    while ((m = re.exec(text)) !== null) { if (!/^\.{1,}$/.test(m[1])) A(m.index, m.index + m[0].length, m[1] + '.', 'fix', 'E2'); }" & vbCrLf
     s = s & "    // E3 (nuqta): keldi.Men -> keldi. Men" & vbCrLf
     s = s & "    re = new RegExp('(' + LETC + '{2,}|\\d)\\.(?=[A-Z\\u0410-\\u042F])', 'g');" & vbCrLf
+    ImcPart7 = s
+End Function
+
+Function ImcPart8()
+    Dim s
+    s = ""
     s = s & "    while ((m = re.exec(text)) !== null) {" & vbCrLf
     s = s & "      var wd = stripAp(m[1]);" & vbCrLf
     s = s & "      if (has(ABBR, wd) || /^\d+$/.test(wd) && false) continue;" & vbCrLf
@@ -9952,16 +10321,16 @@ Function ImcPart6()
     s = s & "    while ((m = re.exec(text)) !== null) A(m.index, m.index + m[0].length, m[1] + '-' + m[2], 'fix', 'E8');" & vbCrLf
     s = s & "    // E9: qo'shtirnoq" & vbCrLf
     s = s & "    var qs = [];" & vbCrLf
-    ImcPart6 = s
-End Function
-
-Function ImcPart7()
-    Dim s
-    s = ""
     s = s & "    for (i = 0; i < n; i++) if (text.charAt(i) === '""' && !mask[i]) qs.push(i);" & vbCrLf
     s = s & "    if (qs.length > 0 && qs.length % 2 === 0) for (i = 0; i < qs.length; i++) A(qs[i], qs[i] + 1, (i % 2 === 0) ? '\u201C' : '\u201D', 'fix', 'E9');" & vbCrLf
     s = s & "    // E10: harflar orasidagi bo'shliq: k i t o b" & vbCrLf
     s = s & "    var tk = [], tr = /\S+/g, mt, a, b, run, j, jn, cand, c;" & vbCrLf
+    ImcPart8 = s
+End Function
+
+Function ImcPart9()
+    Dim s
+    s = ""
     s = s & "    while ((mt = tr.exec(text)) !== null) tk.push({ s: mt.index, e: mt.index + mt[0].length, t: mt[0] });" & vbCrLf
     s = s & "    var SL = /^[A-Za-z][\u2018\u2019\u02BB\u02BC'`]?$/;" & vbCrLf
     s = s & "    i = 0;" & vbCrLf
@@ -10038,16 +10407,16 @@ Function ImcPart7()
     s = s & "      if (opts.C && i + 1 < toks.length) {" & vbCrLf
     s = s & "        var t2 = toks[i + 1], between = text.slice(e, t2.s);" & vbCrLf
     s = s & "        if (/^[ \u00A0]+$/.test(between)) {" & vbCrLf
-    ImcPart7 = s
-End Function
-
-Function ImcPart8()
-    Dim s
-    s = ""
     s = s & "          var lw2 = norm(t2.t), pair = lw + ' ' + lw2, e2 = t2.s + t2.t.length;" & vbCrLf
     s = s & "          if (has(FIXED2, pair)) add(s, e2, restoreCase(w, display(FIXED2[pair], oAp, tAp)), 'fix', '60');" & vbCrLf
     s = s & "          else {" & vbCrLf
     s = s & "            var hyOk = has(H, lw + '-' + lw2);" & vbCrLf
+    ImcPart9 = s
+End Function
+
+Function ImcPart10()
+    Dim s
+    s = ""
     s = s & "            if (!hyOk) for (var L = lw2.length; L > 1; L--) { if (has(H, lw + '-' + lw2.slice(0, L)) && has(NOUN_SUF, lw2.slice(L))) { hyOk = true; break; } }" & vbCrLf
     s = s & "            var before = text.slice(Math.max(0, s - 3), s);" & vbCrLf
     s = s & "            var midcap = w.charAt(0) !== w.charAt(0).toLowerCase() && s > 0 && !/[.!?]\s+$/.test(before);" & vbCrLf
@@ -10089,6 +10458,8 @@ Function ImcPart8()
     s = s & "        }" & vbCrLf
     s = s & "      }" & vbCrLf
     s = s & "    }" & vbCrLf
+    s = s & "    if (opts.K) cyrillic(text, add);" & vbCrLf
+    s = s & "    if (opts.F && opts.bib) biblio(text, add, opts.bib);" & vbCrLf
     s = s & "    if (opts.E) punct(text, add);" & vbCrLf
     s = s & "    // ustma-ust tushganlarni olib tashlash: avval qo'shilgan (ustuvor) qoladi" & vbCrLf
     s = s & "    var acc = [];" & vbCrLf
@@ -10116,20 +10487,27 @@ Function ImcPart8()
     s = s & "    var inf = fso.OpenTextFile(a(1), 1, false, -1);" & vbCrLf
     s = s & "    var head = inf.ReadLine().split('\t');" & vbCrLf
     s = s & "    var cats = head[1] || 'ABCD';" & vbCrLf
-    s = s & "    var opts = { E: cats.indexOf('E') >= 0, A: cats.indexOf('A') >= 0, B: cats.indexOf('B') >= 0, C: cats.indexOf('C') >= 0, D: cats.indexOf('D') >= 0, oAp: head[2] || '\u02BB', tAp: head[3] || '\u02BC' };" & vbCrLf
+    s = s & "    var BIBX = null;" & vbCrLf
+    s = s & "    if (cats.indexOf('F') >= 0) {" & vbCrLf
+    s = s & "      try {" & vbCrLf
+    s = s & "        var bp = fso.GetParentFolderName(a(0)) + '\\oak_biblio.js';" & vbCrLf
+    s = s & "        if (fso.FileExists(bp)) { var bf = fso.OpenTextFile(bp, 1, false, 0); var btxt = bf.ReadAll(); bf.Close(); BIBX = (new Function('WScript', btxt + '\n;return BIB;'))(undefined); }" & vbCrLf
+    s = s & "      } catch (eb) { BIBX = null; }" & vbCrLf
+    s = s & "    }" & vbCrLf
+    s = s & "    var opts = { K: cats.indexOf('K') >= 0, F: cats.indexOf('F') >= 0, E: cats.indexOf('E') >= 0, A: cats.indexOf('A') >= 0, B: cats.indexOf('B') >= 0, C: cats.indexOf('C') >= 0, D: cats.indexOf('D') >= 0, bib: BIBX, oAp: head[2] || '\u02BB', tAp: head[3] || '\u02BC' };" & vbCrLf
     s = s & "    var paras = [];" & vbCrLf
     s = s & "    while (!inf.AtEndOfStream) paras.push(inf.ReadLine());" & vbCrLf
+    ImcPart10 = s
+End Function
+
+Function ImcPart11()
+    Dim s
+    s = ""
     s = s & "    inf.Close();" & vbCrLf
     s = s & "    var out = fso.CreateTextFile(a(2), true, true);" & vbCrLf
     s = s & "    for (var i = paras.length - 1; i >= 0; i--) {" & vbCrLf
     s = s & "      if (!paras[i]) continue;" & vbCrLf
     s = s & "      var r = IMLO.check(paras[i], opts);" & vbCrLf
-    ImcPart8 = s
-End Function
-
-Function ImcPart9()
-    Dim s
-    s = ""
     s = s & "      for (var k = 0; k < r.length; k++) {" & vbCrLf
     s = s & "        var x = r[k];" & vbCrLf
     s = s & "        out.WriteLine([i, x.s, x.e, x.kind, x.rule, x.rep, x.old, x.note].join('\t'));" & vbCrLf
@@ -10142,11 +10520,11 @@ Function ImcPart9()
     s = s & "    WScript.Quit(1);" & vbCrLf
     s = s & "  }" & vbCrLf
     s = s & "})();" & vbCrLf
-    ImcPart9 = s
+    ImcPart11 = s
 End Function
 
 Function ImloJsText()
-    ImloJsText = ImcPart1() & ImcPart2() & ImcPart3() & ImcPart4() & ImcPart5() & ImcPart6() & ImcPart7() & ImcPart8() & ImcPart9()
+    ImloJsText = ImcPart1() & ImcPart2() & ImcPart3() & ImcPart4() & ImcPart5() & ImcPart6() & ImcPart7() & ImcPart8() & ImcPart9() & ImcPart10() & ImcPart11()
 End Function
 
 Function ImdPart1()
@@ -16669,6 +17047,7 @@ Function RbxPart1()
     s = s & "     <button id=""klOcr"" label=""PDF &#8594; Word"" size=""large"" image=""ic_ocr"" onAction=""KL_Ribbon"" screentip=""PDF &#8594; Word (OCR)"" supertip=""Matnli PDF ni Wordda tez ochadi (shrift va joylashuv saqlanadi); skan PDF ni OCR bilan matnga aylantiradi; ABBYY da ochadi.""/>" & vbCrLf
     s = s & "     <button id=""klBib"" label=""Adabiyotlar"" size=""large"" image=""ic_bib"" onAction=""KL_Ribbon"" screentip=""Adabiyotlar ro'yxati (OAK)"" supertip=""Adabiyotlar ro'yxatini OAK talablari bo'yicha qismlarga bo'lib tartiblaydi, har bir yozuvni muallifdan sahifagacha OAK shakliga keltiradi, matndagi [n] havolalarini yangilaydi va xatolarini hisobotda ko'rsatadi.""/>" & vbCrLf
     s = s & "     <button id=""klManba"" label=""Manba yozish"" size=""large"" image=""ic_manba"" onAction=""KL_Ribbon"" screentip=""Manba shakllantirish (OAK)"" supertip=""Maydonlarni to'ldirsangiz, manba muallifdan sahifagacha OAK shaklida yoziladi va hujjatga qo'yiladi. Belgilangan yozuvni ham shaklga keltiradi.""/>" & vbCrLf
+    s = s & "     <button id=""klSana"" label=""Murojaat sanasi"" size=""large"" image=""ic_sana"" onAction=""KL_Ribbon"" screentip=""Snoska: murojaat sanasi"" supertip=""Snoskalarda sayt manzili bor, lekin murojaat sanasi yo'q yozuvlarni topadi va roziligingiz bilan sanani qo'shadi: o'zbekcha matnda 'Murojaat sanasi', ruscha matnda '&#1044;&#1072;&#1090;&#1072; &#1086;&#1073;&#1088;&#1072;&#1097;&#1077;&#1085;&#1080;&#1103;'.""/>" & vbCrLf
     s = s & "    </group>" & vbCrLf
     s = s & "    <group id=""klGrpL"" label=""Lug'at"">" & vbCrLf
     s = s & "     <button id=""klAtama"" label=""Atamalar lug'ati"" size=""large"" image=""ic_atama"" onAction=""KL_Ribbon"" screentip=""Lingvistik atamalar lug'ati"" supertip=""O'zbekcha, ruscha va inglizcha atamalar; sinonim, omonim, paronim va antonim so'zlar: qidirish va hujjatga qo'yish.""/>" & vbCrLf
@@ -16744,6 +17123,9 @@ Function RicPart1()
     s = s & "ic_punct:iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAACXBIWXMAACxLAAAsSwGlPZapAAADxklEQVR42u2b30sUURTHfejHQ+hm2i+KinZ3kpCwgsooiOiph/ofIoJeeiqKanbUSt1Z2R+u7npHsySjwCQo0NQsf0H0A3pLTTQwMoqM8kea5k73DOyyu3d2ndURZ+bOgfOwcN17vp977rnnyt60NNNMU2S2267dTDXPWpGz0y7wH+2Ca5IRXKIWHGKBmCA2iBFiVU94oPSQDfFdWhGr1HHMr63BkmMLV47OrbQjvoZBrpDexEccYkcuAbSkpJ1BZdk25OzRrfD4bBD47py64izFKw9/YBTxkTqB+Fc2n2/1vPqltDeY+EgmBHmUVLy1qjhf13teQU2wI9fBxBXfgKkf71aB75AVv7PGlWt08ZGtINcnMMjpoAWAFZVeI/c/dFG0ZADiX5L7H/GDtADAJ92A3PE3QRGACbIGUCI+7CYAE4AJIK4ICjw14kEr2QlWOakBAFoJANuDJdQAAK0EgM0VN6kBsAlrJQCs8xVQAwC0EgAyPA5xR7CUivQHrbIAsnyFhgcAGhMCAN8aKNaNmDNNDeKF509ifE+tJ+H4LZW3xLDOhAD0tBUGfv4Q4+1IfVB2LGiyeDhlANZ6OV1AUAoAtICmaI1JAYQdU"
     s = s & "kbvAKLTPmUA4HBkaLVJSgYAYg4XvEUBiAYBDQR8MbSSWrg7yAHIu+OTYp1PT8oAlsKPPxBER3erIj/ZUKvq3JoAAMKUmudttwnABLDcAHbhwnOq8W6M78VFR27s0ftBYizcOKPHbPAXidsCJYp8o/8GMceJh9XEHOvLi5YOwPmWx8TK+N71yI7tGB4kxh6uD6i6ir2j34k5YJFMACYADQDoHB4ixubfq1QVQJ8MAEYLAODW9XViLGbc65Fh4kKyGIcC+md2JmaOpsE+bRyDsNLRBoEmOi0W6qcb62LmGJ2alNpzTQC42vksJjj4rHYPAX1BtJ1tfqSdRqjt00AksDcjn8VMb4HqAN5/+xKZo3moXzudYHZ5oTg581cKbPrfrHigzq+6ePgHx1woJM3xa3pKzKku02crvJxuAjABxFm6xzFGi/h0N/tbJgPYfnoygO2VyQC2jZoM8LAtBACLx3GZoi1wkcwA73U7NQDKOEb298I4NdopSP+2hL8Wx7e4PFwg5gwLwO0IWXzs/qRvBjChCgOvfrmiJzMG3QpdaRy3StGzIUvgSiZujF4YaOXbQVPKz+bS3Q4/7BsdNzxzUtpz3IoFPx9c4+VyM9zsUz1We4ub26faC1LoE/C2uISzohVaSdxMjGuosRnHmfoBOjwpRhyr+djZNGX2HwTg+4H6TAazAAAAAElFTkS"
     s = s & "uQmCC" & vbCrLf
+    s = s & "ic_sana:iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAACXBIWXMAACxLAAAsSwGlPZapAAAEcUlEQVR42u2by08TURSHXfhYG/0XdGFcGFmoK00sPuMjaluVuNK4MDEmihGmICLKVHChqAsU4hNJfGFLbQvYUqBSnsZX5aEiBBUTNT4QKBR6vaemWpw7dG4Z6Z1pT3KTJu3cOb9vzjn33EnvtGkJS5gke5iSv8Cmzc20aY01Nh3fadMbB+x6I2JhgC9Bn8A37CP4Kptwq8641Krja1kRKxmKjm+06XNWRC28MGnvDPt2vgjTDShNfFhkBGx6/iJooRJv3nF6Lr7QrVThwmgw1lXtyp0j+cnDBWoR/weClvdY95+dFREAhL3axIfGAx1fOKF4XEGXKTnnpdQEy/b8JeIAVBj6hNXBRRRfoctfqHbxoUHsE+xa/mi8ALDrcw2E/DfWyHmTL94eFG5f23un5Fopw6o1VhPyn38j501INhXXSqwDr4QA9PzPuAGAtQprgMx5xjIAGAkAcgCoTMlHr++4ke9rP5pqg3vCvSt25sUOwMeGdhRr6/O0yQMAFwaqCZpzShEr1nT8Jm0RJADYlks1SWepixkAHTdddACwVuGbny0nqCZ5fdvNDADwhaoRwloFACwbs+MGQPmGbCEA05pMqkk6SqrZSYEb1V"
+    s = s & "S+g1YBgPvJBmTdelLyJM49Z9Gr23Woy+SJ6egsrUGO3Weowh+0EgGY1x5V/U4QNIoCgPFgc45qxVs2HUchnaIApKZCC38LjfpGYp7/4MPjvDuRQx9rur8qQxoAE/5hJAhKWgVAiylMfEQAoQEho3QA4WFPDSAYDXjJIDVJrAMAn0MFb1IAwkFAAwETQysJSyArBr6AT+Ab+Ai+RtJDDeDf0X7N8X93eDtOSd5vgC+0/jMLALbY5nVZf+9z3Rk/AD64vcS8fWtpUj+A97UvRIvW0wKzcgH4B3yor74NjflHxcXXPBcV704tRqNDw8oEMNI/iFz7LgR/33ishAhhIvF1By8h/+CwMmuA79tP5NxbMO6axuzxEN65nokuWe5DRRGfPNMAWnF/TrquCb9LDIyOoV7HE2RaTRb/6Mhlqn0GkwB6nU8F/Xdo1B4oFBVfn34FjQ37qQooszWgx94qCkEu8cyvAj32FkkQ6rnoxCuiD4gEwcNdjVq8YhqhbhsZwmTFK6oT7LY2j3sr4zFg8SP+SXeRimqFu0wNQQhijZHqAYANff6BAoGAbPuImADwFlcy80LEW1wxeQBlGsMPmgnch4uZAeBOLaISX6bhvpMioIOWImxhY22wn6D1Gz/sNmEEJHNVtBPBLq4N5x/k9FTb0KfvwXtP9OJTdGi4CkIKcEeoJ1LowBGQKgBQ"
+    s = s & "rsmYFy8A7q1Mm0/8vzCOAofqnz5OddF/i+MvF+H8GFOveEOgbFVm0oRnBnAUnFdvBHAFko7MqDIVNIbaW9qsmZLODVnWp83GldKpnqrPOUAT9bE5nDPnIG+U+9ShnnEF1cuzpkd9fvBucvpCPFG5Equ9eTW3WLYTpL/7BO4wTo1KaCXx536Gihv2hXsJHR74CL4mDjsnTJr9AlE0J7pVzRfVAAAAAElFTkSuQmCC" & vbCrLf
     s = s & "ic_update:iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAACXBIWXMAACxLAAAsSwGlPZapAAAF+UlEQVR42u1ba0wcVRTmh2KA1qaxPhIfpUhJU4nWNqZtfDUmGl+JxkRNNDH9AQvYQi0zuzzLssuj1AotDymltHYrtCJgEXwVWkpXFNpGJWihvKQi0pbWKi8LsrvHe27cZGFndmdmZ5d9cDbn18zcOd8355x7zr17/fwWZEEESWhW0uqQdNWOFRr2TLCG7QnRKieJgpvoJNqEtqGNaKtswJdnqjYEa1m9G4EVpISQs8vVzCbpyBWKW0M0bBkZzORp4C3UFKJRliIWUdjD1PHLgrVMiwcDn+sN367KTrxD8JfHB7wFvFlXpLOtofmxt9nF/7/bgzcqIWG/7YSnYTd6eMzbzQnBGmY9LwHe6PocXtDM7fpZTLi3gzcrZ51Apos0XyGAeEGKFQG0ivIVAjTsaS4C+l3x8jXvp8GL+/Ngc8UBYGqPQWJ9FWypOgKvHSyER8k1F9UFvdYhoFVOOOuFrxzIhyL9SWj/YxAMJiPwiYn8ekauwKE2PbxaVuBMEia4CJD9RfiV2y71gVTpGP4doj/V8Y7/ZH42pH99HF4u3SPaNqcS8PjeLPh+oBfkktaBPnimaNesd7xQkgt/Tk7Q69OGGXiJhJVbEBBb"
     s = s & "XQ5/3/wH5JbJ6WnYfvyoFXizJH9RPf8EZJ6oo3HsLMGxdedarMCjpH5Z4xgBZBZwCHx2Q70gEEaTCS5cHoK6n3+iYHTnvoOvOjvgl+Ehek2qiCEAsVoR8ICakQx+a/XHdg3E7J5Epry1u9W84zyWq6HTYv/1EacSgFitCLg3bbvkhGcr5semblJQD2pVgsdcmZFAn5mYnnIKAYjVioC7UmIlEWAr2/deu0qnKqme9WzxbsHeIIaAO5NjrQm4XRUt2sB3ykt5Deq6MgzrPkh3KK9wZXs5CECsVgQEsgq4T2QYtF3q5zRmlITEpsIch8A/R77+yPiY7CGA7o9YOQlYkhAj2EAsVflEVVfpsi8vlgDEyEsA6j2p2wQNVKhv5DTk4tXLNIlJBR+WmQjDo385ZRa4OzUOzDh5CRAaCtjYcInYimyurspKklQPxNVU2BwXMQUpo4QRsIjcaIuE8JwUzq5uxmiwOc8L1dymb+hYQqvDll97YHV2sk3wiyzA2yXArOgyXAPinL63uQGO/dA2S5WfV7rd4oel24smABWnDKlF0nwq2mxOeA4RYEkEFhA4MJaSjvYOMi9xUZvQNrQRbbWHRzQB3qYLBHgqAVGVh+Fgq36W4jpE0Jws71QCliVthTN9F8EkcL7+12Aga3e1DoO/Xx1Px5orBqMRsJlzGQG42ClWsLhZmviuQw"
     s = s & "TE1ZRzjn2W9CQuDQE+Q2zJbzeuC8rOfLqYPIsdJpdgCLg1AdcmxuhqjyNff0sV/6rTxj0Z7kuAHOAf2bWDtthc0tTT6fpZQCgBcoAn21ikwxzmfcfz+3LdlwBcCMW9QKngH9qZTJfV+ORUd+f81AFiQmCcLIrGkO2txSISIHZu20h7i8/yCS6YYFPm9gRYegMmMnRpvnGxnkfgeK/NFphMqW8eLp6/SlAKAZbGtw8NQm3Hj7CvpQmKiVa3n6cbI0IKK7yHrf1kfkthLgIw4SEYk8mJW2MygXeYgLk7QZbZfnNFGYndKdnB3yAx//aREvdohjbkZcDUzAzvVPdwTio093bJBv5k9wUIzVC5Vze4Pk8L7312lKziJvDe88ZHH8L5wQHJwE/3dNG/07ikHQ5gFGPOamGfIPuH+WQN0V6iw64ON1twp1lKeStUA9jIUS4P6HZFP4/7Dk+R/UKM5+hKHa0R3tKVwNMFO+k1V9gQwCq6uDyg0VdWgwjWE9YewCgSfGdJLJK1IsBfGbXSVwjwj48I4/y/MImNUz7g/o28/xYPZCPWBDKRRi8mwBTIRKyzeWaAEFDktQQwkQWCjsx4ZSgwCr2f+nV/QceGliTGLCWx0uQ1cU8+KGISfWyOPFxI48ZzXd5I3V6tvkXy8cEgJjqceEO9J2b7QKVirWwnSGmdwCiUpI5uwFKS"
@@ -17101,6 +17483,16 @@ Function BibPart3()
     s = s & "  function rangeWord(lang) { return lang === 'ru' ? '\u0421.' : (lang === 'en' ? 'P.' : (lang === 'tr' ? 'S.' : (lang === 'uzc' ? '\u0411.' : 'B.'))); }" & vbCrLf
     s = s & "  function volWord(lang) { return lang === 'ru' ? '\u0422.' : (lang === 'en' ? 'Vol.' : (lang === 'tr' ? 'C.' : (lang === 'uzc' ? '\u0416\u0438\u043B\u0434' : 'Jild'))); }" & vbCrLf
     s = s & "  function etAl(lang) { return lang === 'ru' ? ' \u0438 \u0434\u0440.' : (lang === 'en' ? ' et al.' : (lang === 'uzc' ? ' \u0432\u0430 \u0431\u043E\u0448\u049B.' : ' va boshq.')); }" & vbCrLf
+    s = s & "  function accWord(lang) {" & vbCrLf
+    s = s & "    return lang === 'ru' ? '\u0414\u0430\u0442\u0430 \u043E\u0431\u0440\u0430\u0449\u0435\u043D\u0438\u044F' :" & vbCrLf
+    s = s & "      (lang === 'en' ? 'Date accessed' : (lang === 'tr' ? 'Eri\u015Fim tarihi' :" & vbCrLf
+    s = s & "      (lang === 'uzc' ? '\u041C\u0443\u0440\u043E\u0436\u0430\u0430\u0442 \u0441\u0430\u043D\u0430\u0441\u0438' : 'Murojaat sanasi')));" & vbCrLf
+    s = s & "  }" & vbCrLf
+    s = s & "  function elWord(lang) {" & vbCrLf
+    s = s & "    return lang === 'ru' ? '[\u042D\u043B\u0435\u043A\u0442\u0440\u043E\u043D\u043D\u044B\u0439 \u0440\u0435\u0441\u0443\u0440\u0441]' :" & vbCrLf
+    s = s & "      (lang === 'en' ? '[Electronic resource]' : (lang === 'tr' ? '[Elektronik kaynak]' :" & vbCrLf
+    s = s & "      (lang === 'uzc' ? '[\u042D\u043B\u0435\u043A\u0442\u0440\u043E\u043D \u0440\u0435\u0441\u0443\u0440\u0441]' : '[Elektron resurs]')));" & vbCrLf
+    s = s & "  }" & vbCrLf
     s = s & "  function endDot(s) { s = trim(s); return /[.?!\u2026]$/.test(s) ? s : s + '.'; }" & vbCrLf
     s = s & "  function noDot(s) { return trim(s).replace(/[.\s]+$/, ''); }" & vbCrLf
     s = s & "  function cityText(c, abbr) {" & vbCrLf
@@ -17112,6 +17504,12 @@ Function BibPart3()
     s = s & "" & vbCrLf
     s = s & "  /* f: {type, authors[], title, city, publisher, year, pages, journal, issue, vol, range," & vbCrLf
     s = s & "         degree, lang, abbr}. Qaytaradi: {text, missing[]} */" & vbCrLf
+    BibPart3 = s
+End Function
+
+Function BibPart4()
+    Dim s
+    s = ""
     s = s & "  function formatEntry(f) {" & vbCrLf
     s = s & "    var lang = f.lang || 'uz', au = [], i, head = '', miss = [], t = '', pub = '', tail = '', a;" & vbCrLf
     s = s & "    for (i = 0; i < (f.authors || []).length; i++) { a = authorName(f.authors[i]); if (a) au.push(a); }" & vbCrLf
@@ -17121,20 +17519,14 @@ Function BibPart3()
     s = s & "    var many = au.length > 3;" & vbCrLf
     s = s & "    var autStr = au.join(', ');" & vbCrLf
     s = s & "    if (au.length > 4) autStr = au.slice(0, 3).join(', ') + etAl(lang);" & vbCrLf
-    s = s & "    if (!au.length && type !== 'book') miss.push('muallif');" & vbCrLf
-    BibPart3 = s
-End Function
-
-Function BibPart4()
-    Dim s
-    s = ""
+    s = s & "    if (!au.length && type !== 'book' && type !== 'web') miss.push('muallif');" & vbCrLf
     s = s & "    if (type === 'book') {" & vbCrLf
     s = s & "      head = many || !au.length ? title + (many ? ' / ' + autStr : '') : au.join(', ') + ' ' + title;" & vbCrLf
     s = s & "    } else {" & vbCrLf
     s = s & "      head = many ? title + ' / ' + autStr : au.join(', ') + ' ' + title;" & vbCrLf
     s = s & "    }" & vbCrLf
     s = s & "    var city = cityText(f.city || '', f.abbr), year = trim(f.year || ''), pubn = trim(f.publisher || '');" & vbCrLf
-    s = s & "    if (!year) miss.push('yil');" & vbCrLf
+    s = s & "    if (!year && type !== 'web') miss.push('yil');" & vbCrLf
     s = s & "    function pubArea(optPub) {" & vbCrLf
     s = s & "      if (!city) miss.push('shahar');" & vbCrLf
     s = s & "      if (!pubn && !optPub) miss.push('nashriyot');" & vbCrLf
@@ -17156,6 +17548,11 @@ Function BibPart4()
     s = s & "      if (!trim(f.journal || '')) miss.push('to\'plam nomi');" & vbCrLf
     s = s & "      t = head + ' // ' + noDot(f.journal || '?') + '. ' + DASH + ' ' + (f.city || pubn ? pubArea(true) : (year || '?')) + '.';" & vbCrLf
     s = s & "      if (trim(f.range || '')) t += ' ' + DASH + ' ' + rw + ' ' + rng(f.range) + '.'; else miss.push('betlar (dan-gacha)');" & vbCrLf
+    s = s & "    } else if (type === 'web') {" & vbCrLf
+    s = s & "      var url = trim(f.url || ''), dt = trim(f.date || '');" & vbCrLf
+    s = s & "      if (!url) miss.push('sayt manzili');" & vbCrLf
+    s = s & "      if (!dt) miss.push('murojaat sanasi');" & vbCrLf
+    s = s & "      t = endDot(trim(head) + ' ' + elWord(lang)) + ' ' + DASH + ' URL: ' + (url || '?') + ' ' + DASH + ' ' + accWord(lang) + ': ' + (dt || '?') + '.';" & vbCrLf
     s = s & "    } else if (type === 'diss' || type === 'avtoref') {" & vbCrLf
     s = s & "      if (!trim(f.degree || '')) miss.push('ilmiy daraja');" & vbCrLf
     s = s & "      var cyr = (lang === 'ru' || lang === 'uzc'), dw = type === 'avtoref' ? (cyr ? '\u0410\u0432\u0442\u043E\u0440\u0435\u0444. \u0434\u0438\u0441\u2026 ' : 'Avtoref. dis\u2026 ') : (cyr ? '\u0414\u0438\u0441\u2026 ' : 'Dis\u2026 ');" & vbCrLf
@@ -17193,6 +17590,12 @@ Function BibPart4()
     s = s & "  var RE_PGRANGE = /(?:^|[^A-Za-z\u0400-\u04FF])(?:(?:PP|pp|Pp|\u0421\u0442\u0440|\u0441\u0442\u0440|Bet|bet)\.?|[BbSsPp\u0411\u0431\u0421\u0441]\.)\s*(\d+)\s*[-\u2013\u2014]\s*(\d+)/;" & vbCrLf
     s = s & "  var RE_PGONE = /(?:^|[^A-Za-z\u0400-\u04FF])(?:(?:PP|pp|Pp|\u0421\u0442\u0440|\u0441\u0442\u0440|Bet|bet)\.?|[BbSsPp\u0411\u0431\u0421\u0441]\.)\s*(\d+)/;" & vbCrLf
     s = s & "  function rangeOf(s) {" & vbCrLf
+    BibPart4 = s
+End Function
+
+Function BibPart5()
+    Dim s
+    s = ""
     s = s & "    var m = s.match(RE_PGRANGE);" & vbCrLf
     s = s & "    if (m) return m[1] + DASH + m[2];" & vbCrLf
     s = s & "    m = s.match(/(\d+)\s*[-\u2013\u2014]\s*(\d+)\s*-?\s*(?:bet|b|p|\u0441|c|s|\u0431\u0435\u0442|\u0431)(?![A-Za-z\u0400-\u04FF])\.?/i);" & vbCrLf
@@ -17208,12 +17611,6 @@ Function BibPart4()
     s = s & "    if (m) return { main: s.substr(0, m.index), pages: s.substr(m.index) };" & vbCrLf
     s = s & "    m = s.match(/[\s.,\u2013\u2014-]*\d+\s*[-\u2013\u2014]\s*\d+\s*-?\s*(?:bet|b|p|s|\u0441|\u0431)\.?\s*$/i);" & vbCrLf
     s = s & "    if (m) return { main: s.substr(0, m.index), pages: m[0] };" & vbCrLf
-    BibPart4 = s
-End Function
-
-Function BibPart5()
-    Dim s
-    s = ""
     s = s & "    m = s.match(/\s[\u2013\u2014-]\s*\d{1,4}\s*[-\u2013\u2014]\s*\d{1,4}\.?\s*$/);" & vbCrLf
     s = s & "    if (m) return { main: s.substr(0, m.index), pages: m[0] };" & vbCrLf
     s = s & "    return { main: s, pages: '' };" & vbCrLf
@@ -17279,6 +17676,12 @@ Function BibPart5()
     s = s & "      if (!f.vol) f.vol = volOf(right);" & vbCrLf
     s = s & "      f.range = rangeOf(right);" & vbCrLf
     s = s & "      if (isColl || (pubm && !f.issue && !f.vol)) {" & vbCrLf
+    BibPart5 = s
+End Function
+
+Function BibPart6()
+    Dim s
+    s = ""
     s = s & "        r.type = 'collection';" & vbCrLf
     s = s & "        if (pubm) { f.city = trim(pubm[1]); f.publisher = trim(pubm[2]); f.year = pubm[3]; var bef = mainR.substr(0, pubm.index); f.journal = cleanJournal(bef.replace(/[\s.\u2013\u2014-]+$/, '')); }" & vbCrLf
     s = s & "        else { var cy = lastMatch(RE_CITYYEAR, mainR); if (cy) { f.city = trim(cy[1]); f.year = cy[2]; f.journal = cleanJournal(mainR.substr(0, cy.index).replace(/[\s.\u2013\u2014-]+$/, '')); } }" & vbCrLf
@@ -17294,12 +17697,6 @@ Function BibPart5()
     s = s & "        else { f.degree = trim(tail.replace(/[\s.\u2013\u2014-]+$/, '')); var y2 = tail.match(/(1[5-9]\d\d|20[0-3]\d)/); f.year = y2 ? y2[1] : ''; }" & vbCrLf
     s = s & "      }" & vbCrLf
     s = s & "    } else {" & vbCrLf
-    BibPart5 = s
-End Function
-
-Function BibPart6()
-    Dim s
-    s = ""
     s = s & "      ta = takeAuthors(t); f.authors = ta.authors; rest = ta.rest;" & vbCrLf
     s = s & "      var pm2 = lastMatch(RE_PUB, rest);" & vbCrLf
     s = s & "      if (pm2) {" & vbCrLf
@@ -17365,6 +17762,12 @@ Function BibPart6()
     s = s & "    for (i = 0; i < n; i++) {" & vbCrLf
     s = s & "      e = list[i]; cls = classify(e.text);" & vbCrLf
     s = s & "      e.part = e.forced || cls.part; e.lang = cls.lang; e.rank = cls.rank; e.year = yearOf(e.text);" & vbCrLf
+    BibPart6 = s
+End Function
+
+Function BibPart7()
+    Dim s
+    s = ""
     s = s & "      e.rf = null;" & vbCrLf
     s = s & "      if (e.part >= 2 && e.part <= 4) {" & vbCrLf
     s = s & "        e.rf = reformat(e.text, e.lang, false);" & vbCrLf
@@ -17380,12 +17783,6 @@ Function BibPart6()
     s = s & "      if (a.part === 1 && a.year !== b.year) return a.year - b.year;" & vbCrLf
     s = s & "      if (a.part !== 1 && opts.mode === 'cite' && a.cf !== b.cf) return a.cf - b.cf;" & vbCrLf
     s = s & "      if (a.part !== 1 && langOrd(a) !== langOrd(b)) return langOrd(a) - langOrd(b);" & vbCrLf
-    BibPart6 = s
-End Function
-
-Function BibPart7()
-    Dim s
-    s = ""
     s = s & "      if (a.key < b.key) return -1;" & vbCrLf
     s = s & "      if (a.key > b.key) return 1;" & vbCrLf
     s = s & "      return a.old - b.old;" & vbCrLf
@@ -17451,6 +17848,12 @@ Function BibPart7()
     s = s & "" & vbCrLf
     s = s & "    /* tartiblash */" & vbCrLf
     s = s & "    if (opts.mode === 'alpha' || opts.mode === 'cite') {" & vbCrLf
+    BibPart7 = s
+End Function
+
+Function BibPart8()
+    Dim s
+    s = ""
     s = s & "      order.sort(cmp);" & vbCrLf
     s = s & "      var map = {}, lastPart = 0, np = 0, num = 0;" & vbCrLf
     s = s & "      for (i = 0; i < n; i++) {" & vbCrLf
@@ -17466,12 +17869,6 @@ Function BibPart7()
     s = s & "        var c = cites[i], nw = [], changed = false;" & vbCrLf
     s = s & "        for (k = 0; k < c.nums.length; k++) {" & vbCrLf
     s = s & "          if (map[c.nums[k]] === undefined) nw.push(c.nums[k]); else { nw.push(map[c.nums[k]]); if (map[c.nums[k]] !== c.nums[k]) changed = true; }" & vbCrLf
-    BibPart7 = s
-End Function
-
-Function BibPart8()
-    Dim s
-    s = ""
     s = s & "        }" & vbCrLf
     s = s & "        if (!changed) continue;" & vbCrLf
     s = s & "        var txt = compress(nw);" & vbCrLf
@@ -17569,6 +17966,7 @@ Function MnbPart1()
     s = s & "<option value=""collection"">To'plam / konferensiya maqolasi</option>" & vbCrLf
     s = s & "<option value=""diss"">Dissertatsiya</option>" & vbCrLf
     s = s & "<option value=""avtoref"">Avtoreferat</option>" & vbCrLf
+    s = s & "<option value=""web"">Internet resurs (sayt) - snoska uchun ham</option>" & vbCrLf
     s = s & "</select></div>" & vbCrLf
     s = s & "<div class=""half""><label>Manba tili</label>" & vbCrLf
     s = s & "<select id=""lang"" onchange=""upd()"">" & vbCrLf
@@ -17585,6 +17983,12 @@ Function MnbPart1()
     s = s & "<label>Nomi (to'liq)</label>" & vbCrLf
     s = s & "<input type=""text"" id=""title"" onkeyup=""upd()"" oninput=""upd()"">" & vbCrLf
     s = s & "" & vbCrLf
+    s = s & "<div id=""r_web"">" & vbCrLf
+    s = s & "<label>Sayt manzili (URL)</label>" & vbCrLf
+    s = s & "<input type=""text"" id=""url"" onkeyup=""upd()"" oninput=""upd()"">" & vbCrLf
+    s = s & "<label>Murojaat sanasi (kk.oo.yyyy) - bo'sh qolsa bugungi sana</label>" & vbCrLf
+    s = s & "<input type=""text"" id=""adate"" onkeyup=""upd()"" oninput=""upd()"">" & vbCrLf
+    s = s & "</div>" & vbCrLf
     s = s & "<div id=""r_journal"">" & vbCrLf
     s = s & "<label id=""l_journal"">Jurnal nomi</label>" & vbCrLf
     s = s & "<input type=""text"" id=""journal"" onkeyup=""upd()"" oninput=""upd()"">" & vbCrLf
@@ -17592,6 +17996,12 @@ Function MnbPart1()
     s = s & "<div id=""r_degree"">" & vbCrLf
     s = s & "<label>Ilmiy daraja (masalan: filol. fan. nomz.)</label>" & vbCrLf
     s = s & "<input type=""text"" id=""degree"" onkeyup=""upd()"" oninput=""upd()"">" & vbCrLf
+    MnbPart1 = s
+End Function
+
+Function MnbPart2()
+    Dim s
+    s = ""
     s = s & "</div>" & vbCrLf
     s = s & "" & vbCrLf
     s = s & "<div class=""sec"">Nashr ma'lumotlari</div>" & vbCrLf
@@ -17599,13 +18009,7 @@ Function MnbPart1()
     s = s & "<div class=""half""><label>Shahar</label><input type=""text"" id=""city"" onkeyup=""upd()"" oninput=""upd()""></div>" & vbCrLf
     s = s & "<div class=""half""><label>Nashriyot</label><input type=""text"" id=""publisher"" onkeyup=""upd()"" oninput=""upd()""></div>" & vbCrLf
     s = s & "</div>" & vbCrLf
-    MnbPart1 = s
-End Function
-
-Function MnbPart2()
-    Dim s
-    s = ""
-    s = s & "<div class=""half""><label>Yil</label><input type=""text"" id=""year"" onkeyup=""upd()"" oninput=""upd()""></div>" & vbCrLf
+    s = s & "<div class=""half"" id=""r_year""><label>Yil</label><input type=""text"" id=""year"" onkeyup=""upd()"" oninput=""upd()""></div>" & vbCrLf
     s = s & "<div class=""half"" id=""r_pages""><label>Jami betlar soni</label><input type=""text"" id=""pages"" onkeyup=""upd()"" oninput=""upd()""></div>" & vbCrLf
     s = s & "<div id=""r_issue"">" & vbCrLf
     s = s & "<div class=""half""><label>Son (&#8470;)</label><input type=""text"" id=""issue"" onkeyup=""upd()"" oninput=""upd()""></div>" & vbCrLf
@@ -17650,11 +18054,17 @@ Function MnbPart2()
     s = s & "  show(""r_journal"", t === ""article"" || t === ""collection"");" & vbCrLf
     s = s & "  $(""l_journal"").innerText = (t === ""collection"") ? ""To'plam / konferensiya nomi"" : ""Jurnal nomi"";" & vbCrLf
     s = s & "  show(""r_degree"", t === ""diss"" || t === ""avtoref"");" & vbCrLf
-    s = s & "  show(""r_pub"", t !== ""article"");" & vbCrLf
+    s = s & "  show(""r_web"", t === ""web"");" & vbCrLf
+    s = s & "  show(""r_pub"", t !== ""article"" && t !== ""web"");" & vbCrLf
+    s = s & "  show(""r_year"", t !== ""web"");" & vbCrLf
     s = s & "  show(""r_pages"", t === ""book"" || t === ""diss"" || t === ""avtoref"");" & vbCrLf
     s = s & "  show(""r_issue"", t === ""article"");" & vbCrLf
     s = s & "  show(""r_range"", t === ""article"" || t === ""collection"");" & vbCrLf
     s = s & "  upd();" & vbCrLf
+    s = s & "}" & vbCrLf
+    s = s & "function todayStr() {" & vbCrLf
+    s = s & "  var d = new Date(), dd = d.getDate(), mm = d.getMonth() + 1;" & vbCrLf
+    s = s & "  return (dd < 10 ? ""0"" : """") + dd + ""."" + (mm < 10 ? ""0"" : """") + mm + ""."" + d.getFullYear();" & vbCrLf
     s = s & "}" & vbCrLf
     s = s & "function collect() {" & vbCrLf
     s = s & "  var a = $(""au"").value.split(/\r?\n/), au = [], i, s;" & vbCrLf
@@ -17663,7 +18073,8 @@ Function MnbPart2()
     s = s & "    type: $(""type"").value, lang: $(""lang"").value, authors: au, title: $(""title"").value," & vbCrLf
     s = s & "    journal: $(""journal"").value, degree: $(""degree"").value, city: $(""city"").value," & vbCrLf
     s = s & "    publisher: $(""publisher"").value, year: $(""year"").value, pages: $(""pages"").value," & vbCrLf
-    s = s & "    issue: $(""issue"").value, vol: $(""vol"").value, range: $(""range"").value, abbr: $(""abbr"").checked" & vbCrLf
+    s = s & "    issue: $(""issue"").value, vol: $(""vol"").value, range: $(""range"").value, abbr: $(""abbr"").checked," & vbCrLf
+    s = s & "    url: trimS($(""url"").value), date: trimS($(""adate"").value) || todayStr()" & vbCrLf
     s = s & "  };" & vbCrLf
     s = s & "}" & vbCrLf
     s = s & "function upd() {" & vbCrLf
@@ -17671,6 +18082,13 @@ Function MnbPart2()
     s = s & "  var t = f.type;" & vbCrLf
     s = s & "  /* kerak bo'lmagan maydonlar hisobga olinmaydi */" & vbCrLf
     s = s & "  if (t !== ""article"" && t !== ""collection"") { f.journal = """"; f.range = """"; }" & vbCrLf
+    MnbPart2 = s
+End Function
+
+Function MnbPart3()
+    Dim s
+    s = ""
+    s = s & "  if (t !== ""web"") { f.url = """"; }" & vbCrLf
     s = s & "  if (t === ""article"") { f.city = """"; f.publisher = """"; }" & vbCrLf
     s = s & "  if (t !== ""article"") { f.issue = """"; f.vol = """"; }" & vbCrLf
     s = s & "  r = BIB.formatEntry(f);" & vbCrLf
@@ -17685,12 +18103,6 @@ Function MnbPart2()
     s = s & "  }" & vbCrLf
     s = s & "}" & vbCrLf
     s = s & "function setVal(id, v) { $(id).value = v ? String(v) : """"; }" & vbCrLf
-    MnbPart2 = s
-End Function
-
-Function MnbPart3()
-    Dim s
-    s = ""
     s = s & "function parseRaw() {" & vbCrLf
     s = s & "  var txt = trimS($(""raw"").value.replace(/[\r\n]+/g, "" "")), lang = BIB.classify(txt).lang, p, f;" & vbCrLf
     s = s & "  if (!txt) { $(""rawInfo"").innerText = "" Yozuvni kiriting.""; return; }" & vbCrLf
@@ -17707,7 +18119,7 @@ Function MnbPart3()
     s = s & "  $(""rawInfo"").innerText = p.ok ? "" Ajratildi. Natijani tekshiring."" : "" Qisman ajratildi: yetishmagan maydonlarni to'ldiring."";" & vbCrLf
     s = s & "}" & vbCrLf
     s = s & "function clearAll() {" & vbCrLf
-    s = s & "  var ids = [""raw"", ""au"", ""title"", ""journal"", ""degree"", ""city"", ""publisher"", ""year"", ""pages"", ""issue"", ""vol"", ""range""], i;" & vbCrLf
+    s = s & "  var ids = [""raw"", ""url"", ""adate"", ""au"", ""title"", ""journal"", ""degree"", ""city"", ""publisher"", ""year"", ""pages"", ""issue"", ""vol"", ""range""], i;" & vbCrLf
     s = s & "  for (i = 0; i < ids.length; i++) $(ids[i]).value = """";" & vbCrLf
     s = s & "  $(""rawInfo"").innerText = """";" & vbCrLf
     s = s & "  upd();" & vbCrLf
@@ -17756,6 +18168,12 @@ Function MnbPart3()
     s = s & "function actGate() {" & vbCrLf
     s = s & "  var saved = """", m = actMachine();" & vbCrLf
     s = s & "  try { saved = sh.RegRead(""HKCU\\Software\\VB and VBA Program Settings\\KirillLotin\\Opts\\Act""); } catch (e) { saved = """"; }" & vbCrLf
+    MnbPart3 = s
+End Function
+
+Function MnbPart4()
+    Dim s
+    s = ""
     s = s & "  if (saved && actNorm(saved) === actNorm(actCode(m))) return true;" & vbCrLf
     s = s & "  document.body.style.overflow = ""auto"";" & vbCrLf
     s = s & "  document.body.innerHTML = ""<div style='padding:40px 28px;font-family:Segoe UI,Tahoma,Arial,sans-serif;font-size:16px;line-height:1.6;color:#10243B'>"" +" & vbCrLf
@@ -17771,12 +18189,6 @@ Function MnbPart3()
     s = s & "  if (!actGate()) return;" & vbCrLf
     s = s & "  onType();" & vbCrLf
     s = s & "  try {" & vbCrLf
-    MnbPart3 = s
-End Function
-
-Function MnbPart4()
-    Dim s
-    s = ""
     s = s & "    var m = /""([^""]+\.txt)""\s*$/i.exec(oApp.commandLine);" & vbCrLf
     s = s & "    if (m && fso.FileExists(m[1])) {" & vbCrLf
     s = s & "      var inp = trimS(readUtf8(m[1]).replace(/^\uFEFF/, """"));" & vbCrLf
@@ -17825,7 +18237,7 @@ Function UpdPart1()
     s = s & "End Sub" & vbCrLf
     s = s & "" & vbCrLf
     s = s & "Sub Say(msg, code)" & vbCrLf
-    s = s & "    If mode = ""/manual"" Then MsgBox msg, code, ""Olim yordamchisi: yangilash""" & vbCrLf
+    s = s & "    If mode = ""/manual"" Or mode = ""/data"" Then MsgBox msg, code, ""Olim yordamchisi: yangilash""" & vbCrLf
     s = s & "End Sub" & vbCrLf
     s = s & "" & vbCrLf
     s = s & "Function CleanTok(s)" & vbCrLf
@@ -18017,8 +18429,111 @@ Function UpdPart3()
     s = s & "    On Error GoTo 0" & vbCrLf
     s = s & "End Sub" & vbCrLf
     s = s & "" & vbCrLf
+    s = s & "Function DataVersion()" & vbCrLf
+    s = s & "    Dim f, v" & vbCrLf
+    s = s & "    v = ""0""" & vbCrLf
+    s = s & "    On Error Resume Next" & vbCrLf
+    s = s & "    If fso.FileExists(root & ""\data.ver"") Then" & vbCrLf
+    s = s & "        Set f = fso.OpenTextFile(root & ""\data.ver"", 1, False)" & vbCrLf
+    s = s & "        If Not f.AtEndOfStream Then v = CleanTok(f.ReadLine)" & vbCrLf
+    s = s & "        f.Close" & vbCrLf
+    s = s & "    End If" & vbCrLf
+    s = s & "    On Error GoTo 0" & vbCrLf
+    s = s & "    If Len(v) = 0 Then v = ""0""" & vbCrLf
+    s = s & "    DataVersion = v" & vbCrLf
+    s = s & "End Function" & vbCrLf
+    s = s & "" & vbCrLf
+    s = s & "Function DataAllowed(nm)" & vbCrLf
+    s = s & "    DataAllowed = (nm = ""atamalar.tsv"" Or nm = ""sozlik.tsv"" Or nm = ""imlo_data.txt"")" & vbCrLf
+    s = s & "End Function" & vbCrLf
+    s = s & "" & vbCrLf
+    s = s & "' Faqat ma'lumotlar bazasini (atamalar, sinonim/omonim/paronim, imlo lug'ati) yangilaydi:" & vbCrLf
+    s = s & "' dastur va o'rnatuvchiga tegmaydi, Wordni yopish shart emas." & vbCrLf
+    s = s & "' Qaytaradi: yangilangan versiya, yangilash kerak bo'lmasa """", xato bo'lsa ""!""." & vbCrLf
+    s = s & "Function DataUpdate(url)" & vbCrLf
+    s = s & "    Dim txt, ln, i, remVer, p, nm, hh, bin, tmpDir, tf, okAll, cnt, parts, cur" & vbCrLf
+    s = s & "    DataUpdate = """"" & vbCrLf
+    s = s & "    txt = HttpGet(url & ""data/data.txt"", False)" & vbCrLf
+    s = s & "    If IsEmpty(txt) Then Exit Function" & vbCrLf
+    s = s & "    txt = Replace(txt, vbCr, """")" & vbCrLf
+    s = s & "    ln = Split(txt, vbLf)" & vbCrLf
+    s = s & "    remVer = """"" & vbCrLf
+    s = s & "    If UBound(ln) >= 0 Then remVer = CleanTok(ln(0))" & vbCrLf
+    s = s & "    If Len(remVer) = 0 Then Exit Function" & vbCrLf
+    s = s & "    cur = DataVersion()" & vbCrLf
+    s = s & "    If Not VerGreater(remVer, cur) Then" & vbCrLf
+    UpdPart3 = s
+End Function
+
+Function UpdPart4()
+    Dim s
+    s = ""
+    s = s & "        WriteLog ""Baza yangilanishi kerak emas ("" & cur & "", serverda "" & remVer & "").""" & vbCrLf
+    s = s & "        Exit Function" & vbCrLf
+    s = s & "    End If" & vbCrLf
+    s = s & "    tmpDir = sh.ExpandEnvironmentStrings(""%TEMP%"") & ""\KL_update""" & vbCrLf
+    s = s & "    On Error Resume Next" & vbCrLf
+    s = s & "    If Not fso.FolderExists(tmpDir) Then fso.CreateFolder tmpDir" & vbCrLf
+    s = s & "    On Error GoTo 0" & vbCrLf
+    s = s & "    okAll = True" & vbCrLf
+    s = s & "    cnt = 0" & vbCrLf
+    s = s & "    For i = 1 To UBound(ln)" & vbCrLf
+    s = s & "        p = InStr(ln(i), ""|"")" & vbCrLf
+    s = s & "        If p > 1 Then" & vbCrLf
+    s = s & "            nm = Trim(Left(ln(i), p - 1))" & vbCrLf
+    s = s & "            hh = LCase(CleanTok(Mid(ln(i), p + 1)))" & vbCrLf
+    s = s & "            If DataAllowed(nm) And Len(hh) = 64 Then" & vbCrLf
+    s = s & "                bin = HttpGet(url & ""data/"" & nm, True)" & vbCrLf
+    s = s & "                tf = tmpDir & ""\d_"" & nm" & vbCrLf
+    s = s & "                If IsEmpty(bin) Then" & vbCrLf
+    s = s & "                    okAll = False" & vbCrLf
+    s = s & "                ElseIf Not SaveBinary(tf, bin) Then" & vbCrLf
+    s = s & "                    okAll = False" & vbCrLf
+    s = s & "                ElseIf FileHash(tf) <> hh Then" & vbCrLf
+    s = s & "                    WriteLog ""Baza fayli nazoratdan o'tmadi: "" & nm" & vbCrLf
+    s = s & "                    okAll = False" & vbCrLf
+    s = s & "                Else" & vbCrLf
+    s = s & "                    cnt = cnt + 1" & vbCrLf
+    s = s & "                End If" & vbCrLf
+    s = s & "            End If" & vbCrLf
+    s = s & "        End If" & vbCrLf
+    s = s & "    Next" & vbCrLf
+    s = s & "    If Not okAll Or cnt = 0 Then" & vbCrLf
+    s = s & "        DataUpdate = ""!""" & vbCrLf
+    s = s & "        Exit Function" & vbCrLf
+    s = s & "    End If" & vbCrLf
+    s = s & "    On Error Resume Next" & vbCrLf
+    s = s & "    For i = 1 To UBound(ln)" & vbCrLf
+    s = s & "        p = InStr(ln(i), ""|"")" & vbCrLf
+    s = s & "        If p > 1 Then" & vbCrLf
+    s = s & "            nm = Trim(Left(ln(i), p - 1))" & vbCrLf
+    s = s & "            If DataAllowed(nm) Then" & vbCrLf
+    s = s & "                tf = tmpDir & ""\d_"" & nm" & vbCrLf
+    s = s & "                If fso.FileExists(tf) Then" & vbCrLf
+    s = s & "                    fso.CopyFile tf, root & ""\"" & nm, True" & vbCrLf
+    s = s & "                    If Err.Number <> 0 Then okAll = False" & vbCrLf
+    s = s & "                    Err.Clear" & vbCrLf
+    s = s & "                    fso.DeleteFile tf, True" & vbCrLf
+    s = s & "                End If" & vbCrLf
+    s = s & "            End If" & vbCrLf
+    s = s & "        End If" & vbCrLf
+    s = s & "    Next" & vbCrLf
+    s = s & "    On Error GoTo 0" & vbCrLf
+    s = s & "    If Not okAll Then" & vbCrLf
+    s = s & "        DataUpdate = ""!""" & vbCrLf
+    s = s & "        Exit Function" & vbCrLf
+    s = s & "    End If" & vbCrLf
+    s = s & "    On Error Resume Next" & vbCrLf
+    s = s & "    Set tf = fso.CreateTextFile(root & ""\data.ver"", True, False)" & vbCrLf
+    s = s & "    tf.WriteLine remVer" & vbCrLf
+    s = s & "    tf.Close" & vbCrLf
+    s = s & "    On Error GoTo 0" & vbCrLf
+    s = s & "    WriteLog ""Baza yangilandi: "" & cur & "" -> "" & remVer" & vbCrLf
+    s = s & "    DataUpdate = remVer" & vbCrLf
+    s = s & "End Function" & vbCrLf
+    s = s & "" & vbCrLf
     s = s & "Sub Main()" & vbCrLf
-    s = s & "    Dim url, loc, txt, ln, remVer, remHash, bin, tmpDir, inst, h, rc, t0, ans, newLoc" & vbCrLf
+    s = s & "    Dim dv, url, loc, txt, ln, remVer, remHash, bin, tmpDir, inst, h, rc, t0, ans, newLoc" & vbCrLf
     s = s & "" & vbCrLf
     s = s & "    If mode = ""/on"" Then" & vbCrLf
     s = s & "        SetAuto True" & vbCrLf
@@ -18033,6 +18548,12 @@ Function UpdPart3()
     s = s & "" & vbCrLf
     s = s & "    If mode = ""/auto"" Then WScript.Sleep 40000" & vbCrLf
     s = s & "    If Not IsActivated() Then" & vbCrLf
+    UpdPart4 = s
+End Function
+
+Function UpdPart5()
+    Dim s
+    s = ""
     s = s & "        Say ""Dastur faollashtirilmagan. Avval o'rnatuvchi orqali faollashtiring."", 48" & vbCrLf
     s = s & "        Exit Sub" & vbCrLf
     s = s & "    End If" & vbCrLf
@@ -18043,6 +18564,16 @@ Function UpdPart3()
     s = s & "    End If" & vbCrLf
     s = s & "    loc = LocalVersion()" & vbCrLf
     s = s & "" & vbCrLf
+    s = s & "    dv = DataUpdate(url)" & vbCrLf
+    s = s & "    If dv = ""!"" Then" & vbCrLf
+    s = s & "        Say ""Bazani yangilab bo'lmadi (internet yoki fayl nazorati). Keyinroq urinib ko'ring."", 48" & vbCrLf
+    s = s & "    ElseIf Len(dv) > 0 Then" & vbCrLf
+    s = s & "        Say ""Ma'lumotlar bazasi yangilandi: "" & dv & vbCrLf & ""(atamalar lug'ati, so'zlar munosabati, imlo lug'ati). Dasturni qayta o'rnatish shart emas."", 64" & vbCrLf
+    s = s & "    ElseIf mode = ""/data"" Then" & vbCrLf
+    s = s & "        Say ""Baza eng so'nggi holatda: "" & DataVersion(), 64" & vbCrLf
+    s = s & "    End If" & vbCrLf
+    s = s & "    If mode = ""/data"" Then Exit Sub" & vbCrLf
+    s = s & "" & vbCrLf
     s = s & "    txt = HttpGet(url & ""version.txt"", False)" & vbCrLf
     s = s & "    If IsEmpty(txt) Then" & vbCrLf
     s = s & "        Say ""Yangilanishni tekshirib bo'lmadi: internetga ulanishni tekshiring."", 48" & vbCrLf
@@ -18050,12 +18581,6 @@ Function UpdPart3()
     s = s & "    End If" & vbCrLf
     s = s & "    txt = Replace(txt, vbCr, """")" & vbCrLf
     s = s & "    ln = Split(txt, vbLf)" & vbCrLf
-    UpdPart3 = s
-End Function
-
-Function UpdPart4()
-    Dim s
-    s = ""
     s = s & "    remVer = """"" & vbCrLf
     s = s & "    remHash = """"" & vbCrLf
     s = s & "    If UBound(ln) >= 0 Then remVer = CleanTok(ln(0))" & vbCrLf
@@ -18109,6 +18634,12 @@ Function UpdPart4()
     s = s & "    If WordRunning() Then" & vbCrLf
     s = s & "        If mode <> ""/manual"" Then Exit Sub" & vbCrLf
     s = s & "        ans = MsgBox(""Yangilanish tayyor. Word ochiq."" & vbCrLf & vbCrLf & _" & vbCrLf
+    UpdPart5 = s
+End Function
+
+Function UpdPart6()
+    Dim s
+    s = ""
     s = s & "                     ""Hujjatlaringizni saqlab, Wordni yoping - yangilanish o'zi boshlanadi."" & vbCrLf & _" & vbCrLf
     s = s & "                     ""(OK - kutish, Cancel - bekor qilish)"", 33, ""Olim yordamchisi: yangilash"")" & vbCrLf
     s = s & "        If ans <> 1 Then Exit Sub" & vbCrLf
@@ -18136,20 +18667,14 @@ Function UpdPart4()
     s = s & "        WriteLog ""Yangilash tugamadi (kod "" & rc & "").""" & vbCrLf
     s = s & "        Say ""Yangilash tugallanmadi. Sabab: "" & root & ""\update.log"" & vbCrLf & ""Muallifga murojaat qiling: +998 99 724 40 12"", 48" & vbCrLf
     s = s & "    End If" & vbCrLf
-    UpdPart4 = s
-End Function
-
-Function UpdPart5()
-    Dim s
-    s = ""
     s = s & "End Sub" & vbCrLf
     s = s & "" & vbCrLf
     s = s & "Main" & vbCrLf
-    UpdPart5 = s
+    UpdPart6 = s
 End Function
 
 Function UpdaterText()
-    UpdaterText = UpdPart1() & UpdPart2() & UpdPart3() & UpdPart4() & UpdPart5()
+    UpdaterText = UpdPart1() & UpdPart2() & UpdPart3() & UpdPart4() & UpdPart5() & UpdPart6()
 End Function
 
 Sub WaitWordGone()
@@ -24831,6 +25356,119 @@ Function SozlikDataText()
     SozlikDataText = s
 End Function
 
+Function IcoPart1()
+    Dim s
+    s = ""
+    s = s & "pdf:AAABAAUAEBAAAAEAIAAJAgAAVgAAACAgAAABACAApAMAAF8CAAAwMAAAAQAgALEFAAADBgAAQEAAAAEAIAD0BgAAtAsAAAAAAAABACAA2yAAAKgSAACJUE5HDQoaCgAAAA1JSERSAAAAEAAAABAIBgAAAB/z/2EAAAAJcEhZcwAACxMAAAsTAQCanBgAAAG7SURBVDiNjZPfK4NRGMfPn6MtlJu9C2WzCy72bhcuuJaUSJOt5YItyZDCEknsQgolF6gR28je19oKw1LD5FdTYsoVvV+dE2/nNdae+p7e9zzP9/M859Qh5Dv2rRZBtpldst3cW1i1TkmsMRA+omKtT7JbFMluQZFSojbLoNpZ4sy3iwG8HiVU3QRmkJmfRqzRmgdhk0iiyc0ncskj8PG0E2R7b6lTxJpELUQ0uQkdpSBgN4iHtRU2TWZuSgNgx9ivqxwoBPjIvSK7tYFscJ0dha+lXhKpLPVEraY/AenxYbxnrtR/mlO7W00IVZd7Scio90SqynBQXwXJZtYC/CP5AJuZ1VIP9RK6hI16/OglEWPFyucn0uNDuPSP4Dm6h4+3HMvxtf8DFIVdWHpiGPerS0iP+fASl4sHZLc3ceHz4HcUB4jLeUYVEJf/AAg6B7952FCHE0crkt1tOO5sQdLZzkS/aU4DEHQOEhFKKkJGvcInrmf8uFteQG"
+    s = s & "Z2EscdzXhcX8XV9Njv7gr1svdAR+Eh530uXE6O4qzHgVNXB1JeN1L9PRpzWND1aV4kpYUNuq6QoPcVEq1ROxNCvgBlnnsx4BiOHgAAAABJRU5ErkJggolQTkcNChoKAAAADUlIRFIAAAAgAAAAIAgGAAAAc3p69AAAAAlwSFlzAAAOxAAADsQBlSsOGwAAA1ZJREFUWIXNl/tLk1EYx/2hPyb2UnSB2FTU+UoW0jYLlbyklmZqIpRpUWGKdNNEsJGlKNpFIawkyqhom+mcLi/zmtc0Uado5ZxkePnGOZpztfcyddUDD7zwnvN8P+853/fhHDe3/y0MgXJfvYp9qlf5mQ1KdrFe5YfN5EoNdrxeyT4xKHzlnMIab+9tBpVv8WYFhZMtIlp/frnqb4jbIOzEG5Q+LNdgY8RhDBXfwXBZIWc2x4ai43wyWhKixEMoWZ81AL3S9xnXwOHSQghF56WzGKkow8KsBW1n4kUB6JVspQ1A5WfmGkgKiwUgsWCdRXtKophtGLftP4/bnQUQC0E01wD4Bm4EgELMWgQ9sXUAl1PQlZ6K0coKuyRg4gAU8k0BTNfXois9jUKsz+a4CG4AhdwGUHfQc1MAXEHmctWtO+BhA6jx2u00wNemBjTFHMVMh2lDAERzDUArY1Dr7+4UwFjVY4fmEwNQu18GomkHwAXBJTBdp0NDcAAm"
+    s = s & "3lY7BfBL3CGAVsbQpaGeWDUmF8Dc0CB9P1WnEwZQyOmek9rrtRwC/J5DRWqHxQfUuWiJj4QxTIXFOavDMWQuX+0NA5Amoz8kx4JlBn25V2GMCERvThZ6rqVj8k216wGGSgrQmhCJ7swLaAwJQMupY6iR70VrYhQaQgJcB7D0Y55+sc5rFz5mXYSlsw1YXqbv5s3jmHj9At9Mza4DaD+XSJe79fRxYGmJ03wuA2g+GYam6CDMT04IirvUA2JjSwAG1Lew0Ri4nSMSQCpZ5BpEmtKnIjU+3y9yKgcL8mhn5QSQSmwHEo2UGeUjXQ/TGKqA1mPHStf03gNjuArv2X20xRqO+POL2qVkZP0KlAtNIM63dHditLIcU7Va2lqt/b0YLr2Hgfxsut9fjPX4PjpCjSpUTyNjHthWwGO7VCNjlvkmkBNOb3YmfSZ/Qe/NDJhfVtmZlQCQ3kC6pBDAOynjsQawsg0SNd+E/rzrmHj1nP6K8+YxfIgKgnWwD8ZQJZqigynAcMldek4wJccKAeTbiZMg1yU+CJ3nTvTcyKBtmPpAxsCUdIJeTDpSk2BKjkFLXDj1RNeVNF5xh1czt9UgS6OVMo+ISfj+DtFJa0hGNDLmoU7GuHMK/6v4CZYmenYEyAv5AAAAAElFTkSuQmCCiVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAA"
+    s = s & "BXAvmHAAAACXBIWXMAABYlAAAWJQFJUiTwAAAFY0lEQVRoge2Y+VNTVxTH+aHt7+1M+z8YsIu0kqRgzAJVhORRZRFxCopLRdAC0jploK2ita1Oy0jbURwZ2+m0P7Y/QDt2SCCQhEAgQIIge7WyiLLJZiCnc44QiAnkvZekiZ2emTPDy7vL93PPuefeR0jIf93qo0Wv6JWyFINKmm9gZEX/iquk+Thn7Y7Il3kLNzIKiV4l0xhU8kU9o4BAuEElX9QpZWrDblkUa+GWxMQXdIz8eqBE6927Xc/Iy1GbR/G46kEgGNy6Sl69IUQQrjy4uFJ61a14bZwk8kmoPA/S9N4e6Cg6BR3FBazccvok9WtMY6DlWLrXEEZGIXEBYJs6KN72aBq42PzIMPW1FuYB2O3QX17mdSqFrDUsVwZGYWPT2fpxLifxLgDLNnDtW94AWJ2wvK+uvlKWwrbzWhHeAKAN3ijnDaGLlyY5AAyM/FQgALyCUMnyVqtPvOx8oAD4QqDmVQCVIqAAfPYEag4qALDbOZVYZwB/p9DoiOMc2Oi8aExj+KVQfWxUiT8B7EtL0J6fxW+zMu4dNa+eA7I3z/gTYAVifnQY5ofvrevtBcdZA6BmB4BaFPqJXin1KwAbsxbmsQNQSgE1OwHURUf4DGDp8QLdfzCnx00NPgfQKiJcATTiMCLzBcB0dye1"
+    s = s & "7SwphM5zRT4F0MVLAbW6AohCoWbb66Bn5F4DPOruora9ZRc53Z2sHgHkpBG1ugVAr5VswWPaK4DFmRnQJ0RD86FU6Pnmgm8AVDLStqJzXQCKROSrUL8z0qtNbD5+gNoPVf7qNUD9zkjStFbjhgCOaGx7A+piRKCLkziiwhYAUwfb//XjNe4AKhnNiXOjBnfaWAG4c3NWukchMwN9oHl7MxjejQGtfCvMDf3NCsCclc5Kg98Bui58SquIdyAMf2Oqiv5+JgAW7o/QZhusuELP010dlAp10UJoSIolIF3cdrB8lAMLD8aCD6D7YgkJnrK2QW/ZJTDujXfq37g/Afq++xqa0hPh7i8/BBfAfc2ftOlqt2+hqtGafRDu/FQB051WmB3sh57SL+iwXCkQU7cswQFgm5qE9vxjtGGxDe6Bx+MP1wW1TU6AbXrK5feAAKB4Y0ocNB/eB4bdMWBM3gVLC/PAx8yBALjz8w2oiXoNTAeSoVYaTunC18yBAJjp76UIYIXhcvMMGgBfmvl/AJHnCJgyksBfZspI4pdCGqGgmG1H/JjAU/ahUedTH6y4QmOz1iEUFK/uAaEgm3XHIPEakSBrTQTCErwZrHEfA60nMp987q35He8/+F3QciSNSi0edKaMRHKsXBouK/6UV4s3qRwAOqHgJY1QYOM8kDgMRm5W0qk6YW6iA6zrfB"
+    s = s & "G9azt5mH7Hz8upjnY6LxBmpfRi2zGtmh+AUGDTRm5+0QGwnEZ/cB0IVx2t5eh+eh64/j0szc3RPWfu3l0YvVnlaKuVveUAaEjeRW1tkxN8I1AV8rTVCAVb1aJQO5eBbn95hgTh5Q2fLQXZ9Iz3f7TbX511au+IQF8PLM7Owq3PTnMWTxrFYSIXgOUolHEZrO2DIySoOXMvPfdfvUypgRGYHx6C4arfHG3xG2EFwFqYC5NtLTDR2sxnH5SGrGdN4eHPa4SC37nsgbHaarp5PjDU0T+0ui+do3f4b8LF2RmYtJhh3GR02gOYQvg9AHY7RY3D6leqJZLn1gVYgVALQy+zTidxGJgOpoDlwxxo2LPD6V19bBS05b4PrScOUZrVvSOG1pxMuvTh+5aj+8GYqmSXNqLQUo/i11p1xKYIigaf6uQrF9LcVbg/Q/gallisuXjYqUWCs2ph6Od+dRHOIcjGOXFu3sKfFfsHBmiR/4J9iuYAAAAASUVORK5CYIKJUE5HDQoaCgAAAA1JSERSAAAAQAAAAEAIBgAAAKppcd4AAAAJcEhZcwAAHYcAAB2HAY/l8WUAAAamSURBVHic7Zv7U1NHFMfzQx8/d9p/wY7mgnWkllxEkXtRUTAJIvXZjlWk0/Fd31Xq2Np2qnbaWjtttXUcta3aqbWjbUep3DzIC0IKEh4GwaqACgjI"
+    s = s & "o0qAnM7ZkBhJInksyQ3ynTlDbrK72fPZPWf37g0SyZjGFJC02bMZo5J73yDnNQYFV2vI4nsMyjQQhWFfsE9yXoN9xL5KaKlIybN6OaeNupPBmoIrNij4GSE7bs3Jec6Qxf1gUKY5ou5M6OYwyFOPoC9BOW/OTHnJIOd0InCAjsm5IpOSfzHwkZdzRVHvNGXTK3ijLT39+WEBGJzTHkajGRXc4Sc6r1OkJsV4zA9nDu28NJn/0ZeHNvVtBz6CvvsdEI5unTrubs/R1wctQgGYcubSh6Dg1T6d1yvS4kNtNFznhwJwqd1SPCIQfO4T9Epud6gN0pAvAKiOf8xgej2DKgCdgs/3Mf15jRgBjAgEBafyMQP4erECoA5Bzl3zngFKvlvMAOhC4Lt9AEgDsQOgCSFmAdCCENMAULhPeKoBDNjtlAEouKgCaDhzMuy4DtgUnDcA/bzUqALorLaCIWtmRADoM2d4A9DNnRZVAC4It346BjeOHwnIQu0v+uoFQJuWGHUAwSrU/qKvXgDUyROfGgDoqxcAFcuQqREJALiElSzLgtIVC6GjzBxRAOgj+uoTgHr6pIgAsOQtBVPOHKjYsgbKN+RFFAD66BeAimWgaBY74gCMC9LBvDyHJDxj9mxw9PdHBAD65vLTLwBVUlzQoRCsSt6YD6ZFmWTzY5w/C8DhGHEA+ozpxLfhAb"
+    s = s & "AMqKbGBwUhWFnf20jqVe7cCJZVS0NyPhgAJO6nxj/yb1gArHMmBBoOwerfo9+669r2fTCiADynfXAAWKepp70CujnJVAG0agvddXELPBIAcNRdCS8sACoXiOSJZAOBDeNW0qDkQwbQor7srmvdvp4CAJ70CfuGfcS+DudP0ABUT7BgVbpyEQkxLTeF1G9R/x0SgHD6HDUAHWWlpE7Z6uVw58/fyWsMsZ4b158OANZt60id5oK/yHX1nu3kWp+ZAvcMWui5Xgcd5RZoK9ZDd+1V6P+vZ/QA6KqtIVPfmDWTPP1BOQYGoGr3Vr9ta1ImQ+PZ06MDgHVw9Jt+Ow2991qh4fQJKF+7kqw0nu3h0lX7+Sdw49hhki9wExPzADqrrWT0MUNbt651L1GYCK9syIObJ74H24G9JIuTdpPiwLQwA4oXZoAxe1bsAhiw9xLntPxr7vK4XNn27YF2s9HrPqC/pxuazp2Byh0boGSJAiy5i6G91BSbAB7eaSK3vJrUBDeAq5/uIXFPQ6IG0HO9jixvOMVrPs4n5fAwsr+7i4rzogdgyV1MPqv/5gsyA/BmBJc5mhI1gKLZSc6pz71KymAeoC1RA2jVFJLDDtOCdLh94Sx150UPIBIaA8COzQAQRQjY29sg0rK33RNPCFTmb4ooBHS+cte7dAEIMqYznAZjyQSWue8NgGWuRrtj"
+    s = s & "ETOZtNpXCBTQ/BLcApevy4WavbugbM0K525wSBk8F7BuXwc1e3c6j8nw/aQ4Us9l+BTJ80aKygyQSS/6ACDdRusLcBuMcYpyHXw8bL4L5jfmu8vcPHkUYPCmyGG3k7+2/R+SLfNQ4R0igqAGgGU2ewNInDCORuPqqfHwoLGBPO3B0cURxRMfVHd9LSlTlb/ZeX3NRnaLWAbhWFYtcQN40NRAbqbqv/uSXDf++jM1AJop41/2AoASZMzlcBvHrS+qs6risffReRSe/d354xx5bd2x3rsNDwB4MnTt4H5yXff1Z7QAFEj8SUiSThJYZiCs6Z/nfNTVqlM/9j4efqDMb2ZDm0lHXrvj3gcAT7VqhYDO+gOY+o7CxPgEvwBQgow5FM6XuM7vHjTecj+Pw873ttwlYYEJreGXHx/FvB8Ava3NULFlNXTZqkk9TIgURv+gZDiZExKeDTcU2kz6wbg9BeXrc+H2+bPuH0bg56Vv5ZDk2NfVSSDgwWjdoQMkN7hDAAGyDJQsU5JkifnC8+lu0KMvYzRWqTSwf57SJse/IMikhaF+GSavZuESOQ9EDfQ+hLsXL0DRTJm7zJWNbzvzwuCjcdxJVmx6xwsAGrblN2cE5vxl9Ckg5z1ngoplvsK4CWdFwJ/fDX007Wm4PyBlwhhdv44789lBISXlGUmoEtjxcSqZ9DztzkXACt"
+    s = s & "Sy8ZMltKRKnDBOkDFbBFZ6CbeSKhnTJQInnSZjugRWWoU7POwj9pWa42OSjG79D6OVxDHFrds5AAAAAElFTkSuQmCCiVBORw0KGgoAAAANSUhEUgAAAQAAAAEACAYAAABccqhmAAAACXBIWXMAAHYcAAB2HAGnwnjqAAAgAElEQVR4nO1dZ3Qb15VGyu6es0nOnrMlu5tsz9mNhaFkWy4CSFsUgaGsWBQAyaKL3G3ZcZUT23KJe9xiy3GTW1wVt7iXyEVyEYYNwypRjVShKkVKbCIlUmwi8fbcR9NRAWYGwAzuzJv7nXN/ERjOu++7H1657z6Ph0AgEAgEAoFAIBAIBAKBQCAQCAQCgUAgEAgEAsFmiM0M/LQ8Ujg9Fi64NhYJPK2Gg8vVcKCmMhxsUMPB7bGw3BOLBIfViMzIyAfJOBCLBIeBK8CZMe4EaoBLFaGCxcAtzrGZgZ9i893VYB7Pd8rD+cdVRoILY2H5s1hE7qagpqDOMgf2AveAg8BF4CR2XAiNaH7+92OhwtmxUOC9WDjYQQFPAW8nDsTCwQ7gZmU4EAGuYseLMCibXXCsGgo+poaD7didTEY+UI2IAYxIw4EllaFAAXb8OBIwnIrNKjhTjQRXUdBR0DmcAytjoUAxTRGMBf531aLgGWpEXmODjiMjHzDTfBAONqqhgstoepAEEPixSHArkY6E"
+    s = s & "R2QOxCLyFljLMnXI7GSUFcn/oYYCb2N3DBn5QM2mD8LB5bWRgp953Ip1xcV/rYaD96iRYD8FHwWfKzkwO3ggFgncBbHgcROq5wT/Rw0HqtE7gIx8ELGBD8LB+pVz5P/1uAGVMwNzKXHHBqQjY3byQSwc7C2flX+eR1RsmjHjb9RQwXNqRI5jO5uMfGBTDsQrw4FnhJsSRPPzf6iGg1/bwMFk5AP7cyAULK0tlv/OIwJqi/L/kR+owHYqGfnAURwIrlJnBf7Z42SURwp+poYCTfjOJCMfOJAD4eD2qkjw/zyODf5IsBXdiWTkA0dzINgKseRxEioK/T9Ww4HN+M4jIx84nwOxSHBbeUj+iccJqC8s/AHN+fFJQyaaD4KrykO5P/LYfqsvHFDwnUVGPhCQA+HgCltvEX6zz4/vKDLygaAciEUCT3vsCHWWPIeSfPAJQia8D+JQK8Njt9x+Su9FJwaZS3wQC8s9tjlJyOf9EXkltlPIyAdu4kAsFKy1xXrA2JFefIeQkQ/cxoFYKHAn/rHe2cED2I4gIx+4kwPBftSpgBqRP8d3Ahn5wMUcCAeWogR/+cyCEHrjycgHxAGW9RqD7xQXf48KeFLwUfDJ9vBBKNAEMZk1AVBDBRejNzobNruQbX70Aba3RmXDe7tYfHSUuRVGfTaOkQN9rG/zRtb89mus9sK5+H0puM"
+    s = s & "VmFlyQleCHCw74pYk2aLSVtuqKC1jf1ibUoLMTjPotEUYG+lnTkw+j96nIFgsHG7Jy+cjYjT34DbY6+If39WQ9yOwMo77TQvObS9D7VmgrCp5huQCIfl1X5Zzp9MtvkQBwEXjrVfQ+FtUqI3KdpcEfiwROxm6k1QZzfoJ1AkAiIFvK31hRYLJ1AhAOPIMdoFZbd20lxb/FAgBoef8t9L5WRbRQ4ElLgh8uNXTDFd3D3V0kAFkQABIB2RL+xiLyHku2BCHZADs4s2Fu3urLtgAAaE1ANp3DFbOCRRYIQOA97ODMhhGyKwAAmg7IpnI4Fg7+ydTgh/1FNwz/SQCSw2r/kQjI5vE4HGwzVQAqQsHjsQOTBAAX2RBQEgHZNJ5XzC7MMU0AKiPBhdiBSQIgvgAASARkU7geCxX82jQBiIXlz7ADkwTAHQIAIBGQM+d7KPhn8wQgIndjByYJgHsEAEAiIGfE+cqI3GVK8FfOzv837KAkAXCfAABIBOSMuF87+7R/zVgAyiOF07GDkgTAnQIAIBGQ0x8FzC4IZCwAamjaAuygJAFwrwAASATktGKgIhS4OmMBcEP+v9UEFgHY/iMRkHHOBajh4HLsoCQBwAe2AABIBORUY+FzEwQgUIMdlCQA+LCDAABIBGTDfVEZDlaZMQJoxA5KEgB82EUAACQCsuEyYWYIQDN2UJIA"
+    s = s & "4MNOAgAgEZAN9EdgR8YC4KYkoGwS2Gmwo/9IBGTrk4FikeAwdlCSAODDjgIAIBGQk/dHODiUsQBgByQJgD1gVwEAkAjISfuDBICmAMILAIBEQCYBMGO0QEgMJ/iPRECmEQAJgHsFAEAiINMUgEYA7hUAAImATGsANAVwrwAASARkWgSkNQD3CgCARECmXQBaBHSvAADcLgIeygNIzWGExHCy/5r/9Ef0QFRJAPCd4VQC2wFO91/Tkw+jc0tFMBoBkACYAqcLwMhAP6u9qBg9IFUSAHynOJHA2BDBf81vv4bOL5UEAN8pTiUwJkTwX1/TJnR+qSQA+E5xKoExIYL/Rg70ofNLJQHAd4pTCYwJUfyHzS+VBADfKU4mMBZE8R82v1TnCUAQvRHZNAIFjiqMBU0QgHDABg0hAcAGdr+Qyan7IBzIXABiswpc5XxCYlTOmY7eN2RySj6A2M1cAIqmucrxhMSovfhM9L4hk1MTgKJpJgjAzKmucjwhMTY8cAd635DJqQnAzKmZC0DFL05xleMJidFZFkXvGzI5JR9A7GYsAOXT/a5yPCEJ4nG25sar0PuHTDbsg/JCX+YCUBY4yVVOJyTHYNseVx6oUR1qELsZC0Dp1OPRG5JNI+iLwNobr0bvJzJZ1wcQuxkLQEneRFc5m2AA8ThfE9jwwJ2s7pKzaIswYk9T8iZmLg"
+    s = s & "CKX+IJBdiNIQEgmAFsfqnZsnCAQeyaIgBu2gkgiA1sfqlZMohZ0wSgLHgyeoNIAAgkAHJKC4CmCUDJqceiByYJAIEEQDYcBxCzpgkAXwcIueNMAEFsYPNLzYaFCnjMmioAFTPy8BtGAkAgAWB6cQCxaroAlE6bjB6cJAAEEgBZNw5K8yebLwBumQYQxAY2v9QsDv9NFwA3nAsgiA1sfqlZyP+3TABKph6H3kASAAIJgKy7+m+JAIDFivLRg9RKEwnxkRHWUfIVP8s/XtCjqvh0Vr9gPtv+0jNsoKWZuQ3Y/FItPv9/ZLyaLgCiLwaKgr6tTaz+2ks12wplvna+/hLP7XcLsPmlWmgQm5YLwNgoQNwyYaIEf/W8sOE2Ny1exNwCbH6pFhmMzBPFqiUCUFpwAnqDSQCSIB5nqxfMT9k/7Su+YG4ANr9UiwxiMmsCwEcBglYLdjp6Vq9Mq90rLz+XxUdHmejA5pdqgcGIPFmcWiYAkGyA3XASgKPR/OaSpH6pnDuD7Xj1RVZ5xmkJ/95TX8dEBza/1CzN/S0XAFGPCTsdjffelrRtUMkHsOmR+xP+fefrLzPRgc0v1aJjvygCMFYtSKyrw5wOrZX/Dfffzj/TXVeV8O8Ndy5kogObX6qpFmQlp0zCEwCwMnmKDRxBAjCO2gvOSOqPTQ//ln9meG9Xwr/DzoHoW4LY"
+    s = s & "/FJNNIg9vfi0XACU3ByhkoOcDpjnJ2vb5kcf/PZzVWcXJfzM8L4eJjKw+aWamfSTm2MDARifCghSN9DpqDpzZtK2bVn8yLefq7v0nISfGWhtYSIDm1+qGRYO6A79syoAImUIOh3V80JJ2waLf+Oov+aShJ+BJCKRgc0v1eJVfzQBEOW0oNNRd+nZSdvWcNfN335u1ZUXJvxM/66dTGRg80s1+bSfrQQA5iQVp5+K7iQ3C8CaG65M2jb42zhWXjYv4WeGOtuZyMDml5rplp+BeT+eAIwvCjr4RmGR8wAg209vqjA6OMhEBja/1Exy/VMMfhwBAMub6NgDQ07HtucXJ21b9dmz+GdG+g8k/HvN+XOY6HBk8M8q4Avt6cQijgDAzsApkxxZQszp2LNsqWb7hru72IEd2xL+bc31VzDRgc0vNVULFRhe8beVAIyLgNNGAk7H/sZ1mu3bt2YVP/mnlycgKrD5pab6y59B8KMLwLfTAQetCTgdB/t6mTq7MGn7Wj54i2199vGEf2v98B0mOhw1589Lb9hvLwEY3x1wyMEhEZAsyQes4a6bWE2SdGE6DSjbwmAnzYzgt48AfCMCTsgTEAGN99yaVtuHe7qZ6MDml2pknz+N1X77C8ChGYM2ThsWATtefSHldtddchZzA7D5pSazcCBpVR+hBACsxMbrAiJgb7Wacrs3Pn"
+    s = s & "gXcwOw+aUmme9nutjnKAEYnxKMHSW2Vz0BEXCwV3shMJG1fvQucwOw+aUeZsGxI70mDvmdIwCHjAbsdPGoKEi1MGjvxkbmBmDzS/3GYFHcql99RwnAoWsDdsgZEAVbn3vCcJurzprJ4gcPMjcAm1+xommHXd5JApBQCPAKjIiCjtIVhtu8/rbrmVuAGfhlgROzFviOGwHYRQhEwVBnh+E2w7Vh8REaAahWBP7MqSmd3ycBOHKN4NRjWXnhlKzdQyAStGoDHGldFSXMDcjKD0mogOe8wGW6WIHv+BFAwlFB/uSxBUMLDxmJgoHWXSntBKy//QbmBlgZ9BUz8rI6v3edABw5MigLnjyWYmxiYpEo0DoWnMz2r1/DRIdpAR8OcO6VBU466kpuO5mwAnCUIORNZKVTj+cdAumU0Dkw/4J1BD594CKhn3MgAuC8v1ZtQCMlw0SFvh+CnCvAGc6dmVM5l4BTwC3gmFl5+iQANjQR0PzWq2m3v7u2kokMbH4pJAD4ThFaAEZHWdXcGWm3H3ICRoeHmKjA5pdCAoDvFJEFoLN0hWb7jKxMw2EiUYHNL4UEAN8pIgtA/dUXJ20b7Ed3lH6tm3sOIrG/cT0TEdj8UkgA8J0iqgD0bliv2bbGe27hn9tw322GpgIjB/qYaMDml0ICgO8UUQVg/R03aLatp76Wfw4Kf+hdKw22"
+    s = s & "5te/ZPGRESYSsPmlkADgO0VEAYDEH63TZdVnzTzs5t/dn3xoyB+8ToBANwZj80shAcB3iogCsPnRBzTb1fzmK0d9p/Hum42JwEP38N0FEYDNL4UEAN8pognAwX09mifNYPEvUb2/kf5+VnNuxJBfGu6+WYjtQWx+KSQA+E4RTQC2v/ysZps2Pnhn0u/279zOD1sZ8U3tRcVsYLezrw/H5pdCAoDvFJEEYHRokKerarWpd2OD5jO6KssNn1yDktUdJV8ZereRvl52cP++bw1SlLGBzS+FBADfKSIJQMt7b2q2Z9UvzzP0nA7lq5RKVMH9Ans+/zNPGoL1h3W3LGAr58ONw0HNK6zh4AyICEw9YNdix5LnuQBlqyIRNr8UEgB8p4giAPHhYX6ARas9bV9+Zvh5ENBYB13gKC0sNh7YvtVSn2HzSyEBwHeKKALQ+vG7mm2pPGN6yvv47V8vQ61gAyOEna+9aJnPsPmlkADgO0UEAYDArjzjNM22wPQgHexbt3rsbjrEftj52kvMCmDzSyEBwHeKCAKw59OPNNsB8+zRwcG0nj3YtoftfOMVS+vV6xmcux/c02q637D5pZAA4DvF6QIQHx3lmX1a7djxyh8MPw9W69ujX/DtQr01hWyaFacSsdukkADgO8XpAtD2xaeabYDbZg727tfdPoSgX3frdabXsYP6eHAxCe"
+    s = s & "wMNNxxI9v4u7t5IhGUH19z/RWs7uJiXjRT7zlW3FeIzS+FBADfKU4WAJj7w0k9rTZAYlBCjI6yvdUx1njvb8aupLLKj7k5bPW1l/IdCK3sweG9XVzM1i68OuF0Aw4smQ1sfikkAPhOcbIAtH70ju7c/8iEGwg0WFnPpFJQJtt7mxbdy/bWqJo7Eu1ffn709/Mmmn4GAZtfCgkAvlOcKgCwqAfDa6333/XO62Mfjsd5fb/1t19vi/r042IACUSwOwHZibD2wNs1PMR2L/0g4efNBrYPFBIAfKc4VQBga0zr3SvnTGeD7W18Bb/qzNNN8wmkGsMwHaYW9ddcYqq/tbIPV142z3QfYvNLIQHAd4oTBQBy6fUWzqCcNS9bnYkPcnP4Il3T47/jc3ioM3AkulfWsPqrL7K8L7Y++7jpfsTml0ICgO8UpwnA6MAA23Df7Za1GRYE19/6Kz4MhzsFjQLqBsKQ3oqLMUDIrDh5iM0vhQQA3ylOEQDY74eg1Jv3p2OVswtZ05MPs+66qowP4gx372W73n2DrZx/jmnvZ1U6MDa/FBIAfKc4QQBgu65mXtiCoF/EU32tKvPVv2Mb2/bCUxmtQTQ98ZBl74fNL4UEAN8pdhYAGILDsNq0oJ8znW1ZbG3QJ8NASzNr+eBt1nDnQkNbkFBwpLNcsfSdsPmlkADgO8WWAhCP82DR"
+    s = s & "OkufatDzyz5tVNATFjLhndqWf8K3K2GYD7UK25Yt5ZWJsgFsfikkAPhOsZsADHV18hTZjN49N4ev3O9vWIvSBqcAm18KCQC+U+wkADDkhew9rXcyMnyGaQNBH9j8UkgA8J1iCwEYHeXDdK0jt3Dl+fYXn9bd/4dtvKHO9uy9u4OBzS+FBADfKdgCACm9cApPbx8c6vStu+la3XeG68AJxoDNL4UEwN0CAAdz9PbLSwtO4IUy9Y79gtWcP1u467usBDa/FBIA9woAbPHpHeUtC57MU20hC073zHzeRLZvzSpL31k0YPNLIQFwpwAc7O3VvYUHgn/funr+iw4HYfTeFVb9CakBm18KCYALBWB0dKzohcb/hUq8kJYL2PL0o7rvWVX8C35GgJAasPmlkAC4TwD0Lu+AnYD2Fcv/UhhDrxhn3kTWs6rGkncVHdj8UkgA3CUAcFBG7+49yJ0HQJackZr8NPRPH9j8UkgA3CUAcPWV1v+Dc/UwRYAbcfQSgsDqLj2b3whESA/Y/FJIANwlALUXzk36v8oCJ7GBll2sf9dOXsxD791gVyBRgQ6CcWDzSyEBcI8AwGq+Vsmrrc89zof9erf7csvNYR2lX1OsZwhsfikkAO4RADiJl3RBL28i2/z7+w2X8II6f4TMgc0vhQTARQLAGKueF8r4nTYt+q3p7+VWYPNLIQFwlw"
+    s = s & "Ds+KP2IqCeNd5zi+m18d0MbH4pJADuEgCoeV99dlFa77LlqUdsVdBDBGDzSyEBcJcAjJfG0rvK+1ArC5zIqwMRzAc2vxQSAPcJwHg5rM2PPah7S8/q6y7jgkGwBtj8UkgA3CkA44A773e+/jJPAIrNKuBbgHA8GMShr2mT5f/f7cDml0IC4G4BIOACm18KCQC+U0gA3AtsfikkAPhOIQFwL7D5pZAA4DuFBMC9wOaXQgKA7xQSAPcCm18KCQC+U0gA3AtsfikkAPhOIQFwL7D5pZAA4DuFBMC9wOaXQgKA7xQSAPcCm18KCQC+U0gA3AtsfikkAPhOIQFwL7D5pZAA4DuFBMC9wOaXQgJgb4tT8Q1hAX2LzS+FBMDeRtdsi4vB9jZ0fikkAPa2znIFm6cEiwBVlbH5pZAA2Nsa7rqJAlBQNNxxIzq/FBIAm1veRNa7sQGbqwST0bthPe9bdH75s2ueTIHdAAyrmjuD3+lHEAPQl6nUZFQEMhKADESARgJi/PK7NfgVEoAMHZg3kTXcuZB1lq5gQx1ttEXokK0+6CvoM+g7Nw77FTMFIOqXhrAbQUY+IA5IqfvAJw2aIQBd5HwKQOKA5EQfdGS+BuCTttugIWTkA+KAPzUfRP3erWYIwFoiH5GPOCA5zgdRv3d1xgIQ9Xlj2A0hIx8QB6Q0fOAtN2EE4F1KzqcA"
+    s = s & "JA5IjvNB1C99nPkIwC/9HrshZOQD4oCUzgjg4cxHAH7v5eR8CkDigOQ4H5T4pEszFoAVvpx87IaQkQ+IA1LKPohO8Z6SsQBET/L+CzmfApA4IDnOB6WnHPdPHjOg+KVO7MaIZNVnF7GND93Dtr/0DGt5703W9uVnrG3ZUrbrndfZtheeYo2/vZWpkaD1BMmfzOqvupA1PbmI7fjj86z1o3dY+9fL+Lu0vP8ntvWZx9ia66/kV5gbemZuDs+7T8WgneXT/azE5Sm7iskW9XnbTQl+LgA+6UPsBjndai+cy1o/fo/nqRtF/87tbOfrL7PKOdNNe4/SghPYhgfuYN11VWx0aNBggn2c7W9Yy7Y++7imGICgpAt4l97NG9iezz5m63/za1YWOBG9zxQnm0961zwB8OcsQG+QQy1WlM/av/ycB1G6iA8Ps+Y3l/DgTftdcnPYhvtuT0mAEgbq8BAfuZgtAImO8G565D7+3th9qDjTrjJNAKL+Y3Js0CDH2aorL2TDe7tMC4oD27akdbS1vHAK66woMe099lbHLBeAcez+5EOaHvhT517Un3OMaQLAPJ7vKH7vHuyAcpKtvm6+8SF2Chjq7GBVZ55u+D0qfnEK69u80dR3yKYAADYtuhe9PxUHWdQntXrMRtQvvYHdMCct8o0c6DNEbhiS71+/hhcfMVqFqL95B/9V13"
+    s = s & "uP0mmTeUEMo4DRCojFvjWr+GjjYO9+WwjAcE83Kzn1WPR+VRxiUb+0xHQBWOHPmYndMEdY3kS2v3GdNqPjcbbn049YzXmRw7+bm8NW/fI8trcqphsU8H29d2n54G3d54wODLAdr77Aas494l2+sep5Ibb59/cfJiTpCsDuP7/PVi+Yz23Nry5njff+hm178WnWt3Wz7nvWX3MJft/6HWJTcgpNF4Bofv73Fb+0G71xNrcN992mE3GjvPKw5nNyc/hCmybicVZ3cXHSZ6ycP0934RF+7dWIbLhtKy8/l48O0hUA2FZM9L2SUyax9ugXmt9tevx36H2rOMCiPqnlneLi73msgOKXHsVuoN1N79ds2x+eNPysPcuWaj4LdheSfbcrpr3od2Brk6FpxFGWm8PqLjnLVAEAg9GQFmCUgt23ilvy/5MLwITj8RtoX6s9f44mift37WQlU48z/DzYc9daS4AtuURbg5WzCzV//eMHD7LaC84wvf2ZCEDp1OM1ay7uWPI8ev8qDrDSKTmTPFYi6peqsBtpV9v82IPaAfDc4yk/c/cnH2g+E+bTR36n6YmH0h45YAkACKOWAPCcABv0sWJn80mqpcE/JgATIugNtal1lHylGQCwO5DqM9fecKXmMxP9MnZEv9T8zuprL7Wk/RlNAc7VngLUXpR8vYNM4j6I+qUiywUAcgKi"
+    s = s & "fu8acvrRxIMhfjKM9B9Iq0R1rGiaZmB0lkWP+s6B7Vs1h/8ZZRRaIQC5Oaxt+SdJvwcpwsQ3SdsHPm89xKYnG4j6vedQhxzdCcn2zTmJNzWmTeKRvt6kz923tv6oz8O+udbin1V9pycAu959g+9cgK2cfw5be9M1fNq0b1190u/AtAAOLBHfJB0feIs92QJsM0T90kbqlMO3srQW3rpX1qRN4sE9rUmf279j22GfhVN1sNWYDD31dWgCkM4ZCDgZSTyT9H79G5nH811PNrHCL51GHfOXToAtNS10qWVpE1lrSD/U2Z7ae1SWO0IAuuuqNfMcyKS/+CB3wukeDNAx4UM6QfeXtzb9EUDbnqTPBXE47PN5EzVX0yGRx+4C0PL+W+nlKLjRfCYe+00VJSdK/674vX3oTrCJac29+5o2pf3ckf7+lIb0WicQj5wymGlmjgAG29t45iF2nyo2tqjfe+Br/4T/9GAi6vPeiu0IuxgEVzLAyUBYJ0j1mZCqqwXYekwpG3F01LJfV7PXAED4as6fjd6vik0t6pMWerBRe8IJf6X4pUpsZ9jBoLSXFtLJvlt/6680n7nt+cVHv8cXn2p+Z+3Cq9G3AeGYMrwHVBrSAmytWrVtqTjYoj5vBcSexw4YmwpQ3UCo86eF7a88l3JH82pCGlh1xQUpvwcUB8EWgG+/M20yP1ykBT"
+    s = s & "gxiB1wio0s6vPujU75+X957ATIQor6pTi2czCt+qyZumf/ywInGX4e1ALUKioCQ+REZwvgDEF8ZCT5i1i0t55uIhCMBg7u36fZztisAvT+VWxgEGMrcieEPXaE4vc+hu0gbNu3brVmEEBtP0PPypvIOssVzWdBkdF0Rw6QW5BOUEGQr73xKlMFAGzzow9ofhcqJmP3rWIH83kXeewKvh7g8y5DdxKirbt5AdPDlqce0Sx2CdVvWj9+V/MZkNILI45kz4BCHvAZLQzsbjGcYw8LmA133MgGWppNrwfAvzv1eDa4Z3fS78JIyO2jgKhf+sw28/5kqD3hhL+FBQpsZ2Ga3pwW0F1byX9Jgfjj3yuTp/BiIbBlqAcjIwlYc9DF6CjPw4d3OXJ6UhY8mdc23PHKH/i23DisEAAwOPGn2ea3XkXvWwXJ4BRuNN/7Q48T8OVJx/xD1O9twHYalqnhABvq6mRGAZ/VmgMfif2N63mwGfnVNiJGhwLqD0Di0ehg8rUHqwQAvq9VthzeCcqsY/evkmWL+qVNFf5JP/Y4CZCgoPi9zdjOwzKomqN1OChdwGUhcELQ6HvArzqcQzATVgkAGJT+MmUNRRjzNqMn+2QkAj5vI74TcQzOuEPAmoWeVTV8xTzV94BpBlz75QQBgD1/rdETFDGtOP1U9L5VsmE+b9PXudLPPE5GzOf9"
+    s = s & "ezevCcAv8M43XuHlu9LFwX09/Jcx0/vzYD4PZ+szAaQZJ6vTb4YAgG1ZvEjzOXBdGna/KhZb1OetNu1yT2wsnzTpB7CCie1UTINhO2Ttwfl9zT36Q+a7e2tUXpIbFgdNe5fcHF5GDG7cGWjdZSjooR4BXBoKC5SHLlpaJQBwL6DWHQlQXCWdkZCD7Mvy3J//yCMSvkkZftTtyUJjBD+Jrb7uMl5CfPxmXlhph1/5xntu4dl9WoFmpsFZg3W3LGAbH7yLX/6587UX+bvAViVs+8F2YjpnGMiklH0AsRH1SY/YfqsvEyg+aVbUL3URQShIiAPSIT7w9kT93rkeN+CbY8TlRAASAeKAxOf7JSdP+m+PmzCWNSjdRPUESARcKwI+qReO9Ao95NdDee7Pf6L4vK+idwYZ+cCfzeD3LnXs/r4VgLpmis+7gQKRAlFoDvi8jVGfdwZ2vNkSUNkUFgkVn7cGvaPIyAd+83zA79LwSRdYdnGnSIALDpQp3hBVGqIgdLwQ+yQVftSydmmHaCg92euN+qW7Fb+0Db0zycgHfgO/9j6pJerzPlHiO2YydvwIAxg6wV0EUb+0JOqTWikYKRjtxIHoGCdfKcmVptMwPwtQpkgTSihe3Z4AAACBSURBVPzeqxWf9z3FL3VgE4DMXT6I+rzt33DvKuBiNjhP0ACcly7xT5gazfVeBm"
+    s = s & "WTon7pY55s5PPWR33eLZB9GPVLQ9jEIbO3D6J+aYhzxefdAtwBDnEuAad80nzgmDCHdAgEAoFAIBAIBAKBQCAQCAQCgUAgEAgEAoFAIHhEwv8Dq01jhhiZhKcAAAAASUVORK5CYII=" & vbCrLf
+    s = s & "al:AAABAAUAEBAAAAEAIADiAQAAVgAAACAgAAABACAA7QIAADgCAAAwMAAAAQAgAG8EAAAlBQAAQEAAAAEAIABHBQAAlAkAAAAAAAABACAAzBYAANsOAACJUE5HDQoaCgAAAA1JSERSAAAAEAAAABAIBgAAAB/z/2EAAAAJcEhZcwAACxMAAAsTAQCanBgAAAGUSURBVDiNY2CAArNpgRZms0PKzGYG1eHFs0JLzWcGm8P0gYHZ7KAOi1mh/yxmh/4nCs8K/Wc2K7gdonlaoAVJmpEMAbvEdHZQBcmaoRiklwHkFGRBu3lR/10XJfy3nRsJF3NcEPvfaUEchgFgb+hN9WlFFtxz99h/EFhxeQtc7Pjj8/+vvLyFYQBIL4N8v32D6awgsIDLwoT/P//8+n/n7cP/7759+G8zNwKnASA9in2OjQyyvbYNShMc/xtO9/vfcXjG/19/fv2PW1f2/9//f/9LdnZgGGA+KxisFqQHpJcBRMj12f0H4TNPL/+/9/7x/4rd3f/ffH33f9utA2Dx/fdP/j/3/CqYjYxRDLCfFwW29eijs/+33NwPNgzkHb1pPmADHn14BjYYhF0WxmMakL214f+BByf/q09yA0uC/Hj44Zn/UWsK/085uRjMhuHUjdWYBsiRgSEG9NkUkm1An00hg1yfrZFcr90/kg0A67E1AucHsDdIMQS"
+    s = s & "ith6SFaEAZJpsj12RXJ9tBz4MVQOxmYGBAQCiHAv1FR6BIQAAAABJRU5ErkJggolQTkcNChoKAAAADUlIRFIAAAAgAAAAIAgGAAAAc3p69AAAAAlwSFlzAAAOxAAADsQBlSsOGwAAAp9JREFUWIVjYBhswGxWqJP57JD1FrNCXljMDv1jMTv0P4X4j8Xs4Ofms0PXmc0Mc8Rtc709i8Ws4HlUsBAvtpwdPAdkF4b9FnSwHMURyMB0TrAzvSyHYfPZwQ5wB5jPDtlAbwdYzApZixT84ARHXwfMDn6OcAB1Ujup+A+yA/4PBCbaAQHLs/4Hr8gBY5+laVjVuCyMh6txX5REmgPMZgXhVBSyMvf/v////sPAhx+f/tvOjcRQ1398AVzNyivbCFoOshPuAIPpvjgVzj235j86KNvVRbED9Kf5IBygMtEZqyLL2WH/n356CTb088+v8JA4cP8kxQ4A2Ql3gFyf3X+9aT4YirK2NMANXX11x/9LL26A2b/+/v7vsTiJbAfoTvP+D7ITxQHYHLH55j64oemba//3HZsH53cfnUOWA2CWY3WAXJ8dOGhAacJuXuT/r7++gQ188eXNf6s5Yf+9l6T+//vvL1js2qs7RDsAlOBAcQ4yG9kurA6A4fztLXADZ55ZDhc/9ugcXNx1YTxcvPHAZLj4vHNrMMzDhvE64NCD03ADH"
+    s = s & "314Bo5/EH715S1cfNqppbRxgNmsoP9/oEGND7z4/Pq/Yr8D9R3QcXgm3LAtN/f/r9jdjYLPPrsCl49ZW4zhgDdf38FDDIZ33D5EvANuv30AN8x5YRyGxtxtTXD59dd3YTgAG7j77hFxDtCd5g2OWxDuOjILa9BpTnaHq+k9NhcsFrwyGy6GDbccnEZaIpSjAx5EDui1/UN3B/TaIhokcn12TwfAAY+RHbCc3g6Q7bVbAneAfK+9hVyv3T/6OsLGGu4ASCjYTqWb7/vsJjNggHp7Fno4Amw5tq4ZAzwkbKzlem2XgRIJVXIHyIxe28eyfbZL5XpsrXBaPFAAAO6J09qDXhw+AAAAAElFTkSuQmCCiVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAAACXBIWXMAABYlAAAWJQFJUiTwAAAEIUlEQVRoge2VXUwUVxTH96H1XZP6UndJ1TakjR+EujvQnVkJSjQgArNTUNDUmNWHhmoF20ZTMEK10czArnztzCLQgqlUjC0VRAnQNm0JJo34ETEtSVOMmpoaDbUiuzu3ubPuhJu7O7szuszQcJL/w8ydc8//N/fMGZPp/x4rG/IXp3mdRVYfXW71FlTMinx0Oay5upl5RbNxwss4bAI9RAhMgBAYoJMCBO8cTOcLybiNM53MAkKgW3Q0DTDxjJgm0D7"
+    s = s & "oLab5Z29df9NCJBDngCKE4d68gMvK00JE86nePDs8Kr0NEvHIyzgwAEO3joC3EmIejivCx/h1NybErQAc7zIAnLkGMAXUaA2f964MYOWZ/XobIlTKJjjLZgDQR/U2RKgU9DwPQBjlBN725qtqoZyOXaC05zAmsnmLYl5GSwmWk93u0gQAPcsAqxpzP1OT3H1rAESKjy8dV8wr/HovllM56NEEAD3LAMnurKp4Ex0txWDy6eOIAN//MTJrAMnurCoZwMySh6x8QVyJFQNuEC38wQDY8OXOhANY+QIAPSMAb9VvjCt5eOIKYiAoisg19/PJhAO8WbcRB0jiHBJZrI83KAYRA19d+w65vnl/PKEAa/gCAL1iABaOAsvcmYAQnFGT60fakeI3/vpNaplAMIDcL+4qSxCAU/IIvUYEgHrdsw7YeDriBuMP/kSK1/7SKt0fuX0Vud8++s0LB7DxtOQt7DMqANTS2gyQ0piLbLDj3CdY7286tVtaO/JDE7J2//EDkO4rfGEAKY25kqeZHhUBwlruzgQrGrJBqjcPdF7vQQr/eueGXGD9F++B6aAfWd/TW60ZwMbTUk1YG3qI5C0ugLBg3/3970Ok8IF+Fnmmf/wnZP3cWD+2T0ZrCQbwQU9V1LpKUgXg+vYgUlQEIth+thxkd7hkeYbbkGee+KcAHM2GAOj7/UegJT66e"
+    s = s & "Ex/gFUNOWA6MK0JAE4n3QEqBmqB1oCtRp4sUgQ4PFQH7M1FUfWGZ/3zAYzeG0MKwnaC0yGSUpo2g0dTk9i/QgkgVmzrKtcOkNm2Hdtwd/enikd7+vp55PmJR3elX78uAE2XTyGbTT79J+qRhlXctQ8zwZwu1QdgU8cusPXMh7JyOlwxP67XatYiOVDvNBdKa8knsrC1rTEEh8hzj1EjyjwPwBnoBCwcVam3IYt6Vc4AsJcawBBQJ/J9GSCJpfL1N0SpkpkjN8sAS1hikYUj/XPo7fstR+0LZQCpjViqbw4B9CLmQ6dAWi0sJepvjlIWS4lJNVQaBhD6mMl63Q1yyjKzpMcULVK9qS9bWOqCgc33mCodL0UFCEOYWarOUO3EUqL05mOZnxmv1thtodPQczqRfvjBwu/TpDXgiIUzN/SzI6stHPl5glUNa8GasLZm43Ml/gPi7tE308UqBQAAAABJRU5ErkJggolQTkcNChoKAAAADUlIRFIAAABAAAAAQAgGAAAAqmlx3gAAAAlwSFlzAAAdhwAAHYcBj+XxZQAABPlJREFUeJztm29sE2Ucx/vCP6+NvhJ7IxhNnJIIY20Hu2snRocSYb07gjIIGjUxEYPAJFFxbxCc7q6bW+Z6R7cpLmaLi2Ymsj+MsH8wpololEHccDgQVHBug03G2sf8GlhGn6ftXXftc+3"
+    s = s & "6TX5v1uvvvt/P/Z6nT5vMYkkrLU1aVcc/avO637OrQpdd4X/NOSBcc6giMkOBF/AE3sAjeLUYpexqMcem8N20Q+otuyr021XeFXNwsVG8y6G6fQ5FDNAOE3MpYsCm8Cpk0RU+y7v2Ppvi7qUewKCyKXxPdsX6ezU/eZvC99A2bfw0CH355fl3RwXggLGnbTZek6AKSsTwK7z8yqRe81GnQAzYqgocYQHYUnH0Q8qu8J3k0a8Rl9I2l6ginhNsiruYtrGETYG3YA8GwK4KXQsGgMofJez+4tkFA0ARBjEAOapwlbaxRBVkJU0AWkiVBhAqhwmeSnoCVIpLwK7w82q4/dD76O3DMrE2NL6hq9eOln3EPnl1mw0JD1kxANmKO+aGa+tfRf6AH4VT1/B3uvr9Mf4XsY/QsM0QACu8BTiAZdXrYm5YceIgiqQZ/wx65vOXTQMAsmIAMivXxNxw8Mo5FE2e47WmAQBZMQBLyvJiarb1q91Ii85cPmsaAJAVA8DIXHA09DZr/PlbpFWFTbuoA4CMkJUI4MHy1bqa5fo2otGpMczoyYsDwXUfqvqfmqkDgIxhATAyh5ZWPau52VttHxKNvtvhQX0jJ7G/X5n8F63ybaQGALLdyhkWQIbs1LwUjv52AjM5eeM/lFdbiPZ2VhFDvNmyjwqA5dXrgtmiAmBkDi32uKJCeOqzF"
+    s = s & "9H0zDRmsnWwO/j66rot6Drh9fah3oQDgCyQaW7GiACYm5MQaTmU9vqIJovaSmav6Rzux14HKE9+ujVhAOaOvS4AzM1aUvYEWvbJc1jjU38PYgYnrl9FbM0Ls9fsOVJGDPJBtzfuAOCp39rw5gWAmQWRFzxAQGOxYRvRYPPpjttMuGoLg3tCqH68dNpgAELweAvewCN4jZZHNwBmTlX11xMNbmragV0LUEgCOOH6j4xdJL6Hq3les8e4AVjscaEL439i5i5PjhLJv9L8DjFMeV9dcgIobNpJNAem4aATWl/+0kK8/vzYJWxnTgoAXw+0I6MEvxMkFYDMyjVo8saUYQDge0RSAShqK0FG6tr0FHqk4unkAdB3Hj/fg46P/IC6z30fsYb++Z343u2H9moGAHsKfAJFq52t+40HsPLABhRAAcwU/BiiBd76L14jhgI4WgFo1eGhXuMByMdqiDeTjvk0AYCjNSkY/JYIBxlTA8iQnWh49ALxZq7aTfM+QJX0KOYGIDS8TrwRHGn1bDz5B18i9oH9Ye5XVdMBYFKw0gBCxZjgqaQnQE4vAZTeA2RKm6BV5sZpr8tElVXixkib4JkFA0BmB3AAEttO21jCSuJaCQC43dSNJazYXRiARWXcQ/SNJabuL819GAMAskpcB21zcS+JbbeEU4bH+Tgjc/7UDc8FmNLcrLAAQFa"
+    s = s & "Jq6RuNE5lldiPLdGU5c26MyWXgsR2ZRZnavvnKWZ/7j1WmT2SOk+e64BMmsLfNgkyVxFcNyYIEWP5g2Nf7LzDEqse+Mj5mFXmvjFBGH0VPNixyy1GaRGcEyS2iJHZNjhKMhI7YaKwE1aJPQUnPPAIXg0LnpYltfU/O4syL1joww8AAAAASUVORK5CYIKJUE5HDQoaCgAAAA1JSERSAAABAAAAAQAIBgAAAFxyqGYAAAAJcEhZcwAAdhwAAHYcAafCeOoAABZ+SURBVHic7V17lBTVnS7U3T1nk5w9Z3fzMnThI4nBJSaCTPeQqTsqoEQBmem6gIniJopZH3FjIu7GuLCcNWsUqoY3dPWMAhHlKSIqYgTEByIYQIigII+IPOSNvJ+159ctyiID0111+3er+vvO+f5l+n71/T7urbr3/gwDAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAM6RGym+1q09f09azf5nKpocns/bMpGcvrKy3lyc9e10qK3elsvbhVFb6IDRo3AM2eWQXeeZT7ywkL7X10kPJW+Qx8hq338sbvtGsrSd/WOHJPinPfiGVlTtR1Cjq0nrA3kHeIw+SF8mT3GURb/SrPi/VUFNT4aUnJ7P2VhQ8Cl4nDySz9lbyZmV9bTfyKne5xAYVDTU/SGbTdUkvvYX7IYPQINU0DXYmvdrRFZnuV3HXT"
+    s = s & "4Sn+N26pzLpxSg6FF2kPeDZiyoyNRJLhKagn3FOMlObTnrppewPDoQG2TA1sFckvXRvLA8aARV+KivXoPBQeDH3wGp6lxXmhDnSaJORZjJTO0GDBwNCA79UGtCnxXaje1xslCvkRPm3bb10/8qs3A/jIXzK0QOV9fa+Cq+2H9WCUU6oaqi9KJm1F3A/ABAapHTQwEsvST5W+x2jHFAxssbGxh0NTAf6OmmQ9OSe5Kj0TUZc0Wlwp79L1qdHpTx5nFtsEBpo6QFPHk/VyxGxWxJcOkx+OZVNz2IXGIQGEfBAMmu/2iEj/8GIA9pkOv8zHajgFhWEBpHyQCa9uFW2y9eNKKNdpsfFSc/+gF1MEBpE0ANJz17X1uvxXSOqxZ/K2hu5RQShQbQ9YG+kWjKihMtG1Hwt6aVX8YsHQoM4eMBe266+5/lGFHDZ2I5fwpqf2zBg7DTIpBdfUt/1K4b2n/qy6VfYxQKhQRw94Nmztf5EmPvOzy0SCA1i7YH0cENHJLPdarHJh9scYOw18ORxuivD0G1vP7b3amAOsFw02KXNSUJa99OtJxqIAkKDsvFAMpt+W4v3AXSkl1sMEBqUowcqMrV92af+dKaZWwgQGpSjByqzcj/rUiBZn57BLQIIDcrZAxUZezpL8V+RqenKPXgQGsAD0i/9HYMT5bm4wBPFh+KTWmhAB+6oJkt"
+    s = s & "W/5VZ+2fcgwahATwgP18KjKzpVZrq941m1DQR4qMA4QGpjQaVnr28JM1Hch17NBgwCA3gAfn/lwKZ2rTyAEC7LhQeCk9qqUFl1v6z2uIfKSu4BwlCA3hANqpBm0xNa3UB4MkREB8FCA9IbTWoyKSHqKn+ftXnoUU3/wMGoUHqTBp49mYlnwRpswHMB/PBA1J7Ddp63TqHHgAVXnoy98BAaAAPyLNr4KWfCrf6faMZpv8oPhSfjIQGSc/+ONT6v6I+fTn3oEBoAA/IJmtQWd+9VWgBUOHJPhAfBQgPyMho0CaTvje0AEh59gvcAwKhATwgm6xBhWc/G14AZOVOiI8ChAdkZDSorJfbQyn+Cq+mOfdgQGgAD8iCNbAyNd8MHADt6tPXQHwUIDwgI6dBhSevDhwAbTPpe7gHAkIDeEAWEQDpuwIHAPb/o/hQfLJ8zwUks/ZM7oGA0AAekAVrQJf2Bg8Az14I8VGA8ICMnAZJT74VOABSWXsF90BAaAAPyOKuCQs8A8im10N8FCA8ICOnQTKb/msIMwBsAuJ+kCA0SHFtBkpl7cMwIAwID8joaeClD4UxA+AfCAgN4AG/GA0QADAOwqOMPWBgBsD/EEBokEIAwAQIAngAMwCYAEEAD/hYAsAECAJ4wMc7AJgAQQAP+HgJCBMgCOABH18BYAIEATzg4zMgTIAggAd87"
+    s = s & "AOACRAE8ICPjUAwAYIAHvCxExAmQBDAAz62AsMECAJ4wMdZAJgAQQAP+DgMBBMgCOABX8FpQBvGgrHggWwUNbCDB0DSS2swEBAawAOpAjWg2g0cAG292rI2X4cxt/gPvOyWlD+b+p/s4y6WP5n8a6Xa3Px0H/YxpiJCqt3AAXBFpoZ9IJx05j3mlxrrd2/yK7Pd2cdeDOv/PFGpNuOXPcc+xlRESLUbOABaj7qBfSCcXLF1tc+B2599kH3sxRABILUh1W7gALh8ZFf2gXDxxkn3+lx4ZsXL7OMvhggAqQ2pdgMHwPdHXM8+EC7+8Z1n2AJg7+H9fvXjP2XXoFAiAKQ2bDX8uuAB0HLotewD4WC7+u7+x3u3+Zx4cFYduw6FEgEgtSHVbuAA+Pbg9uwD4eC/z3jI58a8Dxex61AoEQBSG1LtBg6AC+uuZB8IB1/64HXu+vePHT/mdx53O7sWhRABILXhBXVXBg8A0xW5DQXcgykl24/u5R84ctDXAUPnj2XXoxAiAKQWpJql2g0lAMrtS8D/vjrK1wWrd3zIrkchRABILfjDkV3CC4CWwzqxD6iUXLxpua8Tbpl6P7smTSUCQGrzAjC0ALho0NXsAyoVa8bf6R/3j/s6Yfyy59l1aSoRAFILUs2GFgDEijI5E6DawMVg54HdflVDT3ZtdNAPW4HlWZ8B1eqJug0"
+    s = s & "tAH4wojO7uVST9t9/tHuzryP6vPQIuz4IABkJUq2GHgDfHdKRfWCq+W/T+/q6Ys7a+ez6NIWYAUj2Z/CdIR3CD4ByWAY8+94sX1ccPnbE7/THn7NrhACQkZn+hx4AcT4XQPvu9xza6+uMAW/Us+uEAJDa7/9XFgAXx3hbcN/Zg33d8e6WVew6IQCi8fZfSQAQ22S6sQ9SBed/tMSPAnpO+hW7Vmci3gFI1vP/p9Zr6AEQx5eBtN+e9t1HAWOWTGXXCwEgtSTVpvIAIMbtmrDhC57wo4Ite7f77ep7sGvWGDEDkCy608z8dLWqJAAuGXINu9HCJO23jxLueeF/2DVDAEitSDVZsgAgxuW2YLqBVxU+Oajmq8KLq15l1w0BILUhzcgbq1NlAUCbDbgHHgYnvTtD2fbdwfPHKPm36ajy1aN7sWt3OmIJILVY+ysPgDgcE7YabvR3HvhESZFSsFz/RG9lLxcfmjuCXT8EgNTm2C9LAORvC4pu67D/+NMAX/W13gs3LFPy7y/a+C67fggAyay37V806Cq+ACBeOuzH7KYrlnPXLVBSnJv3bvussccfXsso+Rt0ZDk9/m52DU8llgCyZFpT7Z2tPpUHQAu3OpKbg64d+3P/8NHDSorziXemffZ3Oo7919w+fhXw3h7PriMCQLJt+qHaYw+AE0uBqN0bqLLl16k3+Lzx4"
+    s = s & "aKyaSGGGYBUrjHV2tmm/iUNgCjuEFTV8ovuEzj1b/V/ZZhfLi3EEACS9a0/WwBE6bSgypZfDYsmfeHv0Se7g0cOlUULMQSALOlpP60CgNYkl0egmSit0VWB2mOf7m/ShR6qWohd+fhN7JoiAKRybemze1PW/WwBcCIEdO4orLLl18rt6xr9u7+b5fqq8F+zB7HrigCQSnWlF+2FFj9LABCpI4muB4ZUtvwasWBco3+X/pfef/hA7FuIYQkgQ9eUtt3Ti/ZiapElAIj0llLHK8RUtvxKT7ib5W/TbsMuT/6CXVsEgAxdT6qhpr7x1yoAToSATjMBlS2/ln288qx///6XHvXj3kIMMwAZ6v/8QYqfPQBOLAd0eSegsuVX3ZuPN+nswe6De2LdQgwBIENb81PtBK0/9gD47OuABgeHlmxaoaT4jh0/3uQp+PT3Z/txbiGGAJCBNaQvaWEUvzYBcCIEOPcJqGz59fbGv2jxElKHFmIIABn4O38xb/u1D4ATpF1MHNuGVRqTDvw09Xf8qKGnv2P/LiW/Y9fBT3LLDARA9Jj00o3e6hOrACBeWOL3Aipbfh05djR3sKiQ3zNl+Uw/ri3EMAOQRa33g77si1QAnFgS5I8S25Fu+UUHfQr9PXc81y+2LcQQALIAvexcDYQ55Y9MAJw8G1DdeFTli7f+c4YWtRuRbveNYws"
+    s = s & "xBIBskk70UlzV//qRCoCT3w2o2DOQb/m1T0mxHTp62O8w5paiftdTy57z49hCDAEgz6gPefzk5p0IgNMEQZgXjKhs+TV7TfHT7VunPRDLFmIIANlo4X9vaPgv+WIzA1AVBCpbfj3wshPot9GFHqU+lYgAKK0erUfdUND5fQTAKSJQs8N/Gf7jovoQqGz5te/w/tzyIog5xix52o9bCzHMAGRu/z7teaFmulyFH/kZwOlIayd6YdjUQ0YqW37NCKE5x81T7otdC7FyDYAKrzbnzVKu78suAE6dGbQc1il3L3pjG4tUtvz6zYsPh2KcNTvXx6qFWLkEQNJL57zXcui1X2jJrRNjGwCn+5z47cHtcw+EtlPeNOU3Slt+hbXjTmXBhDFL0Wk8pQkAO1fctOSkd1C0hqdPduQp8hZ5LKx9+ggAhSKMXjxFmQmfXDo9tN9JF4WoAh19pvcnpTQcnYpUCQoY7qIyI8SymQGcTHr5sl3RfntCz0m/CvX30mc7Vbhv5sMl1R4BINj9X/YB0PvZ3yl9uVbs9UyNUVX3IMKb6xcjADQoRBMBUDoRZn7wmrKCemzR5NB/L609VR1Vpn+3qqFnybTHDEBoxbJbAtCnGFUtvwjdnrpDye+mZp+q4MxrQABo4E0TAaBehL6zBykrpA2fbFZ2cqv/K0OV/e4Pd21UeuLsZGIGILRi2"
+    s = s & "c0Alm5+T+m136p+N+0VP6po1yKhdvxdCAAN/GkiANSJ0H5ML18l6JitygdIL+yi8OnyTMQMQGjFspoBjFr4pLICWr3jr8p/Px0uUoU9h/YquXIKASDYfY8A+HQn4OY9W5UV0Kw18/w7nuurlA8qbB9GuPv5/ggADYrSRACEL0Kvp9UdrIkL6LowzAD4i9JEAIQvwjPvvcxdX9qDXjLSqTWVBsQ7AKEVy+IdAF2suP+ImsabccNDc0cgADTwrIkACE8ElT334ob3t61BAGhQmCYCIDwRFny0lLuuIoXrnrhNmQGxBBBaMfZLgB819FC2jz6uUHGeAQEg2GuhLANA9f84ccSOA7uV3VeHGYBgr4myCQDa375u5wbueookbp32WwSAy+9hBEAAEeSEX3LXUWQxY9VcBIDLX6AIgAAiTPjL89x1FFnQkWm61DJsA2IJILRibJcA1GyBLucEiseDs+oQAC6/lxEARYhAV14DwbB403IEgMtfpAiAIkSYu24B6j8EdBxzS6gGxBJAaMVYLgHoznaVl2eUE6h7EgJAsHsaAVCACA+/Noq7bmKDTXu2hnrLMWYAQivGcgawctta7rqJFaiLUlQCgE59Xj+ut/a8evTN7HUSywDoMu52pQYrR0xd8VJkAiAqeHfLKvZaiWUAqGz5paLrTxQOPIXZQgwBkAcCIIItvz7euy3"
+    s = s & "0rj9hkb7Zq0RYLcQQAHkgACLW8kv3xpPUofbIsaPatxBDAOSBAIhYyy9C1yd/wV7oZ+Kr6xYqG3tYLcQQAHkgACLW8otOFZaqe06xvG/mH3yVCKOFGAIgDwRAyObvN2ewUvMPmT+GvcDPxlbDr/MPKQzBMFqIIQDyQABEqOUXoUPIW2KjugwK2kIMAZAHAiBCLb+Wa/LNtimk5h4qEbSFGAIgDwRARFp+EWhrMXdhN5XU3mvv4f3athBDAOSBAAjJ8BfUXelv3LPFV/n2u119d/bCLoTTFDdBCdJCDAGQBwIgIi2/aIcdd0EXytumPaBUkzlr30IABAQCICItv6ghJ3dBF7MjcueB3co0ORaghRhmAHkgACLQ8ot21rUedQN7Qet4H2KxLcQQAHkgACLQ8ivIVJebP53yay1biCEA8kAARKDl170v/p69kIslHVraum+Hdi3EEAB5IAA0b/l18Mih0I7AcnHMkqd93VqIIQDyQAAENLdqIz2/cg57AQdlesJd2rUQQwDkgQDQoEBAaFDuHjDidiMQCA3gAYEAgAkQBPCAwAwAJkAQwAMCSwCYAEEADwi8A4AJEATwgMBLQJgAQQAPCHwFgAkQBOXsAQOfAfkfAggNTAQATIAggAdMzABgAgQBPGBiCQATIAjgARPvAGACBAE8YOIlIEyAIIAHTHwFgAkQBPCAi"
+    s = s & "c+AMAGCAB4wsQ8AJkAQwAMmNgLBBAgCeMDETkCYAEEAD5jYCgwTIAjgARNnAWACBAE8YOIwEEyAIIAHTJwGhAkQBPCAiePAMAGCAB4wgiLhikMwEowED4jIaZBwrINhXAiynXsgIDSAB0QRGlhbQ5gBWOsgPgoQHhCR0yDhijXBZwCOtYx7ICA0gAdE4Ro44p3gMwDHmgfxUYDwgIicBglHvB48AFwxnXsgIDSAB0QRGljTAgeA6VoOxEcBwgMichokXPFoCAEgbuceCAgN4AFRuAaOdWvgAGjuVFVDfBQgPCAip0FiYHVV4ABo8Wj1N7gHAkIDeEAUrME3Bld91QgDpmNtwwNAEcIDIjoaOGJLKMWfDwAxlX1AIDSAB/ymapBwxKQwA+AeiI8ChAdEZDRo7og7QwuA5gOqW3EPCIQG8IBosgYtBlZ/L7QAMHyjWcKxNuMBoAjhAaG9BglHbDTCRsK1xnEPDIQG8IA4uwaOGB16AJiudT3ERwHCA0J7DRIDRcfQA8DoV31ewrU2cQ8OhAbwgDiTBhuMifLc8AMg/zXAhfgoQHhAxHv/f2NoMVBczj1AEBrAA6JRDb41qOoyQyVMV7yFB4AihAeEdhokXOtNQzWa11V14x4oCA3gAfFFDQZWdVYeALQnwHStpXgAKEJ4QGijQcIVS6g21QdAbhZQfSP3gEFoAA+"
+    s = s & "IzzVwqqVRMkyU55queB8PAEUIDwh2DRKutcLoZ5xTugDIzQKsa7kHDkIDeED4LRxxncEBHBNGAaIARXyO/RaK8wdaCdO19sIECAJ4QJReA0fsu2DAVS0MTiQc67d4+AgAeEAwBIDVx+BGm0ybvzEdMR8GQAjAA6J0U39XvEG1Z+iA3FIA9waiABCCfok02NGirvoCQyfQLiTTEcdhAgQBPCBUrvuPJ1zrBkNHmK6ow8NHAMADQt3U3xEDDF3x6fuAF2EAhAA8IBQUv/WCNuv+xvDNTJu/pxcUMABCAB4QYWrw1leHVX/ZiALOH9r+nxKOtRwGQAjAAyKEdb+18qIBlV8zogTaoGA61noYACEAD4ggxb+efbNPsaAfTgcVYACEADwgitDA+iDx6FUXG1FGcyf1j3gngABAAIhC/+dfEFpzT258fUDHL9EbTJgAQQAPiKYU/58ueaTdV4w44dNPhC42CyEEEALiTJt8Bmr/qS8IEq7oYrpiO0yAIIAHxOff+F1rl+lW2UY5gM4OJBzxOgyAEIAHRG69bw6wLjTKCbklgSvux30CCIGyDQHH2kNHemM95T8bEo+0Oz/hWGPZHwYIDdzSaZBwxfTIft9XAbrXLOGI91CIKMQ4eyDhWiuaO9WduOtNT/Qzzsm9JHSshdwPCoQGZqgaWEsTjuilrHFnrOAbzRIDRVfcN"
+    s = s & "IQijEO7roQrupSsaUfcYA6oujThWP+dcKy13A8ThAZm0zTYkHCtwaZrteaun/hgojw314vAEaMTjtiIYkQx6uSBRN6Tjydc6xpM80uAFnWipeladyVcMdl0ra3cBgDLTANHbCHvNXfEneTFUngeOAPovHTzOkuYTnVvujbJdK1ptNmImiaajlhNuw8TrjjEbhxQaw0SeY9sJ8+Qd/Ib1nJeIk/dRh6LzSEdAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACMOOH/ADH1onqZI9G+AAAAAElFTkSuQmCC" & vbCrLf
+    s = s & "apl:AAABAAUAEBAAAAEAIAD8AQAAVgAAACAgAAABACAAGAMAAFICAAAwMAAAAQAgAJMEAABqBQAAQEAAAAEAIABvBQAA/QkAAAAAAAABACAAGBgAAGwPAACJUE5HDQoaCgAAAA1JSERSAAAAEAAAABAIBgAAAB/z/2EAAAAJcEhZcwAACxMAAAsTAQCanBgAAAGuSURBVDiNnZPfK4NRHMbPX+JNK3dafrRNrpRrNyhx4Q9wIWrCNiNs7zaRJEV+XSghZMoiNVfkQiK7tNfO1qaxH7yvhe19dM7Wu7liO/WcOuf7fT7f51wcQgqLigZTxG0YCrsMY3/ITB1GIyldIdEkUk+TGvY04T9ivSGXyalNpmWYSyE8CXUbh8s1axC3cZiwKJUC+DNCDv00O0SX25G+WMTzeg8vxla7+Jnp9ciK8Ewz4jv9eNk3FwEO/TR5slWPU9GA9+stqF8fUAI+Xnz12pDLpJE6n0VOSSB55oF8s6vVmSc4ppsgQYswLtlrkH2PI+FzQv3KIDLfmgcoCT4xm44h5V/IAx58oI46SDYdmJew7XmzF8h9I3nqQi7zxk3x7T6onzJPljiZwpO9Bm+XG5BvDyBZBC4NIN95oQRO8XI4AvlmD5nHKw74Tka0ZiYGYHfK/TFS/sUiILrSCeps4E2hyVrE1rpBnY2ILnf8AkTmWhBb6+GKLr"
+    s = s & "UVAVJJUznKA6zCQMUAqzBApNGq+qBFUCuYrjIv/w8sSjmQgtn+60cWkgwGLYL4hwa1yYSQH9m+f6bGYrUMAAAAAElFTkSuQmCCiVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAACXBIWXMAAA7EAAAOxAGVKw4bAAACyklEQVRYhe2Xy08TURTGZ8HfMY3xsTIqG9qxhggsTIxx40KXxhgXLoy4IbRiF4KkLSoEi4mhRkKRRMSqifGRiGKCChuJQSEm2qHTaYc+tA9aSjvtMfe2M9PpTEWBXFh4kpPM3Mf5fvPdcxdDUdstQt0NzZzD6OXsjMA5GTHgZGAjiWpwdibEOY2PQvaGpprCYKPqeIfp7kYF10wHM4i0NAA8CfEKCJV4wM60EBMvZ6jbeFgG8DtNj0kDBBymcRkANRxpANSYCsAmdPs/AzgZUekB0vaXc/sAcHYjcXGkqdyCrnrVZGrGA1JkfdOazZlvb6Ayivks5KM/IPneDXxvM14juE/K89HxS5oa/q4DCsCibbcy2WMGMRWpqF6A0O3jugDFXAZywjzkf3Hy8vTXF38FgDRlANZqAH/nfjwRfdhaLr4C+RiLnxOTLl2AVW5WHlue9ZZ588DfaPwjgL9zHyBNFYAEkZl/hTdlFl5D4t0Afkb2rgWQmBqULAO+r6UmgCSuD3B1L/5y"
+    s = s & "vMnbBsKdE7ggivDwGQ2AmFyC5PQwpOee4T7AUPxnzRFExlrxmSPbJS1dgKi3DW8oZFOwaNuDx7LcJzyW/HBP3pj+8hz0YuX7FAR6DuE1/M0meXxp6LRKuCZAlp3RLYyh0j9h8couFcBqcA6CrmMQ7D+isnZdAIHrjQDFkt05YQFbKSUUxNIxjJxTAaArqle4GiD+1gXh0fNyBm8d1QLEJ3pL57ocA7Zjp6oYsrZ0xV6uC6A6kh+HtACxpx2QmByAyIMLmmKC+xSei0/0AXt5B0TGLuL32BNLTQDuWj1eo5dhz1n9HmAJ538A2QGf1SCSth9pKgAWA08cwGLgKnqAHt0CAE+lAyaf1VAkCtFOm2WAsgsuguffT1UH2Kg6EhBIXPfXjJKcaKfNrIW+j5pkM24HqoFqsVZ6hLXSB2sKb1X8Brc/bPtVUhwgAAAAAElFTkSuQmCCiVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAAACXBIWXMAABYlAAAWJQFJUiTwAAAERUlEQVRoge2Wb2wTZRzH+0J9rwm+Mncj80+CBlk01zvZ1BfGV8Y/UQwk8MLEmKghvgAScretONrRaxkLU9AwBEJIBhh9QRbYiGOikQQzokGdGnV37V3XDexahuv+dLuf+d3Y9Z71rnc3BteS/ZJv0vSee57P5/nXBgL3eq"
+    s = s & "Xjax9ORrmNaozZropM811JjNmOYw5H1q1aMviwyL6gxLhvlTg3q8Y58CMKji2y/SnxuQbX4L+GNjyQEtmjfkGr1iKaGuMOI5sjPM6638CqXWLshbISlTbzqtVqRIOdlvCJaLBeX6oKgFQdguezRKCit068dCuRN05k3SolzhV8B4u73EZxbhavd0NAv+crAEz1FPZtQ0AVmR3+A3HeIga3mVaA2eM7UNxbkLkoILLVJyCy95QAU4UCjEmgtS5SdQKtdRFDQGpZs9uu4b9fbYMbFw8YyfXts+9473qiLfHehf0w1h2CkUNvWr6bOdNoGqPdUQCZiwICvUsRg5ZAs+OjsLhGj22x7DTV1gDOpcHk0CVIf/Yq8e6UdNloMTc5XhYeWZGZEEjufqqk4fXTH1ki3Bzoug2B+SpkEpBqf3FJAsmWJ0sF5MYa3czccGKwxzRxc8UBJjKgttU7CuBMjx5/Rw9uEYQ2V7Y36llAiTKArKUCAg2J5kfxj9I8zP6XQJuZLM76ldPE4Hg2nAQmfushV7TrffL5L93eBGKszoislgK6ROhxUEQWxnoixOynD74C0+lB46v8H32eBUaObCKfD/a6FkAmZFvgtBXQ01QLU4kBo0P8jJ3k+juKToVpGP7kZdcCqX3P6zNurvEfDrsSUFrrdCYzY1kBdW89gKYZHY6dDeszkP78deIs"
+    s = s & "ZM/HygpoM3ko5FJ6tOkJ8tnsDIx0vmUroOx5FpLhtZAIPUaAuxLI9rUTAyXDTxvPpuQfTStzheg00VwLbgplrnV9QLyb/+u7okA+ZwntTqCxBgoZ2eiskBuGsd6okcm/vydg8Cq0E5jLZ2E6dXU+6s+Q//28vmp42y0Gyi+XQLpzA3gpPBd2Av/99LUjiLzcAjcHTnoSKGRVkBtXV4ZAYtcT+gEirrm2hpJkuj8mQEe+2LSsAuUKf39sBa6f2ko0vnbiXcvBki1rFv3IfVkZAtlv2vRDisn/2W97hWFyFw8abXGl9G3UVGt8h8G/Cm4Fbpj6K5fRo5udr9FqiLQiIKysAKxsoYWSeSrk95aQvYanQkUBgdrqO5DgNdSHhoDE02/4D0R7yhBf85ohkAw98pDE0wW/oWSXQdbETupBQ+DWOej1G0x2G546F1hc//CrGUmgtYqffYHWpJ00VyJw6zAfqILt0xGwq4H3nrlfFqgevyFl21BnIRS4z1ZgQULi6U8raTtJuG14usMR3lxDTTVBXA0/bycJx+apc3g+A0stvGLxzp3/saPCkkBH72RkgQrjWDgmjr1k8Gqp/wEPioOkBogXBQAAAABJRU5ErkJggolQTkcNChoKAAAADUlIRFIAAABAAAAAQAgGAAAAqmlx3gAAAAlwSFlzAAAdhwAAHYcBj+XxZQAABS"
+    s = s & "FJREFUeJztm0tsG0UYx33gcUZwA3mJCjlQXopJvHYlhIADCA5AqQQSEkIgOFQgxKO0u0mMUEj8KBEpoQIHQ4EUtZSiKqVKS5W0TZsWRQRUmjZySbu2167tOE7iZxq79qBvowY7s+tdP7rrx/6l75BoZvb7/+abmS+HaDSqVEmSu3fDeq+lrZO1kmOsVf8vazMmvDYDqoaAXLicrOQY5Ai5aiolb3ergbWQJ5U2WTQUCznh79E/VrLxKdOmW3xW0sHaDFmlzZReGYYsa9YPgJeizPu26+5gLfpxpQ1Urhr0p7zdrbdL3nkWJlRB4pUMj9Xwx8W+p24V330r6VA62RsGwULaC5r3mh8x1vKZl3YntJGCANg6LH0MgoU8wWve8xn5gNLJyRW8fYLHSpqUTkyu8Jj1HXj5W8kxpROTK1ir4TjP+ScvNwwAi36GpwKM8capAGMcfwJtyicmZ6gA1spbBbuiVoBNwSPAWkjFd0WuAK84AHNb4wAwt/IA6G5pHADdLTgAzyfrC0/cvgGl5xiUWYpiEdr7tuhHw0PtvHPzIhFGqdBllDh/GIWHaOTrfZR3rblf3sPmxiYGJQMArxgAV8e6gpNCP7+DhAQJi310/tDHqFilwy4U/P5VHMCvW7Cx8b/2SQYAXnEANMGVhtCkxPlhwUSzqSTy9T1RcQCgzFIEBQZerBgA8Ahe"
+    s = s & "eQG4O+/hnQTmwGQhzQ93FQ0gFXSi+NkDXCSmDqFU8CLv2knnsYoBAI+CAFw0gTxdD+LJD3fhO5MI5/181TNZNIDomV3YuMXj/di47LUU8n3+eNkAwNt1n4IAXO13Y0cBzOUqHXbzJJpFfvsLZQPw2owok1zExga/e6UsAGyPjvMmDoAGCE2rEMAUymbyEx//Bvm/fp4znavIKXsFABhQet6DjZ0dfL1kANy5b2/6358oAHqlEqBkwNRaBRwvcQsv+/7J+316geV2sBwAgYFNGHCQ/6vnSgKQW/bFAaBXIMDbnyu4qFbP60gvvlM/vSUZQPzv/Shg37gS376Mwgc7eHd/BWxxlyDs+vULr2QAfvtG7EOLozu4VtJrJZF/57PYbsGNLhWAVC0c7hEFEJvcy5mGJgfeeSHjRQGITezO/0o2y3WEuWOWLp3G3m23qRlbK7Tv3ZLMRyd2511eEMEf38DHndklarooAG5TM2cmV1fdk9hCcwe2YcmE9mwuG8Cy7xya5VlHNgChPZtRqUo6RyUBgAYHAK7G/vdR8IfXuD9XCyUvC4Ck81jJAFAmzd0TYgCglygmadkAsD06zkQ5gu6xZgHMD3+KfQB69ciJnYKRXU7kjU8FpmUFAM914txvBSP3aBUEsOyfxnpxT9dDBZOKnx3CkrrS/7RsAKTI1/ekOIArXz6DTUxcOC"
+    s = s & "Ka1OwgnlRk3FF7AKKnHdhEoecoN6DryiQX8uZdi88hd+e62gLgapBQAayVqwp2Ra0AWj0CSL0DaPUSROorQCvyDGqjSt/MsgWljfABcCqemGyhncYAMBRxtIEq4AgGwE1pP2qgCvgAAzDTfue9yicmT1za2tSMAQAxFDGidHI3OuCoa4TEUMTDDEVk6tY8TWTdHVqdIAAQQxH9dbz7OzRi+vNN3c31eBQYmhibMt0n7Z+n3Fu1t7lo7Wgd7fwIeJJkPq8SaOILODc1bDwDZY9Mmps0pcqz7a77GYo4WIPmj7oobYumUpqBPoHSfsjQxO/QSjIUEasiszEXpb0AHR7kCLlWzLgqTX3rP+behf+39x+fAAAAAElFTkSuQmCCiVBORw0KGgoAAAANSUhEUgAAAQAAAAEACAYAAABccqhmAAAACXBIWXMAAHYcAAB2HAGnwnjqAAAXyklEQVR4nO1deZAc1X1uH0mqYrtSlfgkqJ9AxmBsEwTWbvcam2AbATHG2CAnTlzETjgcsMEhhe2dWbSAkbTdowNJSGDAHAIBEjKXMBL3LZAESIhDgKSdnumZvWbv+5yX+vXuUmuxu9qZed2vj++r+v27O+973+/rd/zee4oCAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADgM6SXaf+YMivmZ815v7JrtDW2oT1mm9pO29TfsU3N"
+    s = s & "sk293Tb0wUxC5whwMJUGbEMfdLQyqhnSzs5RLZWvJm2RxkhrsvUeaXBF+UjGnHd8xii7Im1oj9qG3oakRlJ7qQHb1FtJe6RB0iJpUnZehBq8Wvl41tR+mDa0Tbah5ZDwSHg/acA2tBxpM7tUP5u0KjtfQgN7Wdk/ZRL6CtvQmmR3MgIcZGZkBnqbbeq31xtlp8jOn+AO8RPaj9OGvgtJh6QLsgZsU3s9Y+oLMEWYSeJXKx+tM8vPsU19j+yOQ4CDjFgj2GvXlF+A6cEUcBLf0GqReEi8UGvA1A7QWpbQIXOQka05UU0b+gbpHYMABwnvOKCtxUazYo4SVbxVveCvbbP86oxZ0YvkQ/JFUQN2oqInbWrVlAtKlJBactKRtqHtkN0BCHCQ8QEHaVPf3WSUH6VEAXWJsnNRuCNfdAh/cWAbWpe9pPynSljx/srT/yZj6DfaCT0vm2wEOPCjBuyEns8a2trQTQkaq4/9ZMbQnpJNMAIcBEEDtqk9f6Dmu3+nhAHZpSd+mg5UyCYVAQ6CpIG0oe86sKj8c0qQkTIr5thG+X7ZZCLAQRA1kDY0q2npvC8pwU1+vU42iQhwEGQN2IZeR7mkBAn1ieM+a5vl+2SThwAHYdBA2tSTKaPiMCUIqE8c9wnM+eWLBhG+NYGccfSnFL9v9dmm/qxsshDgIJQaMLWnfb1FSPv80k"
+    s = s & "lCgIMQa8Cu0dYofkRdovxHKPKRLxBEuDmwnUI67ceK/2r7cS+fbHEgosGBbertvjlJODrv116XTQoCHERJA7ahveqL9QDnSK8PCEGAg6hpIG2ULZQ/9E9U9MgmAgEOIqkBs6JX6lTANvQt0klAgIMIa8CuKd8sJflTRvlZshuPAAfQgM49v2OQL1A+hgs8kXxIPt0XHNCBO8pJzwwgU6P/XHajEeAAGtA/4CC1RDvPk+SnBw7o0USQjwSEBnTfcEA56cnjI1SFJLuxCHAADegf4oDe1nDdAPBcF5IPyaf7kgPb1F9zN/lrtDLZjUSAA2hAn5IDy9BOcM0A7BptLchHAkIDum85sI3yVa4kPz1qiCe65XcwAhxkpjUAvcGVLUEqNoD4ID5oQPc9B5ahnyncANKGtkl2wxDgABrQZzAN0O5xYe9fawL5SEBoQPc9B7ahNQo1gMzSr8+V3SgEOIAG9BlzkE7oXxVnAEbZFSAfCQgN6IHhwDbK/leYAaQN7VHZDUKAA2hAn/kIwCh/WJgB4L4/JB+STw8UB7ZZ0SIm+WvKDpfdGAQ4gAb0gjmwln/zCyUbQMqsmA/ykYDQgB44DuqXlH279BFAovxS2Q1BgANoQC+cA7PsktINAPX/EB8MiEf2XIBtaI/JbggCHEADehEGoG8p3QBMbSfIRwJCA3rgOLBNfbsIA9gr"
+    s = s & "uyEIcAAN6MUYwDslG0DG1GyQjwSEBvTAcWCbWqr0EQAe/ZTekQhwkJFVDGQb+iAECAFCA3rgOLBNfaBkA5DdCAQ4gAb0ojmAASCBkEAR1oCCEYD8TkCAgwwMACKAEUADGAFABDACaIBjCgARwAigAY41AIgARgANcCwCQgQwAmiAYxcAIoARQAMc24AQAYwAGuCoA4AIYATQAEchEEQAI4AGOCoBIQIYATTAUQoMEcAIoAGOswAQAYwAGuA4DAQRwAigAS7+NKCpQVgQFjSQCCAHpla6AdgGDEB6RyLAQaJwDih3SzeAmjKQjwSEBhLB44ByV4ABzJPeEAQ4gAb0IgxgngADWHIiyEcCQgOJ4HFAuVu6ASyeK70hCHAADeiFG8DiuaUbQPra40A+EhAaSASPg/Tvv1a6AaSuPlZ6QxDgABrQC+aAcrd0A6g+CuQjAaGBRPA4oNwt2QCsK4+U3hAEOIAG9II5sKqOEGAAceYUFKADkITQgB4YDihnKXfFGAB2AqR3KAIcZArgIL1orjgDSF/jn4XA7Mrv8oG6t/lgw15Xov3Z1dLbOFm0bF7oWpsLiYHsm7zf2sH7DmzjPW/9mXduv5O3P30db77/Ct5w8wKeWfoN6VxRNN72U6Htzt17ifQ2FboAKMwAUgvnSG/QeLRuXcTdxHBno29EPDEoyYKA/NAAH8i8wT"
+    s = s & "tfvo3nNl7Gs8u/JYWvprvOF9qu5gd+K10DhQTlrDADGF0HKJfeKIp+exd3GyRc2e0MqgEcjJH+Lt7z5iNjnFZ4xleUDcA2yp2cFWoA6UXHS29Y/U3n0DeGu42et7dKb2tYDGAiBnMHeOuWa3l22Tdd5yvKBpBedLx4A0hddbT0hnW8dAv3AvnBPp5d+R3p7Q2bAYxjqDXFm/90uat8RdkAUtVfEm8A8qcBFXyoLcO9An2pZHdkWA1g4kjLLaONqgHYE4b/wg1A5rmApnt+wb1Ef/o16Z0ZdgMgDLWmnRV7GIAurP7fNQNILfyitATo2fOwx9LM84abzpGe+GE3gPGFwqa7LxLKV1RHAKmx1X9XDMCZBiz5uueNyq74Z0ckXqPjxZukd2gUDICQH+zlTesvgAEkSjv/f3C+CjcAGYuBrY9USxHlUJvt6dZVlA2AMNLbxhtuPlcIX1EcAaSuOtp9A3BGAR5fE9aXfIXLguihKQxgegw2vMszy06CASQK0wqNzCfLVVcMIHXVMZ4Jv/6G73OeH+Gy0P3Gg9KTPyojgHF0PH8jDCBR6Nf/GO8MYHQU4M1twe3PrZEqRlp7yK44GQbgcTlx/Y1nl8R5lKYAds28SXPUVQOgYgMvGjeY289lo2XzldI7OUojAEL365tgAIni5/6uG4AXx4Qb1/2c+wF9tdtCZwBtjy3h"
+    s = s & "LQ/HZxRUFNX+9ErngA9xMdLXwd1GfniQ1605o2i+ojICSI8d+5ViAM5tQS4+Hdb12kbuC4wM8/q1Z4bKAEprTwXPbbyU9+173tWzGW1PLoUBJKbpB1Pj1pVzJBqAc1fAV1wRPB0jpW0hv6D9mVUwgEn6iYxguKvJFc4HsntgAIlpvv7XfGXa3PTEAKyq2a4UB9GQy0+gtQiMACbvq7o133NqJoQjP8LrVp1aFO9hnwLYVPRTNdsHBjA2FRB9b2DfvueEdFzvu086q8oi0HjHf0rrcH9NAT4cVMDjRrVm86biTg2G2QBs49BDf28NQHCFYN31ZziLQCKQ2/BLYWbS9eq9MIBp+q3j+bVcNDpfugUGkJj5qr80AxB5WrD9qeVCxDPc3exc70XbeCIw0tPqyWUWQRwBuHVmo9jLWcI6AkgfdNrPVwbgrAcsPqHkRtIljCLQ9dqGUWFed4pz2EQE6PJLGMDUfdf73tPcDwuBYTQAe/HcGc375RnAB4uCxb8o3HjbvwvrtImny3r3PiHkb/a+9wwMYJr+a3siwUWCLoGBAeijtf4FJr8cA3BM4IiiDwx1bb9TiHCGOxr+4iSfqF0Fp0Dl+tM9N4EgTAEcnu//jdDf6UzjIj4CsGvKnIX2YnJRjgFQXDmn8CvEln5D2J4y3Vc/8W9TPb+o+Sl95WAAUyTe+gu4SOQHei"
+    s = s & "JtADZd8TXDFX9/GcC4CRQwEmi+79fCOqzxjvM+9PfpIQsRGKh7Cwbg0dVtZNpRNQDb+fIXn/zyDWB8OjDDNYHevY8L6ayhFmtyg9l0OReFhj/+m6diCMoUoOWhSqG/c7grF0kDsJ05/xGl5Z4vDOCD3YG5h3zyKz/U7+reMW3hiSov7nzlDhjAZEb1zCou+tLQqBmAvfgEIcnvHwMYM4Hp6gTati4R1lkNt/5kyv/TvfsBIf+D1iq8fEIsKCMA0bc3FXs7c1ANIE37/EWs9vvfAMaCqpgmKxsesHcL6ajBxvenJTi34RIuCrkNv4IBTOCWdkdEjeLG0bNncyQMwDa0KW/1CZUBfHB2YMK6ANWRizpW2vHcmkPvNHQ3C/lfPW9vgQFM4LZr591cNKi8OOwGYNN8v8TFvmAZwPiUgI4Sm5ozZxeDPK+/6Uee3TNA1YXZ677tiQn4fQpACSfq/MZE5O69OLwGYGqjR3oFDvmDYwDjsXCOsKOk9Hb9jMSx/kIetCfE/GwAtCMy0iP+7gYyFDpfEEYDsKms16WvfqAMoOHmBcI6iQ4RzawDKvhwR72Q/9mfei3SBtC6dZFTrOMGaEGx2N/lVwOwa+b9xeOdkTcAOmIrBPmRgkTdteMucf/3Dz+MlAHUrZ7v7NoMNu3jbqL10WtCYwA2Jf7VX/Ys8QMxAqBVT1Hluf2p"
+    s = s & "VwvqkMZ1P+Oi0PHCHwJnAHTBJy2YziQ6t/3RWTehQi0qsnLzHsBx5Ae6S3o52C8GYC85saDz+5EygNzGy4R1EH2RCu0ceqdeXLGKu0+IRe1acDKoUviSaQC2Ue7UvNBjurISPxAG0OvcKivohN7q0woWSee2W7ko0MIiDEAMaFRY6olLrw3ApqRfdLyn8/tAGwAddKDrtkWgb98LRa9ei0L37vthABJHc14bgG1ozp38qauP/dCT3H4K3xpA62M1wjond9+vneKiVPVRTodQOSVts9D8i4osyGyc6sNJ3jAYzB0Q8htG+jpdfUIsKlOAfmuHkOmUaAPIbbxsNNmrjxJWpx9pA6BXYEWASk9ncj/6VCHyBpumey52rSNb/3w1DztoLcU5CCOAL3pbUCSa7rpAejKHxgDq1p4lrGPojH8pvyWz/GRhv6X33adgAEViuLuFZ6/7jjD+YADMvwZAR2lFoWn9RSX/noHMG2J+zMjQlO+0lxphHgEMdzby7KrThPIFA2D+NADaGqHrtUWtFotYdW3dsoiLQuujv4cBFIB+e5cz5xetMxgA86cBiKzD7971JyG/iRaNeF5McctA/TswgJlgZJh3PLfWtRV0GADzpwGIuvZr/KkuUb+r39op7HfVrT5duKDDNAXoq33ZqdtwI/FhAMy/BkBbc/nhISEiommEyK9Hy+aFXB"
+    s = s & "Q6XroFBnAw8nnnTYWGW//D1cSHATD/GkDLI1cJS7KuHeuFCoYW70QVJtFFlqKPegZ1BDDYtN+pYciuOMWTxIcBMP8aAD3zJAojPS18qCUlNGgVXxQa1/1X9AxgZMgprKK1meYHfud50sMAmH8NILtqPo8Set58xNcGQE+l0W8sNLrfeNgZfXW+fDtve3I5b36wkjfeeT7PrjzVF4dfxgOLgMxfBkBHZqMEOqBEh0P8agBu1Sv4JWAAzEcGcOWRwm7gCRJaHqyEAcAAuBV1A6DtuiiCrgsT1ZEYAWAEYAXVAGjeGFXQrcEwAO+/fJgCMH8YAJ3Uo+uzo4r2Z1bDAGAAPLIGQNtBUcZQW1bI+XFMATACsIJoACJLbIMKunkIBuDtlw9TACbfAJyz9oIO2QQZXa9vggHAAHjkDKD96ZWyc88XoIcz6DqpUrjEFAAjACtQBlA1e7S8FnCQ23Q5DABTAB6ZEUDDLf+K1J+Avv0vwgBgADwyBiDqBd7QID/iXDyCKUAwFwGHWiznMJvsaH92jf8NgN5AG+nvFkZ+25PLeN2aM6XEYON74trxuAkDCKgB+AVUVOd7A6B7+v16qKbQaHvcENaWwebaot+CxyIgDCAwBtC3/wUuCnSFmKzkp8gsPUnoVmb9DT+AAXjQbxgBMDkGQG+kibpZh5Db8EupBkBBN9eKQuf2O2EA"
+    s = s & "MIDwjgBEDplH98+9f1PdzeH3SG/76PNSEn8DAfcBBBO+NwC6A05YY3fdLz35KeyaeUJHNU13/w8MwOU+wxSAeW8ANL8VicY7fiY9+cej78A2oddxFfr/MQKAAfh+BND5yjou8tJPPz27THffiWtc4U+IwQBgAL42gNEnv1q47MUytyJ97XHOlqQoUELDANzrL0wBmLcG0HT3L7hI1N+8QHrSHxz0+q8oDNS9BQOAAYRnBEDzWlEYaq8TcomG6BBZ4EQo5HksTAEwAvCtAdiLTxD25Beh4/kbpCf7ZJG+5lih15t1vHATDMClvsIUgHlnAKK/TnXXnyE92acKehxDFAp5QgwjABiAb0cANJ8VBaojkJ3k00XT+ou4jK1OGAAMwLcGgAAH0ADzJQcwAB90AgIcWDAAiABGAA1YGAFABDACaMDCFAAigBFAAxbWACACGAE0YGERECKAEUADFnYBIAIYATRgYRsQIoARQAMW6gAgAhgBNGChEAgigBFAAxYqASECGAE0YKEUGCKAEUADFs4CQAQwAmjAwmEgiABGAA1YOA0IEcAIoAELx4EhAhgBNKDgQhCIAEYQXQ0oMAD5nYAABxYMACKAEUADFkYAEAGMABqwMAWACGAE0ICFNQCIAEYADVhYBIQIYATQgIVdAIgARgANWNgGhAhgBNCAhToAiABGAA1YKASCCG"
+    s = s & "AE0ICFSkCIAEYADVgoBYYIYATQgIWzABABjAAasHAYCCKAEUADlvDTgDF1AMKCsKABFkAO1P6SDSAZYy3yG4IAB9CAVSAHyRjLiRgBWBAfxAcNsMBxkIyx2tJHAHH2puyGIMABNMCK4EB9o/QRQFzdBvKRgNAACxwHyTh7sfQRQIxtlt0QBDiABljhBhBjD5U+Aoipy0A+EhAaYIHjIBlnZskGkIqpF8puCAIcQAOsCA7U/y7ZAGorZ58M8pGA0AALHAep+KyTSjaAZDX7vOyGIMABNMAK5uD9yi9+pmQDcEwgzprRAUhCaIAFiAO1SREFK6Y+IL9BCHAADVgz5CAZY/eJNIBLIT6IDxpggeEgGWMXCzOAdOXhX5XdIAQ4gAbYzA2gkh0jzAC4onzEiqsN6AAkITTAfM9BMs7qFNGw4up62Q1DgANogB2ag5h6u3gDiKnfA/lIQGiA+Z6DVOWsU4UbAK9WPm7F1HrZjUOAA2iATT38j7EsX6B8THEDVkxdDvKRgNAAC3f9/1RIVrG5shuIAAfQAJuSgwOVRxynuAkrrm5HByAJoQHmQw7UlxW3kaxiZ8tvKAIcQAPWwRxUqWe6bgBUE5CMsT0QIAQIDTD/cBBTd1NuKl4gGWc/kd5gBDiABvg4B6m4ukDxCrTNYMXV99ABSEJogPmAA3Uvr1Y+qniJ2tjs0+Q3"
+    s = s & "HAEOoIFkFfsXRQZwTBjigwGx8Bz7LRT74nNmJeOsGyKAEUADTEby99TGZzNFJpIxVonOhwFAA8x7DmLqFYpsvHrhiX9lxdRXIACYADTAvPz6v0S5p/gBY1MB3BsIE4AJxD1I/jhrTf6WzVb8BKpCSsZZHkmAJIAGmJvJn6+Nzf6B4kdYcXUFOh8GAA0wN4f+CcWvcNYD4upWCAAmAA0wFzhQH/XNvH8qZKu/8Le0QAEBwASgASYy+bc3Vn/mk0oQkPndYf9gxdR3IACYADTABAz71ff3Vx/5WSVIoAKFZIzZEABMABpgpcz5benFPsWCfjgdVIAAYALQACsm+fen4rPmKEFGuvrwv8eaAAwABsAKTf4dwh73lI36//vcJ2gFEyKAEUADbCbJ/8TeK47+lBImjJUML0exEEwAJsAmT3ynkE5d6vutvlKQis36fjLGWiACGAE0wCZu87VbVeq5ShQwdnbgRQgAJgANMGe+b8XVI5QoYaxq8De4TwAmEFUTSMZYFx3pDfWQ/1BIVc86LBlj62R3BgIcWN4m/+bA7u+7AbrXzIqp7yIRkYjh1oC6Nxlnp8vON1+CbjZ1FgnjbKf8jkKAAybyi78nFZt1nmsPd4YJ9MBBqmrWWbhpCCYUfBNSX6aPmmePdoQNVqV6bDLOrrLialJ+ZyLAAZvJ1z6bjLOVVkw9QXb+hA"
+    s = s & "Y0dHLeIoiptyfjrA5ChBn5SQNJR5PqbbXx2fMxzPcAySr2ZSuuXpKMs03JGMvJFgAiahyoTWPau5i06IXmgWlA56Vr47O/ZcXVC+japGSMPeQUG8XU3ck4O+BUH8bUAfnCQfiag5g6QFohzYxp50VHSzGWsGLq+aSx0BzSAQAAAAAAAAAAAAAAAAAAAAAAAAAAAABACRP+H2d+CvRoQgm+AAAAAElFTkSuQmCC" & vbCrLf
+    s = s & "kt:AAABAAUAEBAAAAEAIADCAQAAVgAAACAgAAABACAAcAIAABgCAAAwMAAAAQAgAO4DAACIBAAAQEAAAAEAIAADBAAAdggAAAAAAAABACAAjRIAAHkMAACJUE5HDQoaCgAAAA1JSERSAAAAEAAAABAIBgAAAB/z/2EAAAAJcEhZcwAACxMAAAsTAQCanBgAAAF0SURBVDiNlZPPSwJBFMfnb+pSf0SsVLcoyFw61SGhyNXKQnNbDyV0C4UIEqJTYBRksGvmuJjUCmXQ2g+C0n5opzrtize2a0Yu7YPPMvN438/MHJaQ7wrxtEd00+lljzpny6g6teTOdZOfJXqoKPHUkPg8/A9qiDyNWCdLjsItCbuJ6M7POA83wSzBq5gNXatDfFazBmITBYa51zI1SEoXLQE+IzSUDZsNrGT0si2AmPvGyyfsJXRrj1ni78sERTf9U1DKPjO04xocbN60CTATGJAXiM8lBwP9GQgP5yzB9koZDrduLcF9+R2yuw9MkIrrbBYzmCX4EVwKIFjr/nNIJ++gUmrAafqJgWvsvVU/YCd2xWaRjoLICIXV8QJEx1QGrrG35i3C4uCJvUA9eIT9jUpHUgm9s6B4VIXrs7ot5cLrLwGnTJoNp2CWCL1yl+CSDecC2cAs+x+az3AikQ2BU+bb/ki0+TnF6+Nk0Q6csU4mhHwB9m6VezZ"
+    s = s & "Zv4QAAAAASUVORK5CYIKJUE5HDQoaCgAAAA1JSERSAAAAIAAAACAIBgAAAHN6evQAAAAJcEhZcwAADsQAAA7EAZUrDhsAAAIiSURBVFiF1ZfJS8NQEMZ78I8SPbid21w8uaAkxZuevDSCBRdsKoILelEEcSkutSriTUvilrggotYqKNoqCiIoggjWjszTpLF9tcbGqB8Mb/Iy732/JBNIbLa/prZqudjDKQGBVa69TiXmdSqQZcQ8nHwlcPK0wG4VpTV2FwRzBKcyaILhpyFwygB6pQAIFpjrIT6aVyklVpmr0cZtFiYAWGXGagCBlf16gGurAbAxNQCTut1oxPQAKQULgycgTkWgn9/9lsFkZ5isxzFdzacAEAeildkL6uL2mg3weUMkME8+Hwnfk/U4ZgTwsHIqwLtW5+gAY56QVoO5UQD01ABaKtcNA/jaD7UazI0CtFSsJwAaS1eyBvB3H8FZ6B7Cm7dfAkBPDYBnJGguX8sKAOtUZQJAL/T8AJAMQQMYatqH8Y5D6Krb+jaAak4F4BmJ3BrsCRrAy8vbq7EciBoCwIbDZ457672oAGqoWvSdU+f6G3a1Y8xxThXWnu7dkRxH2v7/E2B+4AREfxS6arehqWwNlsbPSWCOc3gOa7B2uPWAHONoGgBvcvwPADN0d/NkHODx4dk0gHgcjAP01e9AcCJCGinbC"
+    s = s & "PQeZwBwSLGfes5pwyElPkh4Rrz8BYCoHsBnNYCLkUYSAPblXJ4R45YC2KV8DQDlcoi9Fl59jy1Z7oJgjhUQaE79NbOpd8Iu5bsc4hg2iSlvB+7xttdoAyPmpTX+Lb0CZjfCInCU8dQAAAAASUVORK5CYIKJUE5HDQoaCgAAAA1JSERSAAAAMAAAADAIBgAAAFcC+YcAAAAJcEhZcwAAFiUAABYlAUlSJPAAAAOgSURBVGiB7ZbbT9NgGIe5UO810T9FY6LhDzC0eEAgSnTdIFFDYsJUOpCBY9IOFaNCNKAiXqBeqRdyiAjtBmsLuHFQ0BgIaAJTThoNCGOfeRtWumyMdnbrRniTX9J8PXzP8522tLStXtWnu/dRhJBDEYKZNgpliQhFCGbo025g98YMTucL6ZSR73KYeL/DxCOd4qcJvpM29R1WDG61Du+ijcJjHaFReLgAbeQbgG1T+LVRR8kYysi/iyqRfCPPh0sQXH1EeJvBfQimSm9Ah4LA/gwTSOal44iwlELg4bhymIQVvcEcyuOH43199AkhJwmgkKpZMPAn1zcvIVzSG8ihMrSBL5LNAFeVcjNAcFXrAqboArVF79HzmyPo2Y0RdOtcr+YwNed7xW9DH4/KBpUJmFQI/F5YRsH61D+nuUD/22np+4HVALp7sV+lwCZLSF6Toz8VQTVWDKG2pnExcB3"
+    s = s & "t2aHuHyF9PLjiVbeEKvPcdq0FZqcWpXfgWmuByjy3XRIoz3bZtBZYmFmS3oFrrQXKs102SYDEmXKK4FJGgCI4BMwhAtdye+IuAKdNb/sU8jI+5OnyoYbSgZgEKnK7wwVKMlnRLJ4CzY6PId9yvfqmWoAycAhYwwQsOIuuHnci2hhHgeqRkG91v1YnAGzACKwRBSBlWS5EE8knQBO8yBbk3FAAUnrMiex5bkUCL2pG0ZxvEc1/X0K+yT+ozuzRXMCe5xaZ5IxRBaTZOOFCtlM9UQUAQl4A+b8C9y97UdVZTuwbGCKxKRIIRl5jQwsh9zqaJ0Lu15cMiO0wK8GCa2iDe/LqaJ4Q2/s71v9KQFXnCxuybAuMbbUZqDN70GfPHPrinUcfuBlx3UJ7+9NxsQ0C19AG9+AZaIN36swesb3JNiw96+3yhW3YuAroFXJbAE/RGZidXkStT8binsaKofgIJKr8/oB2AstLq7pIWLQScL78mnD4X3N/tROA3C7sQw/LBhOW62fcygUsGGvV+1SxqA3GWmUzwBbqDoSrC4kxF2Qz4DyqN5BFbTIYXBKwZvXsIXF2JWVGH2dXio84d0sCa/ugTW8wi+IwLSHwokAms9+CM4EUgA8UZ3YdDBMQNzPG1OoPyEYPxtxJ26gKCvp2khjbqjskHjkkxryxpnfu2FAgKGHB2XvJtZyYA"
+    s = s & "Iz8pvDyKsbYAzAbep5OpNg30wL7My3WgiMWzlz4sSNxppLEGCquwZlK8Yc1g8Gh75jBU6X+AeE4Runl5HJCAAAAAElFTkSuQmCCiVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAACXBIWXMAAB2HAAAdhwGP5fFlAAADtUlEQVR4nO2bzU8TQRjG9+DH2ei/oBc1MXpRL3rH7CLGgzEo7Da9cdNIR6AaBLaNSkBPGuPR+HFRT0j42GlLdyqJ+BFAQRMMFw3RKHJAZMe8a2vK7pbuttudbbtP8iTdaTd9n9+8M520KccFCmRLN0Nkb0zKdMkiwTGRzMUlshIPEeoLS2QFatJrkzJdUCvnlnpFckSWSIJ5SIeOiWqmT3p5vOTg0ei7bXGJ3IuHVI11mNKtarKo3oUsjsJfD0/u6hPTKfYB3LEsqsneZrLT9szLoppkXbTbjklEHWj7sL0ogLje9uwLroT7pMydTcN3t6SOVveaL2ZVuxZSDxcEINdg6xstS6piGf5GeGI/6+K8suU5QRbVKOvCPOuC1nSnBQCC6waARMbNACTyqW4AiOq8CUBMIr9YF+aVIasJQNwHhXnpAIBRcZvkZjJLlGr0nzRKp8mSpzP3uH+Wrv1ezxZA9ccw5lkHaLnwOQYa9RRA6tnixgIo1cfKBhAT7d1oJadvPtA2SUc"
+    s = s & "fLlDlyWfd8BjGvAIAWU0A5FbVMwAQ2igY8wpAX4tqBtBzLu0ZgHJCuAEAspoAXD2TqhsAkNUEoKMpUTcAIKsJABKw3hp+APCof/b/BgmGa7cAQEbIagmg81TCFwDyP+dBcO0WAMhYEAASMO0+O8EcwGbvUQ4AyJbLWRDA5cbNl0K1Aug9r+rZigJARSBUIwDIkh++KACUhWC1HOwCKGcjcxNAfts7AoCy7mxK0J7mtGMA5WxkbgCAWc9teGUBQFnDZyccIOwCKCeE03uTTxf14y2Ehhqh1mJ5HANAWVvJ6etGHiyYnoMxN+616wCAUSjoABwsAeTiHvDxzfcNr4Hr3HP3r7yla6t5X2utrutjbtzrmz0A+dwBAKNQ0AE4WAIo2ANwSZugHwS/T7zGX9lsgn6CUHEAf9YMPw35TBUHMD+18ZBSdx0QDxE69+qb7zoBwk+Nf6k8AFQjDgAYhQTlJ+tZ8coRQflhBsAr71kX5qFnTAAigjLsg8K8MY+HLJZA4hLzwjxyu6BcMAHoaBjfXTcAGvEeEwBQRMAjrIurtGGpc4WEhOSBCK+ssy6ycla09sbEoYIAQEjAt9kXWiHzyiBXTOHw5NaaXAo8xtHTNv881d6Q2IEEPMq8aJcMEwqZbIU3dMItWDdVGxz2M14ZjB4b28KVqsjJsX2IV55X36wrw+iEcpBzSx1wT"
+    s = s & "uCVi0jAL+AoGeHxsn9mGi9HeDyNeDwENUKtrgUPxNW2/gKjxdrA17upwwAAAABJRU5ErkJggolQTkcNChoKAAAADUlIRFIAAAEAAAABAAgGAAAAXHKoZgAAAAlwSFlzAAB2HAAAdhwBp8J46gAAEj9JREFUeJztnWuMHld9xsdAW6mAKvVCW3ovakURooUP/VQ1aiXSitozm8sCoYnxO7O4EihIVevimU2yCTjxO5MQChTUb00jKAICKI0asBCs53i9O2ezBSdQm6Q4JLHsJja50NS34Hqq87obOd6sve/O5X9mzu+R/t/iPZnn/zzPe+bMmTOeBwAAAAAAAAAAAAAAAAAAAAAAAABgGXZsnv+VLCwuz0J9/TAqPpUO9K7hoHggndL700g/lkbFc8OweCGb0iUFB6tpYBgWLxitjDQzpfePNDTQu9KB/qTRltGY0Zq03h1HuSGbmvuDNFzclkbF/WlUPIupMXWrGoj0MyPthYvbjBaNJqVd0WvMXDb7qmygrxgO9D3DsDiG4TG8TRoYhsUxo800LCaMVqX90ht8dFD8fhrqj6VRcVS6yRQcZGvgwMxI07C4Kw2X/kTaPx1FuWE40O9Mo8VvYzpM12UNpJH+VrZFT3KLsAbMzJSvyMLFq9KoeEi6cRQcZPUGwYFhqN/H7cEqMMYfRvpRjIfx+qyBNCoOmrWsWif"
+    s = s & "MXcbwuqVfT8Pi89KNoeAgazMIBnpXtnXpDZ6rmJn57k8OQ31LGukTmA/zOamBSB8fhsWM8YLnEnYOFn87DYtF8QZQcDAlz0Ea6X3pX33rdzwXMBwUV7NxR150lF0cDKPi+Z2DhWu9vuLj1z/yUztD/Y/ZVHFWmmwKDuzUQHF2GC5+une3BDOTs69JI/0NeYIpOLBfA8NQq+HWpZ/x+oA7ti79vHmhQppUCg66pIE0Wvz2rdHCL3pdhnnMMQyL70uTScFBFzUwjIrH7pja97teV82fRvqINIkUHHRZA6nxUNf2C9x+7d7XpaH+T2nyKDjogwbSSP8gDede73UBt1+779Xc88uLhurfmkAazr3Ws/1R3zDSu6XJouCgjxoYRvqbVj8iPPecX54oCg76qoFhVHzKsxHDaPFKNvnIC4TqOwfFWXNWhmfd3n7O5bNAHJQLHKRR8Zw1TwbMff/o1BMLiKHgwBUNDMNiyYr1APNKrzQZFBy4qIGdUXGT+NTfvNMsTQQFBy5qIDVnaUjeCqTh4lelSaDgwGUNDKPF+0TMf9vmBV/64ik4QAO6bP2MwcnJL7ySAzwxH+bTVnBgXrgznmwtAIbRwkD6oik4QAP6RQ52DuY3t2T/coP5aCLkY0A0oK3hIJ0q9rfy8RGzC0n6Yik4QAN6JQfh4lWNBwCf68J8mE/byUGk/71R8"
+    s = s & "++I5v9Q/CIpOEAD5aq3Alvm39ZYAAzD4tOQjwHRgLaWg+Gg+EQj5jcfNeQT3fINpuAguwgHaaifbOSRoNlsgPgQHxrQ1nNw22DvxtoDYDjQ90hfGAUHaEBfkoM00p+r2f7lBqb/mA/z6U5wMAyLp2q1/x3h3rdKXxQFB2hAr5mD28O9b64tANJwcRvkY0A0oDvDQToo/rq+AIiK+6UviIIDNKDXHgBh8a91BsCzkI8B0YDuDAfplH66FvMPp4pflb4YCg7QgB6bgzu3Lv1y5QDIwuJyyMeAaEB3joOdW4o/rT4DGCx8UPpCKDhAA3odHBQfqB4A7P9HfARQ6ex7AelA75K+EAoO0IAemwNzaG/1GcCgeADyMSAa0N3jINS6+gwg0gfEL4SCAzRQru+YsKoBEOpDkI8B0YDuHAdppB+vYQbAJiDpRlJwkEltBhqGxQsIEAGiAd05DtJIn64cANIXQcEBGtDr5oAAwEAYyGENeMwA5JtAwUFGACACggANMANABAQBGii5BUAEBAEaKFkDQAQEARooWQREBAQBGih5CrBOEXz5Hx4pn3j4v8sXTv1vuVaY//aJ7/2o/NInH8Z8PTDf31+/VO7b/VR58viPy3Fx8viPR//W/A3p66iznHgMWHz1SFkVC/92WPw6qPVzYIz7zJMnK+vgmSdP9ioEeh8A5pe/LnzpE8w"
+    s = s & "Eulrm17su7Nv9lPj11FW9DwAz7a8Ljx/4kfj1UOvjYD3T/tVg/lZf+tD7ADh96kxZF06fPCN+PdT6OKgbWU960fsAoPHyPbCh0IEmAEh+eSMSANqqYgbg6NTPtWIGoJsJgDSSby6Nl+fZ9iIA9ApOjHerB0Ao31waL8+z7UUA6JUBENYQAMNBId5cGr8+blzaGUcA6BWcGO9WDoCdWwiArprfpZ1xBIBewYnxbuUAuO29BEAXy7WdcQSAXsGJ8W7lALj1ugXx5tL48XlxbWccAaBXcGK8WzkAPvKX8+LNpfHwgg702N748HvmqwfAze/aK25yAgBe0IEe2xvGu5UD4Kar58RNTgDACzrQY3vDeLdyANxwxR5xkxMA8IIO9NjemJ5Q1QMgCdRoQ4G00VcrFn/gBR3oFb4wnjXerSUAbH4SQADACzrQK3yx47qF+gLglnfbuxBIAMALOtAvuwBYWwDceKW96wAEALygA73CF8aztQWAqWFo545AAgBe0IF+iSeMV5d9W1sA7LjWznUAAgBe0IF+iSeMV2sPgJlJO/cDEADwgg70Szxx0+Rc/QFg620AAQAv6EC/7PS/9gCw8b0AAgBe0IF+yf7/xgLgxqvsexpAAMALOtArVv8bCQBTth0QQgDACzrQL77/f6Ffaw8A2xYDCQB4QQd6xIHxZuMBYNssgACwjxeJs"
+    s = s & "whd18HOLSt//RsLgJl32jMLcL3xtvEidRZh3cgs6OE4ZTzZWgCMHglaclqw6423jRepswjrRmZBD6v++jcaAGazgfSFu954G3mROouwbmQW9LDKvX/jAWDLa8IuN95GXlwbN7PktV+RADCnBUl/OszVxtvKi2vjZoJlvHfDBc/9Ww0AU7dcI3tWgIuNt5kX18bNBMt471L+bDwAzLljko8FXWy8zby4Nm4muOnHeE88AF68FRA6N9C1xtvOi2vjZgJlvHapqX+rATDaGyD0VMClxneBF9fGzSxb9RcLAKm3BV1qfBd4cW3cTPhtP6sCwNyT3Lq53UeDrjS+K7y4Nm7WYpnH7mu57xcLgOUQaPOLwi40vku8uDZu1lKZhfZxzS8SAG0/Geh747vGi2vjZi2U2XZvFtrX40WRADBlVinbOEKsz43vIi+ujZs1bf6wWPOKv1UBsBwCTc8E+tr4rvLi2rhZ07/8FcwvHgBtrAn0sfFd5sW1cTPL7vmtC4DlEGjqxaG+Nb7rvLg2btZAmSdpdZjfmgBYDoEm9gn0qfF94MW1cbMGnvPXZX6rAmC5zC6mOrcN96XxBEC1fnRdB2m4+qk+vQoAU+aRRl3rAl1ovEtn5Lk2blbT/X7Vxb5OBcDyLYF5nbHqeQK2N961M/JcGzerUEb7xgN1Tvk7EwDnzwaqfHjU9sa7dka"
+    s = s & "ea+Nm6yyzKN7Ur36nAuD8tYH17BmwvfGunZHn2rjZmGU0fv7HOwmAikFge+Ol/v8Ytx2eszGMf/O7Ln2Cj7MzgPUGgZTQMaJd/ZAaN7tEmcXucd7fJwAuIMF87PDD18yv+h0CWxsv/f/HuO3wnK2yf9/seTEf05UyfudnAC9X5t7JLBie/5KRlNAxIsGTXWB6o8027++dC4ALZwa3vHsvAYARRX4I0vDcmfzmvv7CT3LbVL0NgOVqu/HMANy49TC3nGYNytzDm0d2ZouuMftNV881+tyeABAOANsDinHt4jmxvJgBCDdeSpiM2w7PieVFAAg3HiO2Y0QpnhPLiwAQbryUMBm3HZ4Ty4sAEG48RmzHiFI8J5YXASDceClhMm47PCeWFwEg3HiM2I4RpXhOLC8CQLjxUsJk3HZ4TiwvAkC48RixHSNK8ZxYXgSAcOOlhMm47fCcWF4EgHDjMWI7RpTiObG8CADhxksJk3Hb4TmxvAgA4cZjxHaMKMVzYnkRAMKNlxIm47bDc2J5EQDCjceI7RhRiufE8iIAhBsvJUzGbYfnxPIiAIQbf+L5+o4FN3+Lce3iObG8CIAxUXcD9NeO1CZM87cY1y6eE8uLABgTdTfAfPrp2OETlUVp/ob5W4xrF8+J5UUAjIkmmmAEZX5V1jNNNf/G/Nv1iJJx2+E5sbgIgDEh3TAKD"
+    s = s & "hICYO0iqBsYEAMmPeKAGQABIC5CShEATYmAGQAGI2AUMwBuAQgCgkBxC8AaAEFAECjWAFgEJAgIAsUiIIuABIHLQeDxcVAeA0qLkFIEAE8BMAJBoJgB8BiQICAIFLcA7AMgCAgCxRoAG4EIAoJAsQjITkCCgCBQPAVgKzBBQBAoHgPyLgBBQBAo9gHwMhBBQBAoNgLxNiBBQBAodgLyOjBBQBAotgJzHgBBQBAo3gUAoC2cPnmmfPQ7z5V37/huZ8KHl4EAaACzX3xC3NwEQANHggGwVtz9EftnAswAAGgIBx96VtzgBAAAQjh14oy4wQkAAASRWGBybgEAIABK1gAAYAZQsggIALcAJU8BAGANoBqkFzEuVWZ3FgCsASg31wCOHT6B+gEBEDgaAA+qo8gfEACBowHwuewA8gcEQOBoANx45Z7yh0e4DQAySCzwgNMBYOqzw/3oH7SOU2wFtqfUVw5hAdAqDj7Iy0DW1PSEKtWXCQHQHv6Z14Htq8/c9h+sCYDG8c3PPy6u9bWUE2sAL7cw+C/Z/nLf7qfKo4eOs1kI1ILTJ8+Mpv1d+OV3OgAoOEADigBABASB6xrwmAHIN4GCg4QAQAQEARpImAEgAoIADSTcAiACggANJKwBIAKCAA0kLAIiAoIADSS2PQWI/fw0wkSYaEB1kYNTdQTA0xZcCAUHaCAYj4M"
+    s = s & "4UMfqCIDHEB/iQwOqcxzEgXq0cgAkvvqO9IVQcIAG1Do4yB+sIwDmIR8DogHVQQ7yuRoCIL9P/kIoOEADyfgc3Fs5AOIg/yjiQ3xoQHWOgzhQWfUZwMSerdIXQsEBGlDrCIA8qj4DmFCXQT4GRAOqcxxMT+z5o8oB8LfvmP0l6Quh4AANqPFnAJPqF7w6kPjqhzQAE6IB1R0O/PxoLeY/FwD5V8QviIIDNFCunYP8izUGgPog5GNANKC6xMH7awuA+IrZN1twQRQcoIFgbRzEG2ffWFsAeF65IQnyJxEgAkQDynoOYl8d8epG4qvPSl8YBQdoQK2Fg7saCID8LyAfA6IBZT0H8abdb689AGYum31VEqj/kr44Cg7QgLoIB/nhyckvvNJrAkmQ3wn5GBANqH7v/18NH/J3v1X6Aik4QAPqItN/9RavScS+0jQAE6IBZR0HcZAvNGr+UQAEakL6Qik4QANqBQfbJ9TGxgPA7AmIffUQDcCEaEDZw4Gf7zPebCEAPG96Ql0jfsEUHKCBcpmDaX/PpNcWzGOGxM8fpgGYEA0oGzg4MDNTvsJrE0mQ/5kFF07BgfMa2B7sfker5n8xBHhN2HnxEUCqP6/9jovpIP+1JFD/gwikRUC5yEEc5Menr9z7G54kkk15LE0EBQdOasDPt3nS2Lp16SeSIC/EyaDgwCENxL7aa"
+    s = s & "7zn2YDRrQDnBoqLgnKFg/yZDwWzv+nZBLMLKQnys/LkUHDQZw3kZ5NNeeDZiNhXH5MniIKD/mog9tXtnq0w9ySxr74mTRIFB33UQOzn91tz378aZjYu/bRZoJAmi4KDPmkg9pWemZx9jdcFbJ/4+s/FvtovTRoFB33QQByoR2au2Ps6r0swGxQSXx2SJo+Cg05rwFeHxDf7VAqBQB0QJ5GCgw5qIPbz709PzL3B6zJmJud/ljUBeTFRneNgsbaPe0rjb96+69VmBdMCUik4sF4DcZB/fZs/91qvT/j/LcN3sllIXmCUrRzkZxNf3WH9o74qSII9m2I/f1qebAoOlD0c+Oq52FdXey7g3GvE+Zw46RQcBFZwsDi9Kf8tzyWMdg0G6u84T0BcfFQgw0Hsq+fNK729nvJfCtv8udcnfn43QsSITmnAz+/r7PP9JmDONYuD/HvijaHgIGiUgwPbN6k/l/ablTAnm44WCYP8AYyIEfukgdh8S8Pfs7mxD3f2C+WG7f5un5OG5IVLqWrGD/IF86PW2kc7+obYV2+Kg/zmxFc/QIwYshsayA/HQf7xZGP+Nmn/9Aajj5Gc+xbBXbGvjsg3mYIDdf4U/0jsq3/aPpFfzjS/Bdwwsfv3Yj//QOyre+JAHUOMBFKrGvDzo0Z7SaDeb7TYhubBRWDel5728z+OffU+c2xSEqh"
+    s = s & "7R5uN/Hxf4ucHze7D2M9PExQExUXv2f389Ginqp8fHGnn3Ia1e89pKp8aaawvL+kAAAAAAAAAAAAAAAAAAAAAAAAAwOsT/g+fxirTXk2cZgAAAABJRU5ErkJggg==" & vbCrLf
+    IcoPart1 = s
+End Function
+
+Function IcoText()
+    IcoText = IcoPart1()
+End Function
+
+Sub WriteIcons(root)
+    Dim d, lines, i, p, el, st, nm
+    On Error Resume Next
+    Set d = CreateObject("MSXML2.DOMDocument")
+    lines = Split(IcoText(), vbCrLf)
+    For i = 0 To UBound(lines)
+        p = InStr(lines(i), ":")
+        If p > 1 Then
+            nm = Left(lines(i), p - 1)
+            Set el = d.createElement("b")
+            el.dataType = "bin.base64"
+            el.Text = Mid(lines(i), p + 1)
+            Set st = CreateObject("ADODB.Stream")
+            st.Type = 1
+            st.Open
+            st.Write el.nodeTypedValue
+            st.SaveToFile root & "\" & nm & ".ico", 2
+            st.Close
+        End If
+    Next
+End Sub
+
 Function AddRibbon(dotm, rootDir, ver)
     Dim d, rc, v, tryN
     AddRibbon = False
@@ -24950,6 +25588,8 @@ WriteFile root & "\ribbon\customUI14.xml", RibbonXmlText()
 WriteFile root & "\ribbon\customUI.xml", Replace(RibbonXmlText(), "http://schemas.microsoft.com/office/2009/07/customui", "http://schemas.microsoft.com/office/2006/01/customui")
 WriteFile root & "\ribbon\icons.txt", RibbonIconsText()
 WriteFile root & "\ribbon\ribbon.ps1", RibbonPsText()
+WriteIcons root
+WriteFile root & "\data.ver", KL_DATA_VERSION & vbCrLf
 If Not fso.FolderExists(root & "\namuna_korpus") Then fso.CreateFolder root & "\namuna_korpus"
 WriteUtf8 root & "\namuna_korpus\01_ilmiy.txt", NamunaText1()
 WriteUtf8 root & "\namuna_korpus\02_yangilik.txt", NamunaText2()
@@ -24983,21 +25623,25 @@ Else
     lnk.TargetPath = root & "\ocr.hta"
     lnk.WorkingDirectory = root
     lnk.Description = "PDF > Word (OCR)"
+    lnk.IconLocation = root & "\pdf.ico,0"
     lnk.Save
     Set lnk = sh.CreateShortcut(sh.SpecialFolders("Desktop") & "\Antiplagiat.lnk")
     lnk.TargetPath = root & "\antiplagiat.hta"
     lnk.WorkingDirectory = root
     lnk.Description = "Antiplagiat"
+    lnk.IconLocation = root & "\apl.ico,0"
     lnk.Save
     Set lnk = sh.CreateShortcut(sh.SpecialFolders("Desktop") & "\Atamalar lug'ati.lnk")
     lnk.TargetPath = root & "\atamalar.hta"
     lnk.WorkingDirectory = root
     lnk.Description = "Lingvistik atamalar lug'ati"
+    lnk.IconLocation = root & "\al.ico,0"
     lnk.Save
     Set lnk = sh.CreateShortcut(sh.SpecialFolders("Desktop") & "\Korpus tahlili.lnk")
     lnk.TargetPath = root & "\korpus.hta"
     lnk.WorkingDirectory = root
     lnk.Description = "Korpus tahlili"
+    lnk.IconLocation = root & "\kt.ico,0"
     lnk.Save
     Err.Clear
     On Error GoTo 0
